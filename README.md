@@ -14,6 +14,18 @@ This dashboard is built using React & Tailwind.
 
 ## Documentation
 
+### Design
+
+#### Colors
+
+The colors are inspired by the Spotify brand colors and come from the base
+colors in the Tailwind CSS framework.
+
+Primary: Emerald 600
+Secondary: Sky 500
+Text: Zinc 800
+Background: Neutral 200
+
 ### Authentication
 
 **Sign-up**: Client side route at `/signup`
