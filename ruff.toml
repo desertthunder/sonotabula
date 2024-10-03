@@ -51,7 +51,10 @@ select = [
     "ANN",   # Annotations
     "T20",   # Print
 ]
-ignore = ["E401", "ANN101"]
+
+# NOTE: ANN002 and ANN003 are disabled because they warn about
+#   a common pattern (*args, **kwargs) that is used in many places.
+ignore = ["E401", "ANN101", "ANN002", "ANN003"]
 
 fixable = ["ALL"]
 unfixable = []

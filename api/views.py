@@ -1,11 +1,7 @@
 """API Views."""
 
 import dataclasses
-import datetime
-import enum
 import logging
-import os
-import typing
 from http import HTTPMethod
 
 import httpx
@@ -14,19 +10,19 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
-    HttpResponseServerError,
     JsonResponse,
 )
 from django.shortcuts import redirect
-from httpx import URL, Request
 from rest_framework import views
 from rest_framework.request import Request as DRFRequest
 
+from api.libs.constants import WEB_APP_URL, SpotifyAPIStates
+from api.libs.exceptions import SpotifyAPIError
+from api.libs.services import RedirectURI, SpotifyAuthService
 from api.models import AppUser
 from server import settings
 
-logger = logging.getLogger(__name__)
-
+default_auth_service = SpotifyAuthService()  # NOTE used for dependency injection
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -34,10 +30,10 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-WEB_APP_URL = "http://localhost:5173"
-REDIRECT_URI = "http://localhost:8000/api/login"
+logger = logging.getLogger(__name__)
 
 
+# TODO: Move to user model module
 @dataclasses.dataclass
 class TokenPayload:
     """Payload to generate a JWT token."""
@@ -53,6 +49,7 @@ class TokenPayload:
         return dataclasses.asdict(self)
 
 
+# TODO: Move to user model module
 class Token:
     """JWT Token."""
 
@@ -86,163 +83,18 @@ class Token:
         )
 
 
-class MissingAPICredentialsError(HttpResponseServerError):
-    """Missing API Credentials Response."""
-
-    def __init__(self) -> None:
-        """Missing API Credentials HTTP Response."""
-        super().__init__("Missing Spotify API credentials.")
-
-
-class RedirectURI:
-    """Redirect URI wrapper."""
-
-    _url: URL
-
-    def __init__(self, url: URL) -> None:
-        """Redirect URI Constructor."""
-        self._uri = url
-
-    @classmethod
-    def from_request(cls: type["RedirectURI"], request: Request) -> str:
-        """Create a RedirectURI from a Request."""
-        return cls(url=request.url).as_str
-
-    @property
-    def as_str(self) -> str:
-        """Return the URL as a string."""
-        return str(self._uri)
-
-
-class SpotifyAPITokenSet(typing.TypedDict):
-    """Spotify API Token Set."""
-
-    access_token: str
-    refresh_token: str
-    token_expiry: float
-
-
-class SpotifyAPIStates(enum.StrEnum):
-    """Possible values for state parameter in Spotify API."""
-
-    LOGIN = "app-login"
-    SIGNUP = "app-signup"
-
-
-class SpotifyAPIEndpoints(enum.StrEnum):
-    """Spotify API Endpoints."""
-
-    Authorization = "https://accounts.spotify.com/authorize"
-    Access_Token = "https://accounts.spotify.com/api/token"  # noqa: S105
-
-    BASE_URL = "https://api.spotify.com/v1"
-    Current_User = "me"
-
-
-class SpotifyAPIScope(enum.StrEnum):
-    """Available authentication scopes for Spotify API.
-
-    See: https://developer.spotify.com/documentation/web-api/concepts/scopes/
-    """
-
-    # Images
-    UGC_IMAGE_UPLOAD = "ugc-image-upload"
-
-    # Spotify Connect
-    USER_READ_PLAYBACK_STATE = "user-read-playback-state"
-    USER_MODIFY_PLAYBACK_STATE = "user-modify-playback-state"
-    USER_READ_CURRENTLY_PLAYING = "user-read-currently-playing"
-
-    # Playback
-    APP_REMOTE_CONTROL = "app-remote-control"
-    STREAMING = "streaming"
-
-    # Playlists
-    PLAYLIST_READ_PRIVATE = "playlist-read-private"
-    PLAYLIST_READ_COLLABORATIVE = "playlist-read-collaborative"
-    PLAYLIST_MODIFY_PRIVATE = "playlist-modify-private"
-    PLAYLIST_MODIFY_PUBLIC = "playlist-modify-public"
-
-    # Follow
-    USER_FOLLOW_MODIFY = "user-follow-modify"
-    USER_FOLLOW_READ = "user-follow-read"
-
-    # Listening History
-    USER_READ_PLAYBACK_POSITION = "user-read-playback-position"
-    USER_TOP_READ = "user-top-read"
-    USER_READ_RECENTLY_PLAYED = "user-read-recently-played"
-
-    # Library
-    USER_LIBRARY_MODIFY = "user-library-modify"
-    USER_LIBRARY_READ = "user-library-read"
-
-    # Users
-    USER_READ_EMAIL = "user-read-email"
-    USER_READ_PRIVATE = "user-read-private"
-
-    # Open Access
-    USER_SOA_LINK = "user-soa-link"
-    USER_SOA_UNLINK = "user-soa-unlink"
-    SOA_MANAGE_ENTITLEMENTS = "soa-manage-entitlements"
-    SOA_MANAGE_PARTNER = "soa-manage-partner"
-    SOA_CREATE_PARTNER = "soa-create-partner"
-
-    @classmethod
-    def user_scopes(cls: type["SpotifyAPIScope"]) -> str:
-        """Return a list of user scopes."""
-        return " ".join(
-            [
-                cls.USER_READ_EMAIL,
-                cls.USER_READ_PRIVATE,
-                cls.USER_READ_PLAYBACK_STATE,
-                cls.USER_MODIFY_PLAYBACK_STATE,
-                cls.USER_READ_CURRENTLY_PLAYING,
-                cls.USER_READ_PLAYBACK_POSITION,
-                cls.USER_TOP_READ,
-                cls.USER_READ_RECENTLY_PLAYED,
-                cls.USER_LIBRARY_MODIFY,
-                cls.USER_LIBRARY_READ,
-                cls.USER_FOLLOW_MODIFY,
-                cls.USER_FOLLOW_READ,
-            ]
-        )
-
-
-class CallbackMixin(views.APIView):
-    """Handle Callback Mixin."""
-
-    def callback(self, request: DRFRequest) -> None:
-        """OAuth2 Callback."""
-        authorization_code = request.query_params.get("code")
-
-        if not authorization_code:
-            return
-
-        pass
-
-
-class AuthenticateMixin(views.APIView):
-    """Handle Authentication Mixin."""
-
-    def authenticate(self, request: DRFRequest) -> None:
-        """Authenticate.
-
-        Create a JWT and redirect to the frontend.
-
-        i.e. /dashboard?token=JWT - The client is expected to
-        store the JWT in localStorage and redirect to /dashboard.
-        """
-        pass
-
-
-class SignupView(CallbackMixin):
-    """Signup View."""
-
-    pass
-
-
 class LoginView(views.APIView):
     """Login View."""
+
+    auth_service: SpotifyAuthService
+
+    def __init__(
+        self, auth_service: SpotifyAuthService = default_auth_service, *args, **kwargs
+    ) -> None:
+        """Login View Constructor."""
+        self.auth_service = auth_service
+
+        super().__init__(*args, **kwargs)
 
     def get(self, request: DRFRequest) -> HttpResponse:
         """Spotify Callback.
@@ -254,109 +106,28 @@ class LoginView(views.APIView):
         authorization_code: str | None = request.query_params.get("code")
         state = request.query_params.get("state")
 
-        if state != SpotifyAPIStates.LOGIN:
-            return HttpResponseBadRequest()
-
-        if not authorization_code or request.query_params.get("error") is not None:
+        if (
+            state != SpotifyAPIStates.LOGIN
+            or not authorization_code
+            or request.query_params.get("error") is not None
+        ):
             return HttpResponseForbidden()
 
-        client_id = os.getenv("SPOTIFY_CLIENT_ID")
-        client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+        try:
+            token_set = self.auth_service.get_access_token(authorization_code)
+        except SpotifyAPIError as exc:
+            logger.error(f"Spotify API Error details: {exc}")
 
-        if not client_id or not client_secret:
-            return MissingAPICredentialsError()
-
-        auth = httpx.BasicAuth(username=client_id, password=client_secret)
-
-        # TODO: Create a type or dataclass for this object.
-        data = {
-            "grant_type": "authorization_code",
-            "code": authorization_code,
-            "redirect_uri": REDIRECT_URI,
-        }
-
-        token_set: SpotifyAPITokenSet = {
-            "access_token": "",
-            "refresh_token": "",
-            "token_expiry": 0,
-        }
-
-        # TODO: Move to service layer.
-        with httpx.Client(
-            base_url=SpotifyAPIEndpoints.Access_Token, auth=auth
-        ) as client:
-            response = client.post(url="", data=data)
-
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
-                return HttpResponseBadRequest()
-
-            resp = response.json()
-            logger.debug(f"Response: {resp}")
-
-            if not resp.get("access_token"):
-                return HttpResponseBadRequest()
-
-            client.close()
-
-        current_unix_time = datetime.datetime.now().timestamp()
-
-        token_set["access_token"] = resp.get("access_token")
-        token_set["refresh_token"] = resp.get("refresh_token")
-        token_set["token_expiry"] = current_unix_time + float(resp.get("expires_in", 0))
-
-        logger.debug(f"Access token for expires at {token_set.get('token_expiry')}")
-
-        # TODO: Move to service layer.
-        with httpx.Client(
-            base_url=SpotifyAPIEndpoints.BASE_URL,
-            headers={"Authorization": f"Bearer {token_set.get("access_token")}"},
-        ) as client:
-            response = client.get(url=SpotifyAPIEndpoints.Current_User)
-
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
-                return HttpResponseBadRequest()
-
-            resp = response.json()
-            logger.debug(f"Response: {resp}")
-
-            # TODO: Create a type or dataclass for this object.
-            spotify_id = resp.get("id")
-            spotify_email = resp.get("email")
-            spotify_display_name = resp.get("display_name")
-
-            if not spotify_id or not spotify_email:
-                return HttpResponseBadRequest()
-
-            timestamp = token_set.get("token_expiry")
-
-            if not timestamp:
-                return HttpResponseBadRequest()
-
-            client.close()
+            return HttpResponseBadRequest("Unable to get access token.")
 
         try:
-            user = AppUser.objects.get(spotify_id=spotify_id)
+            current_user = self.auth_service.get_current_user(token_set.access_token)
+        except SpotifyAPIError as exc:
+            logger.error(f"Spotify API Error details: {exc}")
 
-            logger.debug(f"Found user: {user.public_id}")
-        except AppUser.DoesNotExist:
-            user = AppUser.objects.create(
-                spotify_id=spotify_id,
-                email=spotify_email,
-                first_name=spotify_display_name,
-                last_name="",
-                access_token=token_set.get("access_token") or "",
-                refresh_token=token_set.get("refresh_token") or "",
-                token_expiry=datetime.datetime.fromtimestamp(timestamp),
-            )
+            return HttpResponseBadRequest("Unable to get current user.")
 
-            user.save()
-
-            user.refresh_from_db()
-
-            logger.debug(f"Created user: {user.public_id}")
-
+        user = AppUser.objects.from_spotify(current_user, token_set)
         client_jwt = Token(user)
 
         client = httpx.Client(base_url=WEB_APP_URL)
@@ -368,7 +139,6 @@ class LoginView(views.APIView):
         )
 
         resp = redirect(to=RedirectURI.from_request(req))
-
         resp.headers["Access-Control-Allow-Origin"] = "*"
 
         logger.debug("Redirecting to dashboard.")
@@ -380,31 +150,15 @@ class LoginView(views.APIView):
 
         Endpoint: POST /api/login
         """
-        client_id = os.getenv("SPOTIFY_CLIENT_ID")
+        redirect_uri = self.auth_service.build_redirect_uri()
 
-        if not client_id:
-            return MissingAPICredentialsError()
-
-        # TODO: Create a type or dataclass for these params.
-        params = {
-            "client_id": client_id,
-            "response_type": "code",
-            "redirect_uri": REDIRECT_URI,
-            "state": SpotifyAPIStates.LOGIN,
-            "scope": SpotifyAPIScope.user_scopes(),
-        }
-
-        # TODO: Move to service layer.
-        client = httpx.Client(base_url=SpotifyAPIEndpoints.Authorization)
-
-        req = client.build_request(HTTPMethod.GET, url="", params=params)
-        resp = redirect(to=RedirectURI.from_request(req))
-
+        resp = redirect(to=redirect_uri)
         resp.headers["Access-Control-Allow-Origin"] = "*"
 
         logger.debug("Redirecting to Spotify for login.")
         logger.debug(f"Headers: {resp.headers}")
 
+        # TODO: Should this be a serialized response?
         return JsonResponse(data={"redirect": resp.url})
 
 
@@ -431,13 +185,13 @@ class ValidateView(views.APIView):
         if tag.lower() != "bearer":
             return HttpResponseForbidden()
 
+        # TODO: Move to a validator class?
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        except jwt.ExpiredSignatureError:
-            logger.debug(f"Token expired for user {payload.get('public_id')}")
-            return HttpResponseForbidden()
-        except jwt.InvalidTokenError:
-            logger.debug("Invalid token.")
+        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+            logger.debug(
+                f"Invalid or expired token for user {payload.get('public_id')}"
+            )
             return HttpResponseForbidden()
 
         logger.debug(f"Found token for user {payload.get('public_id')}")
@@ -447,6 +201,11 @@ class ValidateView(views.APIView):
 
             logger.debug(f"Found user: {user.public_id} with pk {user.pk}")
         except AppUser.DoesNotExist:
+            logger.error("User not found.")
+
             return HttpResponseForbidden(content={"message": "User not found."})
 
+        # TODO: Check if spotify access token is still valid
+        #      and refresh if necessary.
+        # TODO: Serialized response?
         return JsonResponse(data={"message": "Valid token."})
