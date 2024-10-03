@@ -16,6 +16,12 @@ class AppUser(TokenSetMixin, AbstractUser):
     email = models.EmailField(blank=False, unique=True)
 
     username = None  # type: ignore
+    first_name = None  # type: ignore
+    last_name = None  # type: ignore
+
+    spotify_id = models.CharField(max_length=255, unique=True)
+    spotify_display_name = models.CharField(max_length=255, blank=True, unique=False)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 

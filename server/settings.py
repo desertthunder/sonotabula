@@ -12,11 +12,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# NOTE: Used to encode and decode JWT tokens
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-oukd3fukrry=ce&7kc*itz=(%y*hphm7fq)1s^228fn4p2%%8q"
 )
@@ -24,11 +20,28 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", False)
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = ["127.0.0.1", "localhost"]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    # Spotify redirect URI
+    "https://accounts.spotify.com",
+]
+
+CORS_ALLOWED_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "referer",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -36,10 +49,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_extensions",
+    "rest_framework",
+    "corsheaders",
     "api",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -134,3 +151,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID", None)
 SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET", None)
 SPOTIFY_BASE_URL = "https://api.spotify.com/v1/"
+
+REST_FRAMEWORK = {
+    "DEFAULT_METADATA_CLASS": "rest_framework.metadata.SimpleMetadata",
+}

@@ -13,6 +13,13 @@ django-stubs = {extras = ["compatible-mypy"], version = "^5.1.0"}
 psycopg = {extras = ["binary"], version = "^3.2.2"}
 python-dotenv = "^1.0.1"
 httpx = "^0.27.2"
+djangorestframework-stubs = {extras = ["compatible-mypy"], version = "^3.15.1"}
+django-extensions = "^3.2.3"
+werkzeug = "^3.0.4"
+django-cors-headers = "^4.4.0"
+pyjwt = "^2.9.0"
+ipython = "^8.28.0"
+ipdb = "^0.13.13"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.7"
@@ -23,7 +30,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-plugins = ["mypy_django_plugin.main"]
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 
 [tool.django-stubs]
 django_settings_module = "server.settings"
