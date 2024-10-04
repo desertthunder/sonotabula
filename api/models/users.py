@@ -1,4 +1,4 @@
-"""User model."""
+"""Custom user model."""
 
 import datetime
 import logging
@@ -22,7 +22,7 @@ class AppUserManager(UserManager["AppUser"]):
         spotify_data: SpotifyCurrentUserDataResponse,
         token_set: SpotifyAccessTokenResponse,
     ) -> "AppUser":
-        """Create a user from spotify data."""
+        """Find or Create a user from spotify data."""
         try:
             user = self.get(spotify_id=spotify_data.id)
 
@@ -62,6 +62,17 @@ class AppUser(TokenSetMixin, AbstractUser):
     REQUIRED_FIELDS = []
 
     objects: AppUserManager = AppUserManager()  # type: ignore
+
+    def update_token_set(self, token_set: SpotifyAccessTokenResponse) -> None:
+        """Update the user's token set."""
+        self.access_token = token_set.access_token
+        self.refresh_token = token_set.refresh_token
+        self.token_expiry = datetime.datetime.fromtimestamp(token_set.token_expiry)
+
+        self.save()
+        self.refresh_from_db()
+
+        logger.debug(f"Updated token set for user: {self.public_id}")
 
     class Meta(TypedModelMeta):
         """Meta class for app user."""

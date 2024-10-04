@@ -11,6 +11,11 @@ class TokenSetMixin(models.Model):
     refresh_token = models.CharField(max_length=255)
     token_expiry = models.DateTimeField()
 
+    @property
+    def token_expired(self) -> bool:
+        """Check if the token is expired."""
+        return self.token_expiry < self.token_expiry.now()
+
     class Meta(TypedModelMeta):
         """TokenSet meta class."""
 

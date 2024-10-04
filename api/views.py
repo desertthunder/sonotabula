@@ -170,6 +170,16 @@ class ValidateView(views.APIView):
     Endpoint: GET /api/validate
     """
 
+    auth_service: SpotifyAuthService
+
+    def __init__(
+        self, auth_service: SpotifyAuthService = default_auth_service, *args, **kwargs
+    ) -> None:
+        """Validate View Constructor."""
+        self.auth_service = auth_service
+
+        super().__init__(*args, **kwargs)
+
     def post(self, request: DRFRequest) -> HttpResponse:
         """Validate the JWT token.
 
@@ -205,7 +215,23 @@ class ValidateView(views.APIView):
 
             return HttpResponseForbidden(content={"message": "User not found."})
 
-        # TODO: Check if spotify access token is still valid
-        #      and refresh if necessary.
-        # TODO: Serialized response?
-        return JsonResponse(data={"message": "Valid token."})
+        if user.token_expired:
+            logger.debug("Token expired. Refreshing token.")
+
+            try:
+                success, user = self.auth_service.refresh_access_token(user=user)
+
+                if not success:
+                    return HttpResponseBadRequest("Unable to refresh token.")
+
+                client_jwt = Token(user)
+
+                return JsonResponse(
+                    data={"message": "Updated token", "token": client_jwt.encode()}
+                )
+            except SpotifyAPIError as exc:
+                logger.error(f"Spotify API Error details: {exc}")
+
+                return HttpResponseBadRequest("Unable to refresh token.")
+
+        return JsonResponse(data={"message": "Valid token.", "token": token})
