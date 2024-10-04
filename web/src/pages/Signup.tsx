@@ -1,39 +1,70 @@
-import { authService } from "@libs/services";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-function onClickSignup() {
-  authService.login();
-}
-
+// TODO: Create a proper index page
 export default function Signup() {
   const navigate = useNavigate();
 
+  // Check token
+  const query = useQuery({
+    queryKey: ["token"],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Token not found");
+      }
+
+      const response = await fetch("/api/validate", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Token invalid");
+      }
+
+      return response.json();
+    },
+  });
+
+  // Login
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {},
+      });
+
+      if (!response.ok) {
+        throw new Error("Login failed");
+      }
+
+      return response.json();
+    },
+  });
+
+  function onClickSignup() {
+    mutation.mutate();
+  }
+
   React.useEffect(() => {
-    const cachedToken = localStorage.getItem("token");
-
-    if (!cachedToken) {
-      return;
+    if (query.isSuccess) {
+      navigate("/dashboard");
+    } else if (query.isError) {
+      console.error(query.error);
     }
+  }, [query, navigate]);
 
-    async function validateToken() {
-      if (!cachedToken) {
-        return;
-      }
-
-      const isValid = await authService.validateToken(cachedToken);
-
-      if (!isValid) {
-        localStorage.removeItem("token");
-
-        navigate("/login");
-      } else {
-        navigate("/dashboard");
-      }
+  React.useEffect(() => {
+    if (mutation.isSuccess) {
+      window.location.href = mutation.data.redirect;
+    } else if (mutation.isError) {
+      console.error(mutation.error);
     }
-
-    validateToken();
-  }, [navigate]);
+  }, [mutation]);
 
   return (
     <main className="container min-h-80">

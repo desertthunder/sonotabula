@@ -14,7 +14,7 @@ class TokenSetMixin(models.Model):
     @property
     def token_expired(self) -> bool:
         """Check if the token is expired."""
-        return self.token_expiry < self.token_expiry.now()
+        return True
 
     class Meta(TypedModelMeta):
         """TokenSet meta class."""

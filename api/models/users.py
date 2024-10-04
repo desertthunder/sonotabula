@@ -1,6 +1,5 @@
 """Custom user model."""
 
-import datetime
 import logging
 import uuid
 
@@ -8,7 +7,10 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django_stubs_ext.db.models import TypedModelMeta
 
-from api.libs.services import SpotifyAccessTokenResponse, SpotifyCurrentUserDataResponse
+from api.libs.responses import (
+    SpotifyAccessTokenResponse,
+    SpotifyCurrentUserDataResponse,
+)
 from api.models.mixins import TokenSetMixin
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,8 @@ class AppUserManager(UserManager["AppUser"]):
             user = self.get(spotify_id=spotify_data.id)
 
             logger.debug(f"Found user: {user.public_id}")
+
+            user.update_token_set(token_set)
         except AppUser.DoesNotExist:
             user = self.create(
                 spotify_id=spotify_data.id,
@@ -34,7 +38,7 @@ class AppUserManager(UserManager["AppUser"]):
                 spotify_display_name=spotify_data.display_name,
                 access_token=token_set.access_token,
                 refresh_token=token_set.refresh_token,
-                token_expiry=datetime.datetime.fromtimestamp(token_set.token_expiry),
+                token_expiry=token_set.token_expiry,
             )
 
             user.save()
@@ -67,7 +71,7 @@ class AppUser(TokenSetMixin, AbstractUser):
         """Update the user's token set."""
         self.access_token = token_set.access_token
         self.refresh_token = token_set.refresh_token
-        self.token_expiry = datetime.datetime.fromtimestamp(token_set.token_expiry)
+        self.token_expiry = token_set.token_expiry
 
         self.save()
         self.refresh_from_db()

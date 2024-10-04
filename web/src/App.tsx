@@ -1,16 +1,43 @@
 import "./App.css";
 import "@fontsource-variable/noto-sans-jp";
 import "@fontsource-variable/rubik";
-
+import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Signup, Dashboard } from "./pages";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
 
+// TODO: Move to libs
 enum Routes {
   Home = "/",
   Signup = "/signup",
   Login = "/login",
   Dashboard = "/dashboard/",
 }
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
+
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
+});
+
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister,
+  dehydrateOptions: {
+    shouldDehydrateQuery(query: Query): boolean {
+      // We're only persisting the token query
+      // but also want to keep the default behavior.
+      return query.queryKey[0] === "token" && query.state.status === "success";
+    },
+  },
+});
 
 export const BrowserRouter = createBrowserRouter([
   {
@@ -28,5 +55,9 @@ export const BrowserRouter = createBrowserRouter([
 ]);
 
 export default function Root() {
-  return <RouterProvider router={BrowserRouter} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={BrowserRouter} />
+    </QueryClientProvider>
+  );
 }

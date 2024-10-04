@@ -3,7 +3,6 @@
 import dataclasses
 import logging
 import os
-import time
 from http import HTTPMethod
 
 import httpx
@@ -11,15 +10,16 @@ from httpx import URL, Request
 
 from api.libs.constants import REDIRECT_URI, SpotifyAPIEndpoints, SpotifyAPIScopes
 from api.libs.exceptions import MissingAPICredentialsError, SpotifyAPIError
-from api.models.users import AppUser
+from api.libs.responses import (
+    SpotifyAccessTokenResponse,
+    SpotifyCurrentUserDataResponse,
+)
+from api.models import AppUser
 
 logger = logging.getLogger("spotify_service")
 
 
 # TODO: Move this to a utils module
-def get_current_unix_timestamp() -> int:
-    """Return the current Unix timestamp."""
-    return int(time.time())
 
 
 class RedirectURI:
@@ -59,41 +59,12 @@ class SpotifyRequest:
 
 
 @dataclasses.dataclass
-class SpotifyResponse:
-    """Spotify Response Data base class."""
-
-    @property
-    def as_dict(self) -> dict:
-        """Return the data as a dictionary."""
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
 class SpotifyAccessTokenRequest(SpotifyRequest):
     """Spotify Access Token Request Data."""
 
     code: str
     redirect_uri: str = REDIRECT_URI
     grant_type: str = "authorization_code"
-
-
-@dataclasses.dataclass
-class SpotifyAccessTokenResponse(SpotifyResponse):
-    """Spotify Access Token Response Data."""
-
-    access_token: str
-    refresh_token: str
-    token_type: str
-    token_expiry: int
-
-    def __init__(
-        self, access_token: str, refresh_token: str, token_type: str, token_expiry: int
-    ) -> None:
-        """Spotify Access Token Response."""
-        self.access_token = access_token
-        self.refresh_token = refresh_token
-        self.token_type = token_type
-        self.token_expiry = get_current_unix_timestamp() + token_expiry
 
 
 @dataclasses.dataclass
@@ -114,15 +85,6 @@ class SpotifyRedirectParams(SpotifyRequest):
     scope: str
     response_type: str = "code"
     redirect_uri: str = REDIRECT_URI
-
-
-@dataclasses.dataclass
-class SpotifyCurrentUserDataResponse(SpotifyResponse):
-    """Spotify Current User Data."""
-
-    display_name: str
-    email: str
-    id: str
 
 
 class SpotifyAuthService:
@@ -177,6 +139,8 @@ class SpotifyAuthService:
                 raise SpotifyAPIError("Access token not found in response.")
 
             client.close()
+
+        logger.debug(f"Access token response: {resp}")
 
         token_set = SpotifyAccessTokenResponse(
             access_token=resp["access_token"],
@@ -235,7 +199,7 @@ class SpotifyAuthService:
         return SpotifyRedirectURI.from_request(req)
 
     def refresh_access_token(
-        self, refresh_token: str = None, user: AppUser = None
+        self, refresh_token: str | None = None, user: AppUser | None = None
     ) -> tuple[bool, AppUser | None]:
         """Refresh the access token and update the user's token set."""
         if not user and not refresh_token:
@@ -249,7 +213,7 @@ class SpotifyAuthService:
         except AppUser.DoesNotExist:
             return False, None
 
-        request_data = SpotifyRefreshTokenRequest(refresh_token, self.client_id)
+        request_data = SpotifyRefreshTokenRequest(refresh_token, self.client_id)  # type: ignore
 
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.Access_Token, auth=self.auth()
@@ -270,9 +234,11 @@ class SpotifyAuthService:
 
             client.close()
 
+        logger.debug(f"Access token response: {resp}")
+
         token_set = SpotifyAccessTokenResponse(
             access_token=resp["access_token"],
-            refresh_token=resp["refresh_token"],
+            refresh_token=resp.get("refresh_token", user.refresh_token),
             token_type=resp["token_type"],
             token_expiry=resp["expires_in"],
         )

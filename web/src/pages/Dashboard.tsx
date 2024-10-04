@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { authService } from "@/libs/services";
+import { useQuery } from "@tanstack/react-query";
 
 function useQueryParams(): Record<string, string> {
   const location = useLocation();
@@ -12,46 +12,41 @@ function useQueryParams(): Record<string, string> {
 export default function Dashboard() {
   const params = useQueryParams();
   const navigate = useNavigate();
-  const [token, setToken] = React.useState<string | null>(null);
-  const delay = 60;
+
+  const query = useQuery({
+    queryKey: ["token"],
+    queryFn: async () => {
+      console.debug("Checking token validity");
+
+      const token = params.token || localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Token not found");
+      }
+
+      const response = await fetch("/api/validate", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Token invalid");
+      }
+
+      return response.json();
+    },
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  });
 
   React.useEffect(() => {
-    const cachedToken = localStorage.getItem("token");
-
-    if (!params.token && !cachedToken) {
+    if (query.isError) {
       navigate("/login");
-
-      return;
+    } else if (query.isSuccess && params.token) {
+      navigate("/dashboard");
     }
-
-    if (!params.token && cachedToken) {
-      const interval = setInterval(async () => {
-        console.debug("Checking token validity");
-
-        const isValid = await authService.validateToken(cachedToken);
-
-        if (!isValid) {
-          clearInterval(interval);
-
-          localStorage.removeItem("token");
-
-          navigate("/login");
-        } else {
-          setToken(cachedToken);
-        }
-      }, delay * 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [navigate, params, delay]);
-
-  React.useEffect(() => {
-    if (!token) {
-      return;
-    }
-
-    console.debug("Token (state) changed");
-  }, [token]);
+  }, [query, navigate, params]);
 
   return (
     <div>
