@@ -84,3 +84,13 @@ user's spotify id and email address to find the user in the database.
   "uri": "string"
 }
 ```
+
+### Attribution
+
+From the [top tracks](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-users-top-artists-and-tracks) endpoint documentation:
+
+> Please keep in mind that metadata, cover art and artist images must be
+> accompanied by a link back to the applicable artist, album, track, or playlist
+> on the Spotify Service.
+>
+> You must also attribute content from Spotify with the logo.

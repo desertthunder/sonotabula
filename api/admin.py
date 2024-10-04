@@ -1,3 +1,5 @@
-from django.contrib import admin
+"""Admin site registration for API models.
 
-# Register your models here.
+TODO - setup jazzmin
+TODO - register models with the admin site
+"""

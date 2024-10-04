@@ -7,11 +7,11 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django_stubs_ext.db.models import TypedModelMeta
 
-from api.libs.responses import (
+from api.models.mixins import TokenSetMixin
+from api.services.spotify.responses import (
     SpotifyAccessTokenResponse,
     SpotifyCurrentUserDataResponse,
 )
-from api.models.mixins import TokenSetMixin
 
 logger = logging.getLogger(__name__)
 

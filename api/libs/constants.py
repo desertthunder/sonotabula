@@ -1,4 +1,10 @@
-"""API Constants."""
+"""API Constants.
+
+TODO - Update the WEB_APP_URL and REDIRECT_URI to check for environment variables.
+
+TODO - move the SpotifyAPIStates, SpotifyAPIScopes, and SpotifyAPIEndpoints to
+the services package.
+"""
 
 import enum
 
@@ -13,7 +19,40 @@ class SpotifyAPIEndpoints(enum.StrEnum):
     Access_Token = "https://accounts.spotify.com/api/token"  # noqa: S105
 
     BASE_URL = "https://api.spotify.com/v1"
-    Current_User = "me"
+
+    CurrentUser = "me"
+    CurrentPlaying = "me/player/currently-playing"
+    TopArtists = "me/top/artists"
+    TopTracks = "me/top/tracks"
+    FollowedArtists = "me/following"  # GET, PUT, DELETE
+
+    UserPlaylists = "users/{user_id}/playlists"  # GET, POST
+    Playlist = "playlists/{playlist_id}"  # GET, PUT, DELETE
+    PlaylistTracks = "playlists/{playlist_id}/tracks"  # GET, POST, PUT, DELETE
+
+    Categories = "browse/categories"
+    Category = "browse/categories/{category_id}"
+    CategoryPlaylists = "browse/categories/{category_id}/playlists"
+
+    FeaturedPlaylists = "browse/featured-playlists"
+
+    Genres = "recommendations/available-genre-seeds"
+    Recommendations = "recommendations"
+
+    Artists = "artists"
+    Artist = "artists/{artist_id}"
+    ArtistAlbums = "artists/{artist_id}/albums"
+    ArtistTopTracks = "artists/{artist_id}/top-tracks"
+    ArtistRelatedArtists = "artists/{artist_id}/related-artists"
+
+    Albums = "albums"
+    Album = "albums/{album_id}"
+    AlbumTracks = "albums/{album_id}/tracks"
+
+    Tracks = "tracks"
+    Track = "tracks/{track_id}"
+    TrackAudioAnalysis = "audio-analysis/{track_id}"
+    TrackAudioFeatures = "audio-features/{track_id}"
 
 
 class SpotifyAPIStates(enum.StrEnum):

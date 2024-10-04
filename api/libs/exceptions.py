@@ -1,4 +1,10 @@
-"""Custom API Exceptions."""
+"""Custom API Exceptions.
+
+TODO - Evaluate need for additional, domain specific exceptions.
+
+TODO - Add more specific exceptions for the Spotify API.
+TODO - Move the spotify exceptions to the spotify service module.
+"""
 
 from django.http import HttpResponseServerError
 

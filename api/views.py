@@ -1,6 +1,5 @@
 """API Views."""
 
-import dataclasses
 import logging
 from http import HTTPMethod
 
@@ -18,8 +17,9 @@ from rest_framework.request import Request as DRFRequest
 
 from api.libs.constants import WEB_APP_URL, SpotifyAPIStates
 from api.libs.exceptions import SpotifyAPIError
-from api.libs.services import RedirectURI, SpotifyAuthService
 from api.models import AppUser
+from api.models.permissions import Token
+from api.services.spotify import RedirectURI, SpotifyAuthService
 from server import settings
 
 default_auth_service = SpotifyAuthService()  # NOTE used for dependency injection
@@ -31,56 +31,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: Move to user model module
-@dataclasses.dataclass
-class TokenPayload:
-    """Payload to generate a JWT token."""
-
-    spotify_id: str | None
-    public_id: str | None
-    spotify_access_token: str
-    email: str
-
-    @property
-    def as_dict(self) -> dict:
-        """Return the payload as a dictionary."""
-        return dataclasses.asdict(self)
-
-
-# TODO: Move to user model module
-class Token:
-    """JWT Token."""
-
-    secret: str = settings.SECRET_KEY
-    algorithm: str = "HS256"
-    token: str
-    payload: TokenPayload
-
-    def __init__(self, user: AppUser) -> None:
-        """Token Constructor."""
-        self.payload = TokenPayload(
-            spotify_id=user.spotify_id,
-            public_id=str(user.public_id) if user.public_id else None,
-            email=user.email,
-            spotify_access_token=user.access_token,
-        )
-
-    def encode(self) -> str:
-        """Encode the JWT token."""
-        return jwt.encode(self.payload.as_dict, self.secret, algorithm=self.algorithm)
-
-    def decode(self, token: str) -> TokenPayload:
-        """Decode the JWT token."""
-        payload = jwt.decode(token, self.secret, algorithms=[self.algorithm])
-
-        return TokenPayload(
-            spotify_id=payload.get("spotify_id"),
-            public_id=payload.get("public_id"),
-            email=payload.get("email"),
-            spotify_access_token=payload.get("spotify_access_token"),
-        )
 
 
 class LoginView(views.APIView):

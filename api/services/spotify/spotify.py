@@ -1,4 +1,10 @@
-"""Service layer."""
+"""Service layer.
+
+TODO - Create a base module for the RedirectURI base class.
+
+TODO - Move the params class to the params module in the spotify service
+module.
+"""
 
 import dataclasses
 import logging
@@ -10,16 +16,14 @@ from httpx import URL, Request
 
 from api.libs.constants import REDIRECT_URI, SpotifyAPIEndpoints, SpotifyAPIScopes
 from api.libs.exceptions import MissingAPICredentialsError, SpotifyAPIError
-from api.libs.responses import (
+from api.models import AppUser
+
+from .responses import (
     SpotifyAccessTokenResponse,
     SpotifyCurrentUserDataResponse,
 )
-from api.models import AppUser
 
 logger = logging.getLogger("spotify_service")
-
-
-# TODO: Move this to a utils module
 
 
 class RedirectURI:
@@ -159,7 +163,7 @@ class SpotifyAuthService:
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {access_token}"},
         ) as client:
-            response = client.get(url=SpotifyAPIEndpoints.Current_User)
+            response = client.get(url=SpotifyAPIEndpoints.CurrentUser)
 
             if response.is_error:
                 logger.error(f"Error: {response.text}")
