@@ -1,0 +1,8 @@
+{
+    "label": "Playback",
+    "position": 2,
+    "link": {
+      "type": "generated-index",
+      "description": "Playback endpoint documentation"
+    }
+  }

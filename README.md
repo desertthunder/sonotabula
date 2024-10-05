@@ -3,6 +3,15 @@
 A spotify stats dashboard and playlist organizer built with Django + DRF,
 Postgres, React & Tailwind.
 
+## Setup
+
+Copy the sample `.env` file and fill in the necessary environment variables. I
+use bitwarden to manage my secrets.
+
+```bash
+cp .env.sample .env
+```
+
 ## Back-end
 
 This is a Django application that uses REST framework for serializing and

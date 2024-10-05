@@ -15,40 +15,54 @@ REDIRECT_URI = "http://localhost:8000/api/login"
 class SpotifyAPIEndpoints(enum.StrEnum):
     """Spotify API Endpoints."""
 
+    # Base URL (a true constant)
+    BASE_URL = "https://api.spotify.com/v1"
+
+    # Authentication
     Authorization = "https://accounts.spotify.com/authorize"
     Access_Token = "https://accounts.spotify.com/api/token"  # noqa: S105
 
-    BASE_URL = "https://api.spotify.com/v1"
-
+    # Meta
     CurrentUser = "me"
+
+    # NOTE - Not yet implemented
+    # Playback
     CurrentPlaying = "me/player/currently-playing"
+    RecentlyPlayed = "me/player/recently-played"
+
+    # Top
     TopArtists = "me/top/artists"
     TopTracks = "me/top/tracks"
-    FollowedArtists = "me/following"  # GET, PUT, DELETE
 
+    # Library
+    FollowedArtists = "me/following"  # GET, PUT, DELETE
     UserPlaylists = "users/{user_id}/playlists"  # GET, POST
     Playlist = "playlists/{playlist_id}"  # GET, PUT, DELETE
     PlaylistTracks = "playlists/{playlist_id}/tracks"  # GET, POST, PUT, DELETE
 
+    # Browse - Categories
     Categories = "browse/categories"
     Category = "browse/categories/{category_id}"
     CategoryPlaylists = "browse/categories/{category_id}/playlists"
 
+    # Browse - Recommendations
     FeaturedPlaylists = "browse/featured-playlists"
-
     Genres = "recommendations/available-genre-seeds"
     Recommendations = "recommendations"
 
+    # Search - Artists
     Artists = "artists"
     Artist = "artists/{artist_id}"
     ArtistAlbums = "artists/{artist_id}/albums"
     ArtistTopTracks = "artists/{artist_id}/top-tracks"
     ArtistRelatedArtists = "artists/{artist_id}/related-artists"
 
+    # Search - Albums
     Albums = "albums"
     Album = "albums/{album_id}"
     AlbumTracks = "albums/{album_id}/tracks"
 
+    # Search - Tracks
     Tracks = "tracks"
     Track = "tracks/{track_id}"
     TrackAudioAnalysis = "audio-analysis/{track_id}"

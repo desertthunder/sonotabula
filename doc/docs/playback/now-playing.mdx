@@ -1,0 +1,205 @@
+---
+sidebar_position: 3
+---
+
+# Now Playing Endpoint
+
+The Now Playing endpoint returns the currently playing track and device information.
+
+:::tip[Meta]
+
+- **Reference**: [Spotify Docs](https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track)
+- **Endpoint**: `https://api.spotify.com/v1/me/player/currently-playing`
+- **Scope**: `user-read-currently-playing`
+
+:::
+
+
+<details>
+  <summary>Spotify API Response</summary>
+
+  ```json
+  {
+    "device": {
+      "id": "string",
+      "is_active": false,
+      "is_private_session": false,
+      "is_restricted": false,
+      "name": "Kitchen speaker",
+      "type": "computer",
+      "volume_percent": 59,
+      "supports_volume": false
+    },
+    "repeat_state": "string",
+    "shuffle_state": false,
+    "context": {
+      "type": "string",
+      "href": "string",
+      "external_urls": {
+        "spotify": "string"
+      },
+      "uri": "string"
+    },
+    "timestamp": 0,
+    "progress_ms": 0,
+    "is_playing": false,
+    "item": {
+      "album": {
+        "album_type": "compilation",
+        "total_tracks": 9,
+        "available_markets": [
+          "CA",
+          "BR",
+          "IT"
+        ],
+        "external_urls": {
+          "spotify": "string"
+        },
+        "href": "string",
+        "id": "2up3OPMp9Tb4dAKM2erWXQ",
+        "images": [
+          {
+            "url": "https://i.scdn.co/image/ab67616d00001e02ff9ca10b55ce82ae553c8228",
+            "height": 300,
+            "width": 300
+          }
+        ],
+        "name": "string",
+        "release_date": "1981-12",
+        "release_date_precision": "year",
+        "restrictions": {
+          "reason": "market"
+        },
+        "type": "album",
+        "uri": "spotify:album:2up3OPMp9Tb4dAKM2erWXQ",
+        "artists": [
+          {
+            "external_urls": {
+              "spotify": "string"
+            },
+            "href": "string",
+            "id": "string",
+            "name": "string",
+            "type": "artist",
+            "uri": "string"
+          }
+        ]
+      },
+      "artists": [
+        {
+          "external_urls": {
+            "spotify": "string"
+          },
+          "href": "string",
+          "id": "string",
+          "name": "string",
+          "type": "artist",
+          "uri": "string"
+        }
+      ],
+      "available_markets": [
+        "string"
+      ],
+      "disc_number": 0,
+      "duration_ms": 0,
+      "explicit": false,
+      "external_ids": {
+        "isrc": "string",
+        "ean": "string",
+        "upc": "string"
+      },
+      "external_urls": {
+        "spotify": "string"
+      },
+      "href": "string",
+      "id": "string",
+      "is_playable": false,
+      "linked_from": {},
+      "restrictions": {
+        "reason": "string"
+      },
+      "name": "string",
+      "popularity": 0,
+      "preview_url": "string",
+      "track_number": 0,
+      "type": "track",
+      "uri": "string",
+      "is_local": false
+    },
+    "currently_playing_type": "string",
+    "actions": {
+      "interrupting_playback": false,
+      "pausing": false,
+      "resuming": false,
+      "seeking": false,
+      "skipping_next": false,
+      "skipping_prev": false,
+      "toggling_repeat_context": false,
+      "toggling_shuffle": false,
+      "toggling_repeat_track": false,
+      "transferring_playback": false
+    }
+  }
+  ```
+
+</details>
+
+## Implementation
+
+Endpoint: `/api/now/`
+
+This endpoint returns flat (no nesting) JSON responses.
+
+Always present:
+
+| Field | Spotify API Response Path | Type | Description |
+| ---   | ---                       | ---  | ---         |
+| `is_playing` | `is_playing` | boolean | Whether the track is playing |
+
+### When `is_playing` is `true`
+
+#### Context
+
+| Field | Spotify API Response Path | Type | Description |
+| ---   | ---                       | ---  | ---         |
+| `device_name` | `device.name` | string | The name of the device |
+| `playback_context` | `context.type` | object | The context of the playback |
+| `playback_context_link` | `context.external_urls.spotify` | string | The link to the playback context |
+| `playback_context_uri` | `context.uri` | string | The Spotify URI of the playback context |
+| `playback_progress` | `progress_ms` | number | The progress in milliseconds |
+| `playback_type` | `currently_playing_type` | string | The type of playback (`track`, `episode`, `ad`, or `unknown`) |
+
+#### Track (when `playback_type` is `track`)
+
+| Field | Spotify API Response Path | Type | Description |
+| ---   | ---                       | ---  | ---         |
+| `track_id` | `item.id` | string | The Spotify ID of the track |
+| `track_uri` | `item.uri` | string | The Spotify URI of the track |
+| `track_name` | `item.name` | string | The name of the track |
+| `track_link` | `item.external_urls.spotify` | string | The link to the track |
+| `track_album_id` | `item.album.id` | string | The Spotify ID of the album |
+| `track_album` | `item.album.name` | string | The name of the album |
+| `track_album_link` | `item.album.external_urls.spotify` | string | The link to the album |
+| `track_artists` | `item.artists` | array | An array of artists |
+
+Artist (in `track_artists`):
+
+| Field | Spotify API Response Path | Type | Description |
+| ---   | ---                       | ---  | ---         |
+| `artist_id` | `track.artists[].id` | string | The Spotify ID of the artist |
+| `artist_uri` | `track.artists[].uri` | string | The Spotify URI of the artist |
+| `artist_name` | `track.artists[].name` | string | The name of the artist |
+| `artist_link` | `track.artists[].external_urls.spotify` | string | The link to the artist |
+
+#### Episode (when `playback_type` is `episode`)
+
+| Field | Spotify API Response Path | Type | Description |
+| ---   | ---                       | ---  | ---         |
+| `episode_show` | `item.show.name` | string | The name of the show (nullable) |
+| `episode_show_description` | `item.show.description` | string | The description of the show |
+| `episode_show_id` | `item.show.id` | string | The Spotify ID of the show |
+| `episode_show_uri` | `item.show.uri` | string | The Spotify URI of the show  |
+| `episode_name` | `item.name` | string | The name of the episode |
+| `episode_id` | `item.id` | string | The Spotify ID of the episode |
+| `episode_uri` | `item.uri` | string | The Spotify URI of the episode |
+| `episode_description` | `item.description` | string | The description of the episode |
