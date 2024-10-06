@@ -5,7 +5,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "Music Dashboard Docs",
   tagline: "A spotify integrated music library dashboard.",
-  favicon: "static/img/favicon.ico",
+  favicon: "/img/favicon.ico",
 
   // Set the production url of your site here
   url: "https://music-dashboard-dt-docs.netlify.app",
@@ -47,11 +47,15 @@ const config: Config = {
   themeConfig: {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
+    colorMode: {
+      defaultMode: "dark",
+      disableSwitch: true,
+    },
     navbar: {
       title: "Music Dashboard",
       logo: {
-        alt: "My Site Logo",
-        src: "img/logo.svg",
+        alt: "App Icon",
+        src: "img/logo.png",
       },
       items: [
         {

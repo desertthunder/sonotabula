@@ -1,0 +1,9 @@
+# Django Project
+
+To setup and install the dependencies for the app, first we want to generate
+a `requirements.txt` file from the `pyproject.toml` and `poetry.lock` files.
+Poetry can do this for us by running the following command:
+
+```bash
+poetry export --without-hashes --format=requirements.txt > requirements.txt
+```
