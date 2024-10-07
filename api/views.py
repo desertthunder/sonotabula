@@ -17,9 +17,10 @@ from rest_framework.request import Request as DRFRequest
 
 from api.libs.constants import WEB_APP_URL, SpotifyAPIStates
 from api.libs.exceptions import SpotifyAPIError
+from api.libs.requests import RedirectURI
 from api.models import AppUser
 from api.models.permissions import Token
-from api.services.spotify import RedirectURI, SpotifyAuthService
+from api.services.spotify import SpotifyAuthService
 from server import settings
 
 default_auth_service = SpotifyAuthService()  # NOTE used for dependency injection

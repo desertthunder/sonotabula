@@ -6,89 +6,27 @@ TODO - Move the params class to the params module in the spotify service
 module.
 """
 
-import dataclasses
 import logging
 import os
 from http import HTTPMethod
 
 import httpx
-from httpx import URL, Request
 
-from api.libs.constants import REDIRECT_URI, SpotifyAPIEndpoints, SpotifyAPIScopes
+from api.libs.constants import SpotifyAPIEndpoints, SpotifyAPIScopes
 from api.libs.exceptions import MissingAPICredentialsError, SpotifyAPIError
-from api.models import AppUser
-
-from .responses import (
+from api.libs.params import SpotifyRedirectParams
+from api.libs.requests import (
+    SpotifyAccessTokenRequest,
+    SpotifyRedirectURI,
+    SpotifyRefreshTokenRequest,
+)
+from api.libs.responses import (
     SpotifyAccessTokenResponse,
     SpotifyCurrentUserDataResponse,
 )
+from api.models import AppUser
 
 logger = logging.getLogger("spotify_service")
-
-
-class RedirectURI:
-    """Redirect URI wrapper."""
-
-    _url: URL
-
-    def __init__(self, url: URL) -> None:
-        """Redirect URI Constructor."""
-        self._uri = url
-
-    @classmethod
-    def from_request(cls: type["RedirectURI"], request: Request) -> str:
-        """Create a RedirectURI from a Request."""
-        return cls(url=request.url).as_str
-
-    @property
-    def as_str(self) -> str:
-        """Return the URL as a string."""
-        return str(self._uri)
-
-
-class SpotifyRedirectURI(RedirectURI):
-    """Spotify Redirect URI wrapper."""
-
-    pass
-
-
-@dataclasses.dataclass
-class SpotifyRequest:
-    """Spotify Request Data base class."""
-
-    @property
-    def as_dict(self) -> dict:
-        """Return the dataclass as a dictionary."""
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class SpotifyAccessTokenRequest(SpotifyRequest):
-    """Spotify Access Token Request Data."""
-
-    code: str
-    redirect_uri: str = REDIRECT_URI
-    grant_type: str = "authorization_code"
-
-
-@dataclasses.dataclass
-class SpotifyRefreshTokenRequest(SpotifyRequest):
-    """Spotify Refresh Token Request Data."""
-
-    refresh_token: str
-    client_id: str
-    grant_type: str = "refresh_token"
-
-
-@dataclasses.dataclass
-class SpotifyRedirectParams(SpotifyRequest):
-    """Spotify Redirect URL Parameters."""
-
-    client_id: str
-    state: str
-    scope: str
-    response_type: str = "code"
-    redirect_uri: str = REDIRECT_URI
 
 
 class SpotifyAuthService:
