@@ -1,6 +1,7 @@
-import "./App.css";
-import "@fontsource-variable/noto-sans-jp";
+import "./styles/base.css";
+import "@fontsource-variable/inter";
 import "@fontsource-variable/rubik";
+import "@fontsource-variable/noto-sans-jp";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Signup, Dashboard } from "./pages";
@@ -42,7 +43,7 @@ persistQueryClient({
 export const BrowserRouter = createBrowserRouter([
   {
     path: Routes.Home,
-    element: <Signup />,
+    element: <Dashboard />,
   },
   {
     path: Routes.Login,

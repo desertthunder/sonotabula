@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#root {
+    @apply font-sans;
+}
+
+.main {
+    @apply flex flex-col h-full bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%;
+}
+
+/*          COMPONENTS         */
+.sidebar {
+    @apply fixed top-0 left-0 z-20 lg:flex;
+    @apply flex flex-col flex-shrink-0 w-64 h-full pt-8;
+    @apply font-medium duration-75 transition-all drop-shadow-xl;
+}
+
+.sidebar-link {
+    @apply flex items-center p-4;
+    @apply text-sm text-slate-900 bg-gray-200;
+    @apply transition duration-75 hover:bg-slate-400 hover:border-l-4 hover:border-l-primary
+}
+
+.sidebar-link.active {
+    @apply border-l-4 border-primary bg-slate-300 pointer-events-none;
+}
+
+.card {
+    @apply py-8 px-8 bg-gray-200 rounded-xl shadow-lg flex items-start justify-between mb-4;
+}

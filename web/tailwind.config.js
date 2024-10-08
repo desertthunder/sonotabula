@@ -4,8 +4,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        prose: 'Noto Sans JP, sans-serif',
-        headings: 'Rubik, sans-serif',
+        sans: '"Inter Variable", sans-serif',
+        prose: '"Noto Sans JP Variable", sans-serif',
+        headings: '"Rubik Variable", sans-serif',
       },
       colors: {
         /**
