@@ -28,5 +28,66 @@
 }
 
 .card {
-    @apply py-8 px-8 bg-gray-200 rounded-xl shadow-lg flex items-start justify-between mb-4;
+    @apply py-8 px-8 bg-gray-200 rounded-xl shadow-lg flex flex-col mb-4;
+}
+
+.card header {
+    @apply flex-shrink-0 mb-4;
+}
+
+.card header h1 {
+    @apply text-xl font-bold leading-none text-gray-900 sm:text-2xl;
+}
+
+.card header .kpi {
+    @apply text-lg font-medium;
+}
+
+.card header h2 {
+    @apply text-base font-light text-gray-500;
+}
+
+.card nav {
+    @apply flex space-x-4;
+}
+
+.card main {
+    @apply flex items-start flex-1 font-medium text-gray-700 overflow-y-auto;
+}
+
+.card table {
+    @apply flex-1 border-gray-400 rounded-full my-2 border-separate;
+}
+
+.card table thead {
+    @apply rounded-full overflow-hidden;
+}
+
+.card table thead th {
+    @apply bg-gray-300 p-4 text-left;
+}
+
+.card table thead {
+    @apply border-b border-b-gray-400 rounded-lg;
+}
+
+.card table tbody td {
+    @apply p-4;
+}
+
+.card nav {
+    @apply flex space-x-0;
+}
+
+.card nav button {
+    @apply text-sm m-0 font-medium text-gray-700 p-4 flex-1 hover:bg-slate-300;
+    @apply border-b-[3px] border-b-green-600;
+}
+
+.card nav button[disabled] {
+    @apply text-gray-400 cursor-not-allowed pointer-events-none ml-0;
+}
+
+.card nav button.active {
+    @apply bg-slate-300 border-b-4 border-primary;
 }
