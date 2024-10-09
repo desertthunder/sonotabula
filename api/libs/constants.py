@@ -39,6 +39,9 @@ class SpotifyAPIEndpoints(enum.StrEnum):
     UserPlaylists = "users/{user_id}/playlists"  # GET, POST
     Playlist = "playlists/{playlist_id}"  # GET, PUT, DELETE
     PlaylistTracks = "playlists/{playlist_id}/tracks"  # GET, POST, PUT, DELETE
+    SavedTracks = "me/tracks"  # GET, PUT, DELETE
+    SavedAlbums = "me/albums"  # GET, PUT, DELETE
+    SavedPlaylists = "me/playlists"  # GET, PUT, DELETE
 
     # Browse - Categories
     Categories = "browse/categories"
