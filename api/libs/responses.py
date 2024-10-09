@@ -133,6 +133,9 @@ class Playlist(Serializer):
     image_url: str
     num_tracks: int
     track_link: str
+    version: str
+    # public: bool = False
+    # shared: bool = False
     description: str | None = None
 
     @classmethod
@@ -142,6 +145,9 @@ class Playlist(Serializer):
             "spotify_id": "id",
             "name": "name",
             "description": "description",
+            "version": "snapshot_id",
+            # "public": "public",
+            # "shared": "collaborative",
             "owner_name": "owner.display_name",
             "owner_id": "owner.id",
             "link": "external_urls.spotify",

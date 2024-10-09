@@ -1,4 +1,4 @@
-.PHONY: devc help write server test shell worker flower
+.PHONY: devc help write server test shell worker redis-dev
 
 help:
 	@echo "Usage: make [target]"
@@ -6,8 +6,8 @@ help:
 	@echo "Targets:"
 	@echo "  server	- Start the application server"
 	@echo "  shell	- Start the Django shell"
+	@echo "  redis-dev	- Start the Redis server"
 	@echo "  worker	- Start the Celery worker"
-	@echo "  flower	 - Start the Celery Flower server"
 	@echo "  write	- Start the documentation server"
 	@echo "  devc	- Build the client dev server"
 	@echo "  test	- Run the test suite"
@@ -37,6 +37,6 @@ worker:
 	@echo "Starting Celery worker..."
 	@celery -A server worker -l INFO
 
-flower:
-	@echo "Starting Celery Flower server..."
-	@celery -A server flower
+redis-dev:
+	@echo "Starting Redis server..."
+	@docker run -d -p 6379:6379 --name redis-music redis:alpine

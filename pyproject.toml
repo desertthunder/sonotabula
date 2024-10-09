@@ -24,6 +24,7 @@ pydantic = "^2.9.2"
 celery = "^5.4.0"
 flower = "^2.0.1"
 django-celery-results = "^2.5.1"
+redis = "^5.1.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.7"

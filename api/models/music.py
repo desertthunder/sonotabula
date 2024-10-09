@@ -14,10 +14,22 @@ if typing.TYPE_CHECKING:
     from api.models.users import AppUser
 
 
+class TimestampedModel(models.Model):
+    """Base model for timestamped models."""
+
+    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Meta options."""
+
+        abstract = True
+
+
 class SpotifyModel(models.Model):
     """Base model for Spotify API models."""
 
-    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
     spotify_id = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255, blank=False)
 
@@ -27,10 +39,9 @@ class SpotifyModel(models.Model):
         abstract = True
 
 
-class Library(models.Model):
+class Library(TimestampedModel):
     """Library metadata model."""
 
-    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
     user_id: models.ForeignKey["AppUser", "Library"] = models.ForeignKey(
         "AppUser", related_name="libraries", on_delete=models.CASCADE
     )
@@ -44,7 +55,7 @@ class Library(models.Model):
     track_ids = models.ManyToManyField("api.Track", related_name="libraries")
 
 
-class Playlist(SpotifyModel):
+class Playlist(SpotifyModel, TimestampedModel):
     """Spotify playlist model.
 
     Required fields for creation:
@@ -53,15 +64,20 @@ class Playlist(SpotifyModel):
         - owner_id
     """
 
+    version = models.CharField(max_length=255, blank=True)  # snapshot_id
+    image_url = models.URLField(blank=True)
+    public = models.BooleanField(null=True)
+    shared = models.BooleanField(null=True)  # collaborative
+    description = models.TextField(blank=True)
+
     user_id = models.ForeignKey(
         "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )
     owner_id = models.CharField(max_length=255, null=False)
-    description = models.TextField(blank=True)
     track_ids = models.ManyToManyField("api.Track", related_name="playlists")
 
 
-class Track(SpotifyModel):
+class Track(SpotifyModel, TimestampedModel):
     """Track model.
 
     Required fields for creation:
@@ -74,7 +90,7 @@ class Track(SpotifyModel):
     playlist_ids = models.ManyToManyField(Playlist, related_name="tracks")
 
 
-class Album(SpotifyModel):
+class Album(SpotifyModel, TimestampedModel):
     """Album model.
 
     Required fields for creation:
@@ -92,7 +108,7 @@ class Album(SpotifyModel):
     genre_ids = models.ManyToManyField("api.Genre", related_name="albums")
 
 
-class Artist(SpotifyModel):
+class Artist(SpotifyModel, TimestampedModel):
     """Artist model.
 
     Required fields for creation:
@@ -107,14 +123,13 @@ class Artist(SpotifyModel):
     genre_ids = models.ManyToManyField("api.Genre", related_name="artists")
 
 
-class Genre(models.Model):
+class Genre(TimestampedModel):
     """Genre model.
 
     Required fields for creation:
         - name
     """
 
-    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
     name = models.CharField(max_length=255, unique=True)
 
     artist_ids = models.ManyToManyField(Artist, related_name="genres")
