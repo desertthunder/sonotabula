@@ -37,13 +37,33 @@ class SpotifyAccessTokenResponse(SpotifyResponse):
         self.token_expiry = timezone.now() + datetime.timedelta(seconds=token_expiry)
 
 
-@dataclasses.dataclass
-class SpotifyCurrentUserDataResponse(SpotifyResponse):
+class SpotifyCurrentUserDataResponse(BaseModel):
     """Spotify Current User Data."""
 
     display_name: str
     email: str
     id: str
+
+
+def map_response(response: dict, mappings: dict) -> dict:
+    """Map JSON data to class properties."""
+    data = {}
+
+    for key, value in mappings.items():
+        path = value.split(".")
+        prop = response.copy()
+
+        for p in path:
+            if p.isdigit() and isinstance(prop, list):
+                i = int(p)
+                prop = prop[i]
+            elif isinstance(prop, dict) and prop.get(p):
+                prop = prop.get(p)  # type: ignore
+
+        if prop is not None or prop == response:
+            data[key] = prop
+
+    return data
 
 
 class Serializer(BaseModel):
@@ -57,19 +77,7 @@ class Serializer(BaseModel):
     @classmethod
     def get(cls: type["Serializer"], response: dict) -> "Serializer":
         """Create a Serializer object from JSON data."""
-        data: dict = {}
-
-        for key, value in cls.mappings().items():
-            path = value.split(".")
-            prop: dict | str | list = response.copy()
-
-            for p in path:
-                if p.isdigit() and isinstance(prop, list):
-                    i = int(p)
-                    prop = prop[i]
-                elif isinstance(prop, dict) and prop.get(p):
-                    prop = prop.get(p)  # type: ignore
-            data[key] = prop
+        data: dict = map_response(response, cls.mappings())
 
         return cls(**data)
 
@@ -117,12 +125,13 @@ class Playlist(Serializer):
 
     spotify_id: str
     name: str
-    description: str
     owner_name: str
     owner_id: str
     link: str
     image_url: str
     num_tracks: int
+    track_link: str
+    description: str | None = None
 
     @classmethod
     def mappings(cls: type["Playlist"]) -> dict[str, str]:
@@ -136,6 +145,7 @@ class Playlist(Serializer):
             "link": "external_urls.spotify",
             "image_url": "images.0.url",
             "num_tracks": "tracks.total",
+            "track_link": "tracks.href",
         }
 
 
