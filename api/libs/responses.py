@@ -59,8 +59,10 @@ def map_response(response: dict, mappings: dict) -> dict:
                 prop = prop[i]
             elif isinstance(prop, dict) and prop.get(p):
                 prop = prop.get(p)  # type: ignore
+        if isinstance(prop, dict):
+            prop = ""  # type: ignore
 
-        if prop is not None or prop == response:
+        if prop is not None:
             data[key] = prop
 
     return data
