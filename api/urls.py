@@ -9,6 +9,7 @@ from api.views import (
     LibraryPlaylistsView,
     LibraryTracksView,
     LoginView,
+    PlaylistAnalysisView,
     RecentlyPlayedView,
     ValidateView,
 )
@@ -22,4 +23,9 @@ urlpatterns = [
     path("library/albums", LibraryAlbumsView.as_view(), name="library-albums"),
     path("library/artists", LibraryArtistsView.as_view(), name="library-artists"),
     path("library/tracks", LibraryTracksView.as_view(), name="library-tracks"),
+    path(
+        "analyze/playlist/<str:playlist_id>",
+        PlaylistAnalysisView.as_view(),
+        name="playlist-analysis",
+    ),
 ]
