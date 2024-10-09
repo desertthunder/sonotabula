@@ -102,6 +102,9 @@ DATABASES = {
         "PASSWORD": os.environ.get("PGPASSWORD", "password"),
         "HOST": os.environ.get("PGHOST", "localhost"),
         "PORT": os.environ.get("PGPORT", 5432),
+        "TEST": {
+            "NAME": os.environ.get("PGDATABASE", "music_api_db_test"),
+        },
     }
 }
 

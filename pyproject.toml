@@ -20,6 +20,7 @@ django-cors-headers = "^4.4.0"
 pyjwt = "^2.9.0"
 ipython = "^8.28.0"
 ipdb = "^0.13.13"
+pydantic = "^2.9.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.7"

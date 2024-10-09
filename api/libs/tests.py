@@ -1,16 +1,11 @@
-"""Spotify Service tests."""
-
-import logging
-
 from django.test import TestCase
 
+from api.libs.responses import LastPlayed
 from api.models.users import AppUser
 from api.services.spotify import SpotifyAuthService, SpotifyDataService
 
-logging.disable(logging.ERROR)
 
-
-class SpotifyDataServiceTestCase(TestCase):
+class SpotifyResponsesTestCase(TestCase):
     def setUp(self) -> None:
         self.user = AppUser.objects.get(is_staff=True)
         self.service = SpotifyDataService()
@@ -22,11 +17,12 @@ class SpotifyDataServiceTestCase(TestCase):
         if not success:
             raise Exception("Failed to refresh access token.")
 
-        if user:
-            self.user = user
+        self.user = user or self.user
 
-    def test_get_last_played(self) -> None:
+    def test_deserialize_last_played(self) -> None:
         r = self.service.last_played(self.user)
 
-        self.assertIn("items", r.keys())
-        self.assertIn("track", r["items"][0].keys())
+        last_played = LastPlayed.from_json(r)
+
+        self.assertIsInstance(last_played, LastPlayed)
+        self.assertIsNotNone(last_played.album_name)

@@ -170,7 +170,11 @@ class ValidateView(views.APIView):
             logger.debug("Token expired. Refreshing token.")
 
             try:
-                success, user = self.auth_service.refresh_access_token(user=user)  # type: ignore
+                success, updated_user = self.auth_service.refresh_access_token(
+                    user.refresh_token
+                )
+
+                user = updated_user or user
 
                 if not success:
                     return HttpResponseBadRequest("Unable to refresh token.")

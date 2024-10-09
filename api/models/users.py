@@ -74,7 +74,6 @@ class AppUser(TokenSetMixin, AbstractUser):
         self.token_expiry = token_set.token_expiry
 
         self.save()
-        self.refresh_from_db()
 
         logger.debug(f"Updated token set for user: {self.public_id}")
 

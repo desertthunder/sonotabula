@@ -140,16 +140,8 @@ class SpotifyAuthService:
 
         return SpotifyRedirectURI.from_request(req)
 
-    def refresh_access_token(
-        self, refresh_token: str | None = None, user: AppUser | None = None
-    ) -> tuple[bool, AppUser | None]:
+    def refresh_access_token(self, refresh_token: str) -> tuple[bool, AppUser | None]:
         """Refresh the access token and update the user's token set."""
-        if not user and not refresh_token:
-            return False, None
-
-        if not refresh_token and user:
-            refresh_token = user.refresh_token
-
         try:
             user = AppUser.objects.get(refresh_token=refresh_token)
         except AppUser.DoesNotExist:
@@ -168,7 +160,6 @@ class SpotifyAuthService:
                 raise SpotifyAPIError(response.text)
 
             resp = response.json()
-
             logger.debug(f"Response: {resp}")
 
             if not resp.get("access_token"):
@@ -186,6 +177,7 @@ class SpotifyAuthService:
         )
 
         user.update_token_set(token_set)
+        user.refresh_from_db()
 
         return True, user
 
@@ -196,6 +188,30 @@ class SpotifyDataService:
     def now_playing(self) -> None:
         """Get the user's currently playing track."""
         pass
+
+    def last_played(self, user: "AppUser") -> dict:
+        """Get the user's last played track."""
+        with httpx.Client(base_url=SpotifyAPIEndpoints.BASE_URL) as client:
+            response = client.get(
+                url=SpotifyAPIEndpoints.RecentlyPlayed,
+                headers={"Authorization": f"Bearer {user.access_token}"},
+                params={"limit": 1},
+            )
+
+            if response.is_error:
+                error = response.json().get("error")
+
+                logger.error(f"{error.get("status")} Error: {error.get("message")}")
+
+                raise SpotifyAPIError(response.text)
+
+            resp = response.json()
+
+            logger.debug(f"Response: {resp}")
+
+            client.close()
+
+        return resp
 
     def recently_played(self) -> None:
         """Get the user's recently played tracks."""
