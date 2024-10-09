@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "api",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -158,3 +159,10 @@ SPOTIFY_BASE_URL = "https://api.spotify.com/v1/"
 REST_FRAMEWORK = {
     "DEFAULT_METADATA_CLASS": "rest_framework.metadata.SimpleMetadata",
 }
+
+# Celery Configuration Options
+CELERY_TIMEZONE = "America/Chicago"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_CACHE_BACKEND = "django-cache"

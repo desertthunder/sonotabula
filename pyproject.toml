@@ -21,6 +21,9 @@ pyjwt = "^2.9.0"
 ipython = "^8.28.0"
 ipdb = "^0.13.13"
 pydantic = "^2.9.2"
+celery = "^5.4.0"
+flower = "^2.0.1"
+django-celery-results = "^2.5.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.7"
