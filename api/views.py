@@ -22,7 +22,6 @@ from api.libs.requests import RedirectURI
 from api.libs.responses import (
     Album,
     Artist,
-    LastPlayed,
     Playlist,
     RecentlyPlayed,
     Track,
@@ -239,7 +238,7 @@ class LastPlayedView(SpotifyDataView):
         """
         app_user = self.get_user(request)
         data = self.data_service.last_played(app_user)
-        last_played = LastPlayed.from_json(data[0])
+        last_played = RecentlyPlayed.get(data[0])
 
         return JsonResponse(data=last_played.model_dump())
 
@@ -258,7 +257,7 @@ class RecentlyPlayedView(SpotifyDataView):
         limit = request.query_params.get("limit", 5)
         app_user = self.get_user(request)
         data = self.data_service.recently_played(app_user, int(limit))
-        recently_played = RecentlyPlayed.from_json_collection(data)
+        recently_played = RecentlyPlayed.list(data)
 
         return JsonResponse({"data": [rp.model_dump() for rp in recently_played]})
 
