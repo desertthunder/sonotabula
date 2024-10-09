@@ -189,13 +189,13 @@ class SpotifyDataService:
         """Get the user's currently playing track."""
         pass
 
-    def last_played(self, user: "AppUser") -> dict:
+    def recently_played(self, user: "AppUser", items: int = 10) -> list[dict]:
         """Get the user's last played track."""
         with httpx.Client(base_url=SpotifyAPIEndpoints.BASE_URL) as client:
             response = client.get(
                 url=SpotifyAPIEndpoints.RecentlyPlayed,
                 headers={"Authorization": f"Bearer {user.access_token}"},
-                params={"limit": 1},
+                params={"limit": items},
             )
 
             if response.is_error:
@@ -211,11 +211,13 @@ class SpotifyDataService:
 
             client.close()
 
-        return resp
+        tracks = resp.get("items") or []
 
-    def recently_played(self) -> None:
-        """Get the user's recently played tracks."""
-        pass
+        return tracks
+
+    def last_played(self, user: "AppUser") -> list[dict]:
+        """Get the user's last played track."""
+        return self.recently_played(user, 1)
 
     def top_tracks(self) -> None:
         """Get the user's top tracks."""

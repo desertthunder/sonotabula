@@ -1,6 +1,7 @@
 """Spotify Service tests."""
 
 import logging
+from secrets import randbelow
 
 from django.test import TestCase
 
@@ -28,5 +29,13 @@ class SpotifyDataServiceTestCase(TestCase):
     def test_get_last_played(self) -> None:
         r = self.service.last_played(self.user)
 
-        self.assertIn("items", r.keys())
-        self.assertIn("track", r["items"][0].keys())
+        self.assertIsInstance(r, list)
+        self.assertEqual(len(r), 1)
+        self.assertIsInstance(r[randbelow(len(r))], dict)
+
+    def test_get_recently_played(self) -> None:
+        r = self.service.recently_played(self.user, 2)
+
+        self.assertIsInstance(r, list)
+        self.assertEqual(len(r), 2)
+        self.assertIsInstance(r[randbelow(len(r))], dict)

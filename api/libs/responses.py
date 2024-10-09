@@ -2,6 +2,7 @@
 
 import dataclasses
 import datetime
+import typing
 
 from django.utils import timezone
 from pydantic import BaseModel
@@ -77,21 +78,14 @@ class LastPlayed(BaseModel):
     @classmethod
     def from_json(cls: type["LastPlayed"], response: dict) -> "LastPlayed":
         """Create a LastPlayed object from JSON data."""
-        resp: dict = {}
+        data: dict = {}
 
-        data = response.get("items")
-
-        if not data:
-            raise ValueError("Items not found in response.")
-
-        if not data[0].get("track"):
-            raise ValueError("Track not found in response.")
-
-        data = data[0]
+        if not response:
+            return cls(**response)  # We're relying on BaseModel to raise an error here.
 
         for key, value in cls.get_mapping().items():
             path = value.split(".")
-            prop: dict | str | list = data
+            prop: dict | str | list = response.copy()
 
             for p in path:
                 if p.isdigit() and isinstance(prop, list):
@@ -100,6 +94,27 @@ class LastPlayed(BaseModel):
                 elif isinstance(prop, dict) and prop.get(p):
                     prop = prop.get(p)  # type: ignore
 
-            resp[key] = prop
+            data[key] = prop
 
-        return cls(**resp)
+        return cls(**data)
+
+    @classmethod
+    def serialize_from_json(cls: type["LastPlayed"], response: dict) -> dict:
+        """Serialize JSON data to a dictionary."""
+        obj = cls.from_json(response)
+        return obj.model_dump()
+
+
+class RecentlyPlayed(LastPlayed):
+    """Recently played API response data.
+
+    The service uses the same endpoint as the LastPlayed response.
+    """
+
+    @classmethod
+    def from_json_collection(
+        cls: type["RecentlyPlayed"], response: list[dict]
+    ) -> typing.Iterator["RecentlyPlayed"]:
+        """Create a RecentlyPlayed object from JSON data."""
+        for item in response:
+            yield cls(**cls.serialize_from_json(item))
