@@ -13,17 +13,20 @@ from django.http import (
 )
 from django.shortcuts import redirect
 from rest_framework import views
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request as DRFRequest
 
 from api.libs.constants import WEB_APP_URL, SpotifyAPIStates
 from api.libs.exceptions import SpotifyAPIError
 from api.libs.requests import RedirectURI
+from api.libs.responses import LastPlayed, RecentlyPlayed
 from api.models import AppUser
-from api.models.permissions import Token
-from api.services.spotify import SpotifyAuthService
+from api.models.permissions import SpotifyAuth, Token
+from api.services.spotify import SpotifyAuthService, SpotifyDataService
 from server import settings
 
 default_auth_service = SpotifyAuthService()  # NOTE used for dependency injection
+default_data_service = SpotifyDataService()  # NOTE used for dependency injection
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -142,7 +145,6 @@ class ValidateView(views.APIView):
             return HttpResponseForbidden()
 
         tag, token = token.split(" ")
-
         if tag.lower() != "bearer":
             return HttpResponseForbidden()
 
@@ -190,3 +192,77 @@ class ValidateView(views.APIView):
                 return HttpResponseBadRequest("Unable to refresh token.")
 
         return JsonResponse(data={"message": "Valid token.", "token": token})
+
+
+class LastPlayedView(views.APIView):
+    """Get the last played track.
+
+    Endpoint: GET /api/playback/last
+    """
+
+    authentication_classes = [
+        SpotifyAuth,
+    ]
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    data_service: SpotifyDataService
+
+    def __init__(
+        self, data_service: SpotifyDataService = default_data_service, *args, **kwargs
+    ) -> None:
+        """Validate View Constructor."""
+        self.data_service = data_service
+
+        super().__init__(*args, **kwargs)
+
+    def get(self, request: DRFRequest) -> HttpResponse:
+        """Get the last played track.
+
+        Endpoint: GET /api/playback/last
+        """
+        app_user = AppUser.objects.get(pk=request.user.pk)
+
+        data = self.data_service.last_played(app_user)
+
+        last_played = LastPlayed.from_json(data[0])
+
+        return JsonResponse(data=last_played.model_dump())
+
+
+class RecentlyPlayedView(views.APIView):
+    """Get recently played tracks.
+
+    Endpoint: GET /api/playback/recent
+    """
+
+    authentication_classes = [
+        SpotifyAuth,
+    ]
+    permission_classes = [
+        IsAuthenticated,
+    ]
+
+    data_service: SpotifyDataService
+
+    def __init__(
+        self, data_service: SpotifyDataService = default_data_service, *args, **kwargs
+    ) -> None:
+        """Validate View Constructor."""
+        self.data_service = data_service
+
+        super().__init__(*args, **kwargs)
+
+    def get(self, request: DRFRequest) -> HttpResponse:
+        """Get the last played track.
+
+        Endpoint: GET /api/playback/last
+        """
+        limit = request.query_params.get("limit", 5)
+        app_user = AppUser.objects.get(pk=request.user.pk)
+
+        data = self.data_service.recently_played(app_user, int(limit))
+        recently_played = RecentlyPlayed.from_json_collection(data)
+
+        return JsonResponse({"data": [rp.model_dump() for rp in recently_played]})

@@ -20,13 +20,21 @@ class SpotifyAuth(BaseAuthentication):
 
     def authenticate(self, request: Request) -> tuple[AppUser, str]:
         """Authenticate the request and return a two-tuple of (user, token)."""
-        if request.user.is_authenticated:
-            return request.user, request.user.access_token
+        if "Authorization" in request.headers:
+            user_email = self.authenticate_header(request)
+            user = AppUser.objects.get(email=user_email)
+
+            return user, user.access_token
 
         raise AuthenticationFailed("Authentication credentials were not provided.")
 
     def authenticate_header(self, request: Request) -> str | None:
         """Decodes the JWT token and returns the payload."""
+        if "Authorization" in request.headers:
+            token = request.headers["Authorization"].split(" ")[1]
+            user_email = Token.decode_jwt(token)
+
+            return user_email
         raise AuthenticationFailed("Authentication credentials were not provided.")
 
 
@@ -76,3 +84,9 @@ class Token:
             email=payload.get("email"),
             spotify_access_token=payload.get("spotify_access_token"),
         )
+
+    @classmethod  # TODO: This needs to change
+    def decode_jwt(cls: type["Token"], jwt_token: str) -> str:
+        """Create a Token from a token string."""
+        payload = jwt.decode(jwt_token, cls.secret, algorithms=[cls.algorithm])
+        return payload.get("email")

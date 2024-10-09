@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 enum CardTitles {
   TopTracks = "Top Tracks",
@@ -149,15 +149,26 @@ function useQueryParams(): Record<string, string> {
 }
 
 export default function Dashboard() {
-  const params = useQueryParams();
   const navigate = useNavigate();
+  const params = useQueryParams();
+  const queryClient = useQueryClient();
+  const queryData = queryClient.getQueryData<{
+    message: string;
+    token: string;
+  }>(["token"]);
+
+  const token = React.useMemo(() => {
+    if (params.token) {
+      return params.token;
+    } else {
+      return queryData?.token ?? null;
+    }
+  }, [params.token, queryData]);
 
   const query = useQuery({
     queryKey: ["token"],
     queryFn: async () => {
       console.debug("Checking token validity");
-
-      const token = params.token || localStorage.getItem("token");
 
       if (!token) {
         throw new Error("Token not found");
@@ -174,7 +185,9 @@ export default function Dashboard() {
         throw new Error("Token invalid");
       }
 
-      return response.json();
+      const data: { message: string; token: string } = await response.json();
+
+      return data;
     },
     refetchInterval: 5 * 60 * 1000, // 5 minutes
   });

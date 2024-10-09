@@ -42,8 +42,9 @@ persistQueryClient({
 
 export const BrowserRouter = createBrowserRouter([
   {
+    // TODO: Add a home page
     path: Routes.Home,
-    element: <Dashboard />,
+    element: <Signup />,
   },
   {
     path: Routes.Login,
