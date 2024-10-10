@@ -68,15 +68,18 @@ class AppUser(TokenSetMixin, AbstractUser):
 
     objects: AppUserManager = AppUserManager()  # type: ignore
 
-    def update_token_set(self, token_set: AccessToken) -> None:
+    def update_token_set(self, token_set: AccessToken) -> "AppUser":
         """Update the user's token set."""
         self.access_token = token_set.access_token
         self.refresh_token = token_set.refresh_token
         self.token_expiry = token_set.token_expiry
 
-        self.save()
-
         logger.debug(f"Updated token set for user: {self.public_id}")
+
+        self.save(update_fields=["access_token", "refresh_token", "token_expiry"])
+        self.refresh_from_db()
+
+        return self
 
     class Meta(TypedModelMeta):
         """Meta class for app user."""

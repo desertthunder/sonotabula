@@ -14,7 +14,7 @@ from django.http import (
 from rest_framework.request import Request as DRFRequest
 
 from api.serializers import playback
-from api.views.base import SpotifyDataView
+from api.views.base import SpotifyPlaybackView
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -25,27 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class LastPlayedView(SpotifyDataView):
-    """Get the last played track.
-
-    Endpoint: GET /api/playback/last
-    """
-
-    def get(self, request: DRFRequest) -> HttpResponse:
-        """Get the last played track.
-
-        Endpoint: GET /api/playback/last
-        """
-        app_user = self.get_user(request)
-        response = self.data_service.recently_played(app_user, 1)
-
-        for data in response:
-            last_played = playback.RecentlyPlayed.get(data)
-
-        return JsonResponse({"data": last_played.model_dump()})
-
-
-class RecentlyPlayedView(SpotifyDataView):
+class RecentlyPlayedView(SpotifyPlaybackView):
     """Get recently played tracks.
 
     Endpoint: GET /api/playback/recent
@@ -58,8 +38,28 @@ class RecentlyPlayedView(SpotifyDataView):
         """
         limit = request.query_params.get("limit", 5)
         app_user = self.get_user(request)
-        iterator = self.data_service.recently_played(app_user, int(limit))
+        iterator = self.playback_service.recently_played(app_user, int(limit))
         data = list(iterator)
         recently_played = playback.RecentlyPlayed.list(data)
 
         return JsonResponse({"data": [track.model_dump() for track in recently_played]})
+
+
+class LastPlayedView(SpotifyPlaybackView):
+    """Get the last played track.
+
+    Endpoint: GET /api/playback/last
+    """
+
+    def get(self, request: DRFRequest) -> HttpResponse:
+        """Get the last played track.
+
+        Endpoint: GET /api/playback/last
+        """
+        app_user = self.get_user(request)
+        response = self.playback_service.recently_played(app_user, 1)
+
+        for data in response:
+            last_played = playback.RecentlyPlayed.get(data)
+
+        return JsonResponse({"data": last_played.model_dump()})

@@ -141,29 +141,33 @@ class SpotifyAuthService:
 
         request_data = SpotifyRefreshTokenRequest(refresh_token, self.client_id)  # type: ignore
 
-        with httpx.Client(
-            base_url=SpotifyAPIEndpoints.Access_Token, auth=self.auth()
-        ) as client:
-            response = client.post(url="", data=request_data.as_dict)
+        response = httpx.post(
+            url=SpotifyAPIEndpoints.Access_Token,
+            data=request_data.as_dict,
+            auth=self.auth(),
+        )
 
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
+        if response.is_error:
+            logger.error(f"Error: {response.text}")
 
-                raise SpotifyAPIError(response.text)
+            raise SpotifyAPIError(response.text)
 
-            resp = response.json()
-            logger.debug(f"Response: {resp}")
+        resp = response.json()
 
-            if not resp.get("access_token"):
-                return False, None
+        logger.debug(f"Response: {resp.keys()}")
 
-            client.close()
+        if not resp.get("access_token"):
+            return False, None
 
-        logger.debug(f"Access token response: {resp}")
+        logger.debug(f"Access token response: {resp.get('access_token')[1:10]}...")
 
-        token_set = AccessToken.get(resp)
+        token_set = AccessToken.get(
+            {
+                **resp,
+                "refresh_token": resp.get("refresh_token", refresh_token),
+            }
+        )
 
-        user.update_token_set(token_set)
-        user.refresh_from_db()
+        user = user.update_token_set(token_set)
 
         return True, user
