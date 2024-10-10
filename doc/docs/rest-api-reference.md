@@ -1,11 +1,8 @@
-# REST API Reference
+---
+sidebar_position: 4
+title: REST API
+---
 
-## Library
+# Endpoint Reference
 
-- Base: `/api/library`
-
-- Playlists:
-    - Base: `/api/library/playlists`
-    - Params:
-        - `limit` (integer)
-        - `sync` (boolean)
+Under construction. 🚧

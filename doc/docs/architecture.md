@@ -1,8 +1,34 @@
+---
+sidebar_position: 2
+---
+
 # Architecture
 
-## Playback
+## Data Model
 
-## Library
+Under construction. 🚧
+
+## API Structure
+
+Under construction. 🚧
+
+## Background Tasks
+
+Under construction. 🚧
+
+## Web
+
+Under construction. 🚧
+
+## Mobile
+
+Under construction. 🚧
+
+## Playback API
+
+Playback endpoints are all synchronous.
+
+## Library API
 
 Library endpoints can occur either synchronously or asynchronously.
     - **Asynchronous endpoints** return the newest data from the API (but still update the
@@ -11,34 +37,21 @@ Library endpoints can occur either synchronously or asynchronously.
     - This is based on the `sync` param.
 These endpoints also *only* return lists.
 
+### Endpoints
+
 1. Playlists
-
-    - Fetch library playlists
-        - Complete the request for the maximum allowed (50) if synchronous
-        - Just return the limit if it is an async call.
-        - *Main Task*: Fetch *all* playlists, update the record if the snapshot ID has changed.
-            - Return type: None
-            - For each task, dispatch the track API call after persisting the playlist
-            to the database.
-        - *Task 2*: Fetch the playlist's tracks
-            - Dispatch track analysis task
-        - *Task 3*: Fetch track metadata
-            - Fetch track features
-            - Persist metadata, then track features
-            - Create an analysis record
-
 2. Tracks
-
 3. Artists
-
 4. Albums
 
 ## Analysis
 
-- Playlist Analysis
-    - Checks for an analysis record
-    - If it doesn't exist, create one.
+1. Track
+2. Playlist
 
 ## Database
 
-These are "expanded" requests for single records
+1. Playlist
+2. Track
+3. Artist
+4. Album
