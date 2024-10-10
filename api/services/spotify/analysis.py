@@ -5,7 +5,7 @@
     - Discerning between episode and tracks
     - Caching?
 
-TODO: Move models to libs
+TODO: This needs to be reorganized.
 """
 
 import logging
@@ -24,7 +24,6 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger("spotify_analysis_service")
 
 
-# TODO: Remove
 class Track(BaseModel):
     """Proposed final playlist track."""
 
@@ -37,7 +36,6 @@ class Track(BaseModel):
     image_url: str
 
 
-# TODO: Remove
 class Playlist(BaseModel):
     """Proposed final playlist."""
 
@@ -59,7 +57,6 @@ class Playlist(BaseModel):
     tracks: list["Track"]
 
 
-# TODO: Remove
 class Owner(BaseModel):
     """Deserialized Spotify playlist owner.
 
@@ -74,7 +71,6 @@ class Owner(BaseModel):
     display_name: str | None = None
 
 
-# TODO: Remove this model and use the one from the models module
 class TrackFeatures(BaseModel):
     """Deserialized Spotify track features."""
 
@@ -93,7 +89,6 @@ class TrackFeatures(BaseModel):
     valence: float
 
 
-# TODO: Remove this model and use the one from the models module
 class Artist(BaseModel):
     """Artist model.
 
@@ -235,6 +230,46 @@ class SpotifyAnalysisService:
             client.close()
 
             return resp
+
+    def get_track_features_batch(
+        self,
+        track_ids: list[str],
+        user: "AppUser",
+    ) -> list[dict]:
+        """Get audio features for a batch of tracks."""
+        with httpx.Client(base_url=settings.SPOTIFY_BASE_URL) as client:
+            response = client.get(
+                url="/audio-features",
+                params={"ids": ",".join(track_ids)},
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            resp = response.json()
+
+            client.close()
+
+            return resp.get("audio_features", [])
+
+    def get_artist_batch(self, artist_ids: list[str], user: "AppUser") -> list[dict]:
+        """Get artist information for a batch of artists."""
+        with httpx.Client(base_url=settings.SPOTIFY_BASE_URL) as client:
+            response = client.get(
+                url="/artists",
+                params={"ids": ",".join(artist_ids)},
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            resp = response.json()
+
+            client.close()
+
+            return resp.get("artists", [])
 
     def get_playlist_owner(self, user_id: str, user: "AppUser") -> dict:
         """Get owner profile."""

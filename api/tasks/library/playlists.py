@@ -1,4 +1,12 @@
-"""Asynchronous playlist tasks."""
+"""Asynchronous playlist tasks.
+
+Parking Lot
+- TODO: Batch requests
+    - Audio Features: 100 tracks per request
+    - Artists: 50 artists per request
+    - Tracks: 50 tracks per request
+- TODO: tests
+"""
 
 import datetime
 import time
@@ -6,7 +14,7 @@ import time
 from celery import shared_task
 
 from api.models.analysis import Analysis, TrackFeatures
-from api.models.music import Album, Artist, Genre, Library, Playlist, Track
+from api.models.music import Album, Artist, Genre, Playlist, Track
 from api.models.serializers import (
     Artist as ArtistSerializer,
 )
@@ -22,35 +30,6 @@ from api.models.users import AppUser
 from api.services.spotify import SpotifyAnalysisService
 
 analysis_service = SpotifyAnalysisService()
-
-
-@shared_task  # NOTE NOT REGISTERED
-def post_sync_user_library(user_pk: int) -> None:
-    """Sync user's library with Spotify API."""
-    user = AppUser.objects.get(pk=user_pk)
-
-    try:
-        analysis = Analysis.objects.filter(user_id=user).latest("created_at")
-        playlist_pk = analysis.playlist_id.pk
-    except Analysis.DoesNotExist:
-        return
-
-    playlist = Playlist.objects.get(pk=playlist_pk)
-    tracks = Track.objects.filter(playlist_ids=playlist)
-    album_ids = Track.objects.filter(playlist_ids=playlist).values_list(
-        "album_id", flat=True
-    )
-    albums = Album.objects.filter(pk__in=album_ids)
-    artists = Artist.objects.filter(album_ids__in=albums)
-
-    library, _ = Library.objects.get_or_create(user_id=user)
-
-    library.playlist_ids.add(playlist)
-    library.track_ids.add(*tracks)
-    library.artist_ids.add(*artists)
-    library.album_ids.add(*albums)
-
-    library.save()
 
 
 @shared_task
