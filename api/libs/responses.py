@@ -1,13 +1,12 @@
 """Response data classes for the Spotify API."""
 
 import dataclasses
-import datetime
 import typing
 
-from django.utils import timezone
 from pydantic import BaseModel
 
 
+# TODO: Remove
 @dataclasses.dataclass
 class SpotifyResponse:
     """Spotify Response Data base class."""
@@ -18,33 +17,7 @@ class SpotifyResponse:
         return dataclasses.asdict(self)
 
 
-@dataclasses.dataclass
-class SpotifyAccessTokenResponse(SpotifyResponse):
-    """Spotify Access Token Response Data."""
-
-    access_token: str
-    refresh_token: str
-    token_type: str
-    token_expiry: datetime.datetime
-
-    def __init__(
-        self, access_token: str, refresh_token: str, token_type: str, token_expiry: int
-    ) -> None:
-        """Spotify Access Token Response."""
-        self.access_token = access_token
-        self.refresh_token = refresh_token
-        self.token_type = token_type
-        self.token_expiry = timezone.now() + datetime.timedelta(seconds=token_expiry)
-
-
-class SpotifyCurrentUserDataResponse(BaseModel):
-    """Spotify Current User Data."""
-
-    display_name: str
-    email: str
-    id: str
-
-
+# TODO: Remove
 def map_response(response: dict, mappings: dict) -> dict:
     """Map JSON data to class properties."""
     data = {}
@@ -68,6 +41,7 @@ def map_response(response: dict, mappings: dict) -> dict:
     return data
 
 
+# TODO: Remove
 class Serializer(BaseModel):
     """Base class for serializing data."""
 
@@ -92,6 +66,7 @@ class Serializer(BaseModel):
             yield cls.get(item)
 
 
+# TODO: Remove
 class RecentlyPlayed(Serializer):
     """Last played API response data."""
 
@@ -122,6 +97,7 @@ class RecentlyPlayed(Serializer):
         }
 
 
+# TODO: Remove
 class Playlist(Serializer):
     """Playlist API response data."""
 
@@ -157,6 +133,7 @@ class Playlist(Serializer):
         }
 
 
+# TODO: Remove
 class Album(Serializer):
     """Album API response data."""
 
@@ -182,6 +159,7 @@ class Album(Serializer):
         }
 
 
+# TODO: Remove
 class Track(Serializer):
     """Track API response data."""
 
@@ -209,6 +187,7 @@ class Track(Serializer):
         }
 
 
+# TODO: Remove
 class Artist(Serializer):
     """Artist API response data."""
 
