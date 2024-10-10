@@ -46,13 +46,10 @@ class Library(TimestampedModel):
         "AppUser", related_name="libraries", on_delete=models.CASCADE
     )
 
-    playlist_ids = models.ManyToManyField("api.Playlist", related_name="libraries")
-
-    artist_ids = models.ManyToManyField("api.Artist", related_name="libraries")
-
-    album_ids = models.ManyToManyField("api.Album", related_name="libraries")
-
-    track_ids = models.ManyToManyField("api.Track", related_name="libraries")
+    playlists = models.ManyToManyField("api.Playlist", related_name="libraries")
+    artists = models.ManyToManyField("api.Artist", related_name="libraries")
+    albums = models.ManyToManyField("api.Album", related_name="libraries")
+    tracks = models.ManyToManyField("api.Track", related_name="libraries")
 
 
 class Playlist(SpotifyModel, TimestampedModel):
@@ -64,17 +61,18 @@ class Playlist(SpotifyModel, TimestampedModel):
         - owner_id
     """
 
-    version = models.CharField(max_length=255, blank=True)  # snapshot_id
-    image_url = models.URLField(blank=True)
-    public = models.BooleanField(null=True)
-    shared = models.BooleanField(null=True)  # collaborative
+    version = models.CharField(max_length=255, blank=True, null=True)  # snapshot_id
+    image_url = models.URLField(blank=True, null=True)
+    public = models.BooleanField(null=True, blank=True)
+    shared = models.BooleanField(null=True, blank=True)  # collaborative
     description = models.TextField(blank=True, null=True)
 
     user_id = models.ForeignKey(
         "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )
-    owner_id = models.CharField(max_length=255, null=False)
-    track_ids = models.ManyToManyField("api.Track", related_name="playlists")
+    owner_id = models.CharField(max_length=255, null=False, blank=False)
+
+    tracks = models.ManyToManyField("api.Track", related_name="playlists")
 
 
 class Track(SpotifyModel, TimestampedModel):
@@ -86,7 +84,6 @@ class Track(SpotifyModel, TimestampedModel):
     """
 
     duration = models.IntegerField()
-    playlist_ids = models.ManyToManyField(Playlist, related_name="tracks")
     album_id = models.ForeignKey(
         "api.Album", related_name="tracks", on_delete=models.PROTECT, null=True
     )
@@ -100,14 +97,13 @@ class Album(SpotifyModel, TimestampedModel):
         - spotify_id
     """
 
-    album_type = models.CharField(max_length=255, blank=True)
-    image_url = models.URLField(blank=True)
-    label = models.CharField(max_length=255, blank=True)
-    copyright = models.CharField(max_length=255, blank=True)
+    album_type = models.CharField(max_length=255, blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)
+    label = models.CharField(max_length=255, blank=True, null=True)
+    copyright = models.CharField(max_length=255, blank=True, null=True)
     release_year = models.IntegerField()
 
-    artist_ids = models.ManyToManyField("api.Artist", related_name="albums")
-    genre_ids = models.ManyToManyField("api.Genre", related_name="albums")
+    artist = models.ManyToManyField("api.Artist", related_name="albums")
 
 
 class Artist(SpotifyModel, TimestampedModel):
@@ -118,11 +114,8 @@ class Artist(SpotifyModel, TimestampedModel):
         - spotify_id
     """
 
-    image_url = models.URLField(blank=True)
-    spotify_follower_count = models.IntegerField(blank=True)
-
-    album_ids = models.ManyToManyField(Album, related_name="artists")
-    genre_ids = models.ManyToManyField("api.Genre", related_name="artists")
+    image_url = models.URLField(blank=True, null=True)
+    spotify_follower_count = models.IntegerField(blank=True, null=True)
 
 
 class Genre(TimestampedModel):
@@ -132,7 +125,7 @@ class Genre(TimestampedModel):
         - name
     """
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255, unique=True, null=False, blank=False)
 
-    artist_ids = models.ManyToManyField(Artist, related_name="genres")
-    album_ids = models.ManyToManyField(Album, related_name="genres")
+    artists = models.ManyToManyField(Artist, related_name="genres")
+    albums = models.ManyToManyField(Album, related_name="genres")
