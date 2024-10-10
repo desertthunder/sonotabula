@@ -7,11 +7,8 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django_stubs_ext.db.models import TypedModelMeta
 
-from api.libs.responses import (
-    SpotifyAccessTokenResponse,
-    SpotifyCurrentUserDataResponse,
-)
 from api.models.mixins import TokenSetMixin
+from api.serializers.authentication import AccessToken, CurrentUser
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +18,8 @@ class AppUserManager(UserManager["AppUser"]):
 
     def from_spotify(
         self,
-        spotify_data: SpotifyCurrentUserDataResponse,
-        token_set: SpotifyAccessTokenResponse,
+        spotify_data: CurrentUser,
+        token_set: AccessToken,
     ) -> "AppUser":
         """Find or Create a user from spotify data."""
         try:
@@ -67,7 +64,7 @@ class AppUser(TokenSetMixin, AbstractUser):
 
     objects: AppUserManager = AppUserManager()  # type: ignore
 
-    def update_token_set(self, token_set: SpotifyAccessTokenResponse) -> None:
+    def update_token_set(self, token_set: AccessToken) -> None:
         """Update the user's token set."""
         self.access_token = token_set.access_token
         self.refresh_token = token_set.refresh_token

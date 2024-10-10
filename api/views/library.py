@@ -1,4 +1,9 @@
-"""Data access views."""
+"""Library data access views.
+
+Parking Lot:
+- TODO: Dispatch celery tasks for fetching data.
+- TODO: Implement caching for data / sync v. async data fetching.
+"""
 
 import logging
 
@@ -8,14 +13,7 @@ from django.http import (
 )
 from rest_framework.request import Request as DRFRequest
 
-from api.libs.responses import (
-    Album,
-    Artist,
-    Playlist,
-    RecentlyPlayed,
-    Track,
-)
-from api.tasks.library.playlists import fetch_playlists
+from api.serializers import library
 from api.views.base import SpotifyDataView
 
 logging.basicConfig(
@@ -25,43 +23,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-
-class LastPlayedView(SpotifyDataView):
-    """Get the last played track.
-
-    Endpoint: GET /api/playback/last
-    """
-
-    def get(self, request: DRFRequest) -> HttpResponse:
-        """Get the last played track.
-
-        Endpoint: GET /api/playback/last
-        """
-        app_user = self.get_user(request)
-        data = self.data_service.last_played(app_user)
-        last_played = RecentlyPlayed.get(data[0])
-
-        return JsonResponse(data=last_played.model_dump())
-
-
-class RecentlyPlayedView(SpotifyDataView):
-    """Get recently played tracks.
-
-    Endpoint: GET /api/playback/recent
-    """
-
-    def get(self, request: DRFRequest) -> HttpResponse:
-        """Get the last played track.
-
-        Endpoint: GET /api/playback/last
-        """
-        limit = request.query_params.get("limit", 5)
-        app_user = self.get_user(request)
-        data = self.data_service.recently_played(app_user, int(limit))
-        recently_played = RecentlyPlayed.list(data)
-
-        return JsonResponse({"data": [rp.model_dump() for rp in recently_played]})
 
 
 class LibraryPlaylistsView(SpotifyDataView):
@@ -79,10 +40,7 @@ class LibraryPlaylistsView(SpotifyDataView):
 
         app_user = self.get_user(request)
         response = self.data_service.library_playlists(app_user, int(limit))
-        data = Playlist.list(response)
-        fetch_playlists.delay(app_user.pk)
-
-        data = list(data)
+        data = library.Playlist.list(response)
 
         return JsonResponse(data={"data": [p.model_dump() for p in data]})
 
@@ -98,7 +56,7 @@ class LibraryArtistsView(SpotifyDataView):
         limit = request.query_params.get("limit", 5)
         app_user = self.get_user(request)
         response = self.data_service.library_artists(app_user, int(limit))
-        data = Artist.list(response)
+        data = library.Artist.list(response)
 
         return JsonResponse(data={"data": [a.model_dump() for a in data]})
 
@@ -114,7 +72,7 @@ class LibraryAlbumsView(SpotifyDataView):
         limit = request.query_params.get("limit", 5)
         app_user = self.get_user(request)
         response = self.data_service.library_albums(app_user, int(limit))
-        data = Album.list(response)
+        data = library.Album.list(response)
 
         return JsonResponse(data={"data": [a.model_dump() for a in data]})
 
@@ -130,5 +88,6 @@ class LibraryTracksView(SpotifyDataView):
         limit = request.query_params.get("limit", 5)
         app_user = self.get_user(request)
         response = self.data_service.library_tracks(app_user, int(limit))
-        data = Track.list(response)
+        data = library.Track.list(response)
+
         return JsonResponse(data={"data": [t.model_dump() for t in data]})
