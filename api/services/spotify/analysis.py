@@ -24,6 +24,7 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger("spotify_analysis_service")
 
 
+# TODO: Remove
 class Track(BaseModel):
     """Proposed final playlist track."""
 
@@ -36,6 +37,7 @@ class Track(BaseModel):
     image_url: str
 
 
+# TODO: Remove
 class Playlist(BaseModel):
     """Proposed final playlist."""
 
@@ -57,6 +59,7 @@ class Playlist(BaseModel):
     tracks: list["Track"]
 
 
+# TODO: Remove
 class Owner(BaseModel):
     """Deserialized Spotify playlist owner.
 
@@ -71,6 +74,7 @@ class Owner(BaseModel):
     display_name: str | None = None
 
 
+# TODO: Remove this model and use the one from the models module
 class TrackFeatures(BaseModel):
     """Deserialized Spotify track features."""
 
@@ -89,6 +93,7 @@ class TrackFeatures(BaseModel):
     valence: float
 
 
+# TODO: Remove this model and use the one from the models module
 class Artist(BaseModel):
     """Artist model.
 
@@ -105,6 +110,47 @@ class Artist(BaseModel):
 
 class SpotifyAnalysisService:
     """Spotify analysis service."""
+
+    def get_all_playlists(self, user: "AppUser") -> typing.Iterable[dict]:
+        """Get all playlists for a user.
+
+        The maximum limit is 50.
+        """
+        next = f"{settings.SPOTIFY_BASE_URL}me/playlists"
+
+        while next:
+            response = httpx.get(
+                url=next,
+                params={"limit": 50},
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            resp = response.json()
+            next = resp.get("next")
+
+            yield from resp.get("items")
+
+    def get_playlist_tracks(
+        self, spotify_id: str, user: "AppUser"
+    ) -> typing.Iterable[dict]:
+        """Get all tracks for a playlist."""
+        next = f"{settings.SPOTIFY_BASE_URL}playlists/{spotify_id}/tracks"
+        while next:
+            response = httpx.get(
+                url=next,
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            resp = response.json()
+            next = resp.get("next")
+
+            yield from resp.get("items")
 
     def get_playlist(self, spotify_id: str, user: "AppUser") -> dict:
         """Get an individual playlist by spotify ID."""
@@ -123,7 +169,25 @@ class SpotifyAnalysisService:
 
         return resp
 
-    def get_playlist_tracks(
+    def get_artist(self, artist_id: str, user: "AppUser") -> dict:
+        """Get artist information."""
+        with httpx.Client(base_url=settings.SPOTIFY_BASE_URL) as client:
+            response = client.get(
+                url=f"/artists/{artist_id}",
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                raise Exception(response.text)
+
+            resp = response.json()
+
+            client.close()
+
+        return resp
+
+    # TODO: Remove
+    def _get_playlist_tracks(
         self, spotify_id: str, user: "AppUser"
     ) -> typing.Iterable[list[dict]]:
         """Get all tracks for a playlist.
@@ -150,23 +214,6 @@ class SpotifyAnalysisService:
                 url = resp.get("next")
 
                 yield resp.get("items")
-
-    def get_artist(self, artist_id: str, user: "AppUser") -> dict:
-        """Get artist information."""
-        with httpx.Client(base_url=settings.SPOTIFY_BASE_URL) as client:
-            response = client.get(
-                url=f"/artists/{artist_id}",
-                headers={"Authorization": f"Bearer {user.access_token}"},
-            )
-
-            if response.is_error:
-                raise Exception(response.text)
-
-            resp = response.json()
-
-            client.close()
-
-            return resp
 
     def get_track_features(
         self,
@@ -206,6 +253,7 @@ class SpotifyAnalysisService:
 
             return resp
 
+    # TODO: Remove
     def expand_playlist(self, spotify_id: str, user: "AppUser") -> Playlist:
         """Expand a playlist to include all tracks and features."""
         playlist = self.get_playlist(spotify_id, user)
@@ -235,7 +283,7 @@ class SpotifyAnalysisService:
 
         expanded_playlist = Playlist.model_construct(**data)
 
-        for tracks in self.get_playlist_tracks(spotify_id, user):
+        for tracks in self._get_playlist_tracks(spotify_id, user):
             # Tracks is at most 50 items
             for track in tracks:
                 # We're only getting the first artist for now

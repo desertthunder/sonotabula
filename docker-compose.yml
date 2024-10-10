@@ -15,6 +15,13 @@ services:
             - postgres_data:/var/lib/postgresql/data/
         networks:
             - default
+    redis:
+        container_name: music-redis
+        image: redis:alpine
+        ports:
+            - "6379:6379"
+        networks:
+            - default
 
 volumes:
     postgres_data:

@@ -68,7 +68,7 @@ class Playlist(SpotifyModel, TimestampedModel):
     image_url = models.URLField(blank=True)
     public = models.BooleanField(null=True)
     shared = models.BooleanField(null=True)  # collaborative
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
 
     user_id = models.ForeignKey(
         "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
@@ -85,9 +85,11 @@ class Track(SpotifyModel, TimestampedModel):
         - spotify_id
     """
 
-    features = models.JSONField(default=dict)
     duration = models.IntegerField()
     playlist_ids = models.ManyToManyField(Playlist, related_name="tracks")
+    album_id = models.ForeignKey(
+        "api.Album", related_name="tracks", on_delete=models.PROTECT, null=True
+    )
 
 
 class Album(SpotifyModel, TimestampedModel):

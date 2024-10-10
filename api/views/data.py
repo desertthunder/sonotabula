@@ -15,9 +15,7 @@ from api.libs.responses import (
     RecentlyPlayed,
     Track,
 )
-from api.tasks import (
-    create_and_add_playlist_to_library,
-)
+from api.tasks.library.playlists import fetch_playlists
 from api.views.base import SpotifyDataView
 
 logging.basicConfig(
@@ -82,9 +80,9 @@ class LibraryPlaylistsView(SpotifyDataView):
         app_user = self.get_user(request)
         response = self.data_service.library_playlists(app_user, int(limit))
         data = Playlist.list(response)
-        data = list(data)
+        fetch_playlists.delay(app_user.pk)
 
-        create_and_add_playlist_to_library(data, app_user.pk)
+        data = list(data)
 
         return JsonResponse(data={"data": [p.model_dump() for p in data]})
 
