@@ -34,12 +34,12 @@ class AccessToken(Serializer):
         """Create a Serializer object from JSON data."""
         data: dict = cls.map_response(response)
 
-        if "token_expiry" in data:
+        if "token_expiry" in data and data.get("token_expiry"):
             token_expiry = int(data["token_expiry"])
             data["token_expiry"] = timezone.now() + datetime.timedelta(
                 seconds=token_expiry
             )
-        elif "expires_in" in response:
+        elif "expires_in" in response and response.get("expires_in"):
             token_expiry = int(response["expires_in"])
             data["token_expiry"] = timezone.now() + datetime.timedelta(
                 seconds=token_expiry

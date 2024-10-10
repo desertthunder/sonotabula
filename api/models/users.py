@@ -1,4 +1,8 @@
-"""Custom user model."""
+"""Custom user model.
+
+Parking Lot:
+- The password field is likely unecessary.
+"""
 
 import logging
 import uuid
