@@ -37,8 +37,10 @@ class LastPlayedView(SpotifyDataView):
         Endpoint: GET /api/playback/last
         """
         app_user = self.get_user(request)
-        data = self.data_service.last_played(app_user)
-        last_played = playback.RecentlyPlayed.get(data[0])
+        response = self.data_service.recently_played(app_user, 1)
+
+        for data in response:
+            last_played = playback.RecentlyPlayed.get(data)
 
         return JsonResponse({"data": last_played.model_dump()})
 
@@ -56,7 +58,8 @@ class RecentlyPlayedView(SpotifyDataView):
         """
         limit = request.query_params.get("limit", 5)
         app_user = self.get_user(request)
-        data = self.data_service.recently_played(app_user, int(limit))
+        iterator = self.data_service.recently_played(app_user, int(limit))
+        data = list(iterator)
         recently_played = playback.RecentlyPlayed.list(data)
 
-        return JsonResponse({"data": [rp.model_dump() for rp in recently_played]})
+        return JsonResponse({"data": [track.model_dump() for track in recently_played]})

@@ -1,6 +1,11 @@
-"""Spotify data service."""
+"""Spotify data service.
+
+# TODO: Split into multiple services
+# TODO: Now playing
+"""
 
 import logging
+import time
 import typing
 
 import httpx
@@ -17,48 +22,64 @@ logger = logging.getLogger("spotify_data_service")
 class SpotifyDataService:
     """API actions for fetching data from the Spotify API."""
 
-    def now_playing(self) -> None:
+    def now_playing(self) -> dict:
         """Get the user's currently playing track."""
-        pass
+        raise NotImplementedError
 
-    def recently_played(self, user: "AppUser", items: int = 10) -> list[dict]:
-        """Get the user's last played track."""
+    def recently_played(
+        self, user: "AppUser", items: int = 10, all: bool = False
+    ) -> typing.Iterable[dict]:
+        """Get the user's recently played track."""
+        yielded = 0
+        next = f"{SpotifyAPIEndpoints.RecentlyPlayed}"
+
         with httpx.Client(base_url=SpotifyAPIEndpoints.BASE_URL) as client:
-            response = client.get(
-                url=SpotifyAPIEndpoints.RecentlyPlayed,
-                headers={"Authorization": f"Bearer {user.access_token}"},
-                params={"limit": items},
-            )
+            while next:
+                if not all and yielded >= items:
+                    break
 
-            if response.is_error:
-                error = response.json().get("error")
+                time.sleep(1)
 
-                logger.error(f"{error.get("status")} Error: {error.get("message")}")
+                response = client.get(
+                    url=SpotifyAPIEndpoints.RecentlyPlayed,
+                    headers={"Authorization": f"Bearer {user.access_token}"},
+                    params={"limit": items},
+                )
 
-                raise SpotifyAPIError(response.text)
+                if response.is_error:
+                    error = response.json().get("error")
 
-            resp = response.json()
+                    logger.error(f"{error.get("status")} Error: {error.get("message")}")
 
-            logger.debug(f"Response: {resp}")
+                    raise SpotifyAPIError(response.text)
 
-            client.close()
+                resp = response.json()
 
-        tracks = resp.get("items") or []
+                logger.debug(f"Response: {resp}")
 
-        return tracks
+                next = resp.get("next")
 
-    def last_played(self, user: "AppUser") -> list[dict]:
-        """Get the user's last played track."""
-        return self.recently_played(user, 1)
+                if next is not None:
+                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-    def library_playlists(self, user: "AppUser", limit: int = 50) -> list[dict]:
+                if not all:
+                    yielded += len(resp.get("items"))
+
+                yield from resp.get("items")
+
+    def library_playlists(
+        self, user: "AppUser", limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
         """Get the user's playlists."""
+        yielded = 0
+        next = f"{SpotifyAPIEndpoints.SavedPlaylists}"
+
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {user.access_token}"},
         ) as client:
             response = client.get(
-                url=SpotifyAPIEndpoints.SavedPlaylists,
+                url=next,
                 params={"limit": limit},
             )
 
@@ -71,20 +92,29 @@ class SpotifyDataService:
 
             logger.debug(f"Response: {resp}")
 
-            client.close()
+            next = resp.get("next")
 
-        playlists = resp.get("items") or []
+            if next is not None:
+                next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-        return playlists
+            if not all:
+                yielded += len(resp.get("items"))
 
-    def library_albums(self, user: "AppUser", limit: int = 50) -> list[dict]:
+            yield from resp.get("items")
+
+    def library_albums(
+        self, user: "AppUser", limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
         """Get the user's albums."""
+        yielded = 0
+        next = f"{SpotifyAPIEndpoints.SavedAlbums}"
+
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {user.access_token}"},
         ) as client:
             response = client.get(
-                url=SpotifyAPIEndpoints.SavedAlbums,
+                url=next,
                 params={"limit": limit},
             )
 
@@ -97,46 +127,63 @@ class SpotifyDataService:
 
             logger.debug(f"Response: {resp}")
 
-            client.close()
+            next = resp.get("next")
 
-        albums = resp.get("items") or []
+            if next is not None:
+                next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-        return albums
+            if not all:
+                yielded += len(resp.get("items"))
 
-    def library_artists(self, user: "AppUser", limit: int = 50) -> list[dict]:
+            yield from resp.get("items")
+
+    def library_artists(
+        self, user: "AppUser", limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
         """Get the user's followed artists."""
+        yielded = 0
+        next = f"{SpotifyAPIEndpoints.FollowedArtists}"
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {user.access_token}"},
         ) as client:
-            response = client.get(
-                url=SpotifyAPIEndpoints.FollowedArtists,
-                params={"type": "artist", "limit": limit},
-            )
+            while next:
+                response = client.get(
+                    url=next,
+                    params={"type": "artist", "limit": limit},
+                )
 
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
+                if response.is_error:
+                    logger.error(f"Error: {response.text}")
 
-                raise SpotifyAPIError(response.text)
+                    raise SpotifyAPIError(response.text)
 
-            resp = response.json()
+                resp = response.json()
 
-            logger.debug(f"Response: {resp}")
+                logger.debug(f"Response: {resp}")
 
-            client.close()
+                next = resp.get("artists", {}).get("next")
 
-        artists = resp.get("artists", {}).get("items") or []
+                if next is not None:
+                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-        return artists
+                if not all:
+                    yielded += len(resp.get("artists", {}).get("items"))
 
-    def library_tracks(self, user: "AppUser", limit: int = 50) -> list[dict]:
+                yield from resp.get("artists", {}).get("items")
+
+    def library_tracks(
+        self, user: "AppUser", limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
         """Get the user's saved tracks."""
+        yielded = 0
+        next = f"{SpotifyAPIEndpoints.SavedTracks}"
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {user.access_token}"},
         ) as client:
             response = client.get(
-                url=SpotifyAPIEndpoints.SavedTracks,
+                url=next,
                 params={"limit": limit},
             )
 
@@ -149,12 +196,12 @@ class SpotifyDataService:
 
             logger.debug(f"Response: {resp}")
 
-            client.close()
+            next = resp.get("next")
 
-        tracks = resp.get("items") or []
+            if next is not None:
+                next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-        return tracks
+            if not all:
+                yielded += len(resp.get("items"))
 
-    def top_tracks(self) -> None:
-        """Get the user's top tracks."""
-        pass
+            yield from resp.get("items")

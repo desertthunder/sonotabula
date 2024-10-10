@@ -15,6 +15,9 @@ that covers each database model.
     - Analysis
 - Complete test coverage for services package
 
+- Put flower in compose file
+- Hot reload for celery
+
 ## Server Side
 
 - [X] Expanded Playlist Structure

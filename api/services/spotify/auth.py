@@ -1,4 +1,8 @@
-"""Authentication service."""
+"""Authentication service.
+
+Parking lot:
+- TODO: Get User Profile
+"""
 
 import logging
 import os
@@ -14,11 +18,8 @@ from api.libs.requests import (
     SpotifyRedirectURI,
     SpotifyRefreshTokenRequest,
 )
-from api.libs.responses import (
-    SpotifyAccessTokenResponse,
-    SpotifyCurrentUserDataResponse,
-)
 from api.models import AppUser
+from api.serializers.authentication import AccessToken, CurrentUser
 
 logger = logging.getLogger("spotify_auth_service")
 
@@ -47,7 +48,7 @@ class SpotifyAuthService:
 
         return httpx.BasicAuth(self.client_id, self.client_secret)
 
-    def get_access_token(self, code: str) -> SpotifyAccessTokenResponse:
+    def get_access_token(self, code: str) -> AccessToken:
         """Handle the Spotify callback.
 
         Returns the access token, refresh token, and expiry time.
@@ -78,18 +79,13 @@ class SpotifyAuthService:
 
         logger.debug(f"Access token response: {resp}")
 
-        token_set = SpotifyAccessTokenResponse(
-            access_token=resp["access_token"],
-            refresh_token=resp["refresh_token"],
-            token_type=resp["token_type"],
-            token_expiry=resp["expires_in"],
-        )
+        token_set = AccessToken.get(resp)
 
         logger.debug(f"Access token for expires at {token_set.token_expiry}")
 
         return token_set
 
-    def get_current_user(self, access_token: str) -> SpotifyCurrentUserDataResponse:
+    def get_current_user(self, access_token: str) -> CurrentUser:
         """Get the current user's data."""
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,
@@ -111,10 +107,12 @@ class SpotifyAuthService:
         if not resp.get("display_name") or not resp.get("email") or not resp.get("id"):
             raise SpotifyAPIError("User data not found in response.")
 
-        return SpotifyCurrentUserDataResponse(
-            display_name=resp["display_name"],
-            email=resp["email"],
-            id=resp["id"],
+        return CurrentUser.get(
+            {
+                "display_name": resp["display_name"],
+                "email": resp["email"],
+                "id": resp["id"],
+            }
         )
 
     def build_redirect_uri(self) -> str:
@@ -163,12 +161,7 @@ class SpotifyAuthService:
 
         logger.debug(f"Access token response: {resp}")
 
-        token_set = SpotifyAccessTokenResponse(
-            access_token=resp["access_token"],
-            refresh_token=resp.get("refresh_token", user.refresh_token),
-            token_type=resp["token_type"],
-            token_expiry=resp["expires_in"],
-        )
+        token_set = AccessToken.get(resp)
 
         user.update_token_set(token_set)
         user.refresh_from_db()
