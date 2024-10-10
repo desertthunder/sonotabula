@@ -14,7 +14,7 @@ from django.http import (
 from rest_framework.request import Request as DRFRequest
 
 from api.serializers import library
-from api.views.base import SpotifyDataView
+from api.views.base import SpotifyLibraryView
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -25,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class LibraryPlaylistsView(SpotifyDataView):
+class LibraryPlaylistsView(SpotifyLibraryView):
     """Get the user's playlists."""
 
     def get(self, request: DRFRequest) -> HttpResponse:
@@ -39,13 +39,13 @@ class LibraryPlaylistsView(SpotifyDataView):
             limit = 50
 
         app_user = self.get_user(request)
-        iterator = self.data_service.library_playlists(app_user, int(limit))
+        iterator = self.library_service.library_playlists(app_user, int(limit))
         response = list(iterator)
         data = library.Playlist.list(response)
         return JsonResponse(data={"data": [playlist.model_dump() for playlist in data]})
 
 
-class LibraryArtistsView(SpotifyDataView):
+class LibraryArtistsView(SpotifyLibraryView):
     """Get the user's artists."""
 
     def get(self, request: DRFRequest) -> HttpResponse:
@@ -59,13 +59,13 @@ class LibraryArtistsView(SpotifyDataView):
             limit = 50
 
         app_user = self.get_user(request)
-        iterator = self.data_service.library_artists(app_user, int(limit))
+        iterator = self.library_service.library_artists(app_user, int(limit))
         response = list(iterator)
         data = library.Artist.list(response)
         return JsonResponse(data={"data": [artist.model_dump() for artist in data]})
 
 
-class LibraryAlbumsView(SpotifyDataView):
+class LibraryAlbumsView(SpotifyLibraryView):
     """Get the user's albums."""
 
     def get(self, request: DRFRequest) -> HttpResponse:
@@ -79,13 +79,13 @@ class LibraryAlbumsView(SpotifyDataView):
             limit = 50
 
         app_user = self.get_user(request)
-        iterator = self.data_service.library_albums(app_user, int(limit))
+        iterator = self.library_service.library_albums(app_user, int(limit))
         response = list(iterator)
         data = library.Album.list(response)
         return JsonResponse(data={"data": [album.model_dump() for album in data]})
 
 
-class LibraryTracksView(SpotifyDataView):
+class LibraryTracksView(SpotifyLibraryView):
     """Get the user's tracks."""
 
     def get(self, request: DRFRequest) -> HttpResponse:
@@ -99,7 +99,7 @@ class LibraryTracksView(SpotifyDataView):
             limit = 50
 
         app_user = self.get_user(request)
-        iterator = self.data_service.library_tracks(app_user, int(limit))
+        iterator = self.library_service.library_tracks(app_user, int(limit))
         response = list(iterator)
         data = library.Track.list(response)
         return JsonResponse(data={"data": [track.model_dump() for track in data]})

@@ -8,5 +8,5 @@ module.
 
 from api.services.spotify.analysis import SpotifyAnalysisService
 from api.services.spotify.auth import SpotifyAuthService
-from api.services.spotify.data import SpotifyDataService
+from api.services.spotify.library import SpotifyLibraryService
 from api.services.spotify.playback import SpotifyPlaybackService

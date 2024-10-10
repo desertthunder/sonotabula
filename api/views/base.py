@@ -6,11 +6,11 @@ from rest_framework.request import Request as DRFRequest
 
 from api.models import AppUser
 from api.models.permissions import SpotifyAuth
-from api.services.spotify import SpotifyDataService, SpotifyPlaybackService
+from api.services.spotify import SpotifyLibraryService, SpotifyPlaybackService
 
 # NOTE used for dependency injection
 default_playback_service = SpotifyPlaybackService()
-default_data_service = SpotifyDataService()
+default_library_service = SpotifyLibraryService()
 
 
 class GetUserMixin:
@@ -21,7 +21,7 @@ class GetUserMixin:
         return AppUser.objects.get(pk=request.user.pk)
 
 
-class SpotifyDataView(GetUserMixin, views.APIView):
+class SpotifyLibraryView(GetUserMixin, views.APIView):
     """Base class for Spotify data views."""
 
     authentication_classes = [
@@ -31,13 +31,16 @@ class SpotifyDataView(GetUserMixin, views.APIView):
         IsAuthenticated,
     ]
 
-    data_service: SpotifyDataService
+    library_service: SpotifyLibraryService
 
     def __init__(
-        self, data_service: SpotifyDataService = default_data_service, *args, **kwargs
+        self,
+        library_service: SpotifyLibraryService = default_library_service,
+        *args,
+        **kwargs,
     ) -> None:
         """Validate View Constructor."""
-        self.data_service = data_service
+        self.library_service = library_service
 
         super().__init__(*args, **kwargs)
 

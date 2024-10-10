@@ -1,6 +1,7 @@
 """Spotify Service tests."""
 
 import logging
+import time
 import typing
 
 from django.test import TestCase
@@ -8,7 +9,11 @@ from django.test.testcases import SerializeMixin
 
 from api.models.users import AppUser
 from api.serializers.authentication import CurrentUser
-from api.services.spotify import SpotifyAuthService, SpotifyPlaybackService
+from api.services.spotify import (
+    SpotifyAuthService,
+    SpotifyLibraryService,
+    SpotifyPlaybackService,
+)
 
 logging.disable(logging.ERROR)
 
@@ -66,5 +71,46 @@ class SpotifyPlaybackServiceTestCase(TestCase):
         self.assertIsInstance(data, typing.Iterable)
         self.assertEqual(len(list(data)), 2)
 
+        # time.sleep(1)
+
     def test_now_playing(self):
         self.assertRaises(NotImplementedError, self.service.now_playing)
+
+
+class SpotifyLibraryServiceTestCase(TestCase):
+    def setUp(self):
+        self.service = SpotifyLibraryService()
+        self.auth_service = SpotifyAuthService()
+
+        user_refresh_token = AppUser.objects.values_list(
+            "refresh_token", flat=True
+        ).first()
+
+        _, self.user = self.auth_service.refresh_access_token(user_refresh_token)
+
+    def test_library_albums(self):
+        data = self.service.library_albums(self.user, limit=2)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, typing.Iterable)
+        self.assertEqual(len(list(data)), 2)
+
+        time.sleep(1)
+
+    def test_library_playlists(self):
+        data = self.service.library_playlists(self.user, limit=2)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, typing.Iterable)
+        self.assertEqual(len(list(data)), 2)
+
+        time.sleep(1)
+
+    def test_library_artists(self):
+        data = self.service.library_artists(self.user, limit=2)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, typing.Iterable)
+        self.assertEqual(len(list(data)), 2)
+
+        time.sleep(1)
