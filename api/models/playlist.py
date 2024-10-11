@@ -32,31 +32,36 @@ class SyncTrack(BaseModel):
 class PlaylistSyncManager(models.Manager["Playlist"]):
     """Manager for syncing user playlists."""
 
-    def create_to_sync(
-        self, playlists: list[SyncPlaylist], user_pk: int
+    def before_sync(
+        self, playlists: typing.Iterable[dict]
+    ) -> typing.Iterable[SyncPlaylist]:
+        """Validate API data and prepare for syncing."""
+        for playlist in playlists:
+            yield SyncPlaylist(
+                name=playlist.get("name", ""),
+                spotify_id=playlist.get("id", ""),
+                owner_id=playlist.get("owner", {}).get("id"),
+                version=playlist.get("snapshot_id"),
+                image_url=playlist.get("images", [{}])[0].get("url"),
+                public=playlist.get("public"),
+                shared=playlist.get("collaborative"),
+                description=playlist.get("description"),
+            )
+
+    def sync(
+        self, playlists: typing.Iterable[SyncPlaylist], user_pk: int
     ) -> typing.Iterable[tuple[uuid.UUID, str]]:
         """Batch create playlists.
 
         Returns list of tuple of playlist pks and spotify ids.
         """
-        to_sync = []
-
-        for playlist in playlists:
-            to_sync.append(
-                self.model(
-                    name=playlist.name,
-                    spotify_id=playlist.spotify_id,
-                    owner_id=playlist.owner_id,
-                    version=playlist.version,
-                    image_url=playlist.image_url,
-                    public=playlist.public,
-                    shared=playlist.shared,
-                    description=playlist.description,
-                    user_id=user_pk,
-                ),
-            )
-
-        synced: list[Playlist] = self.bulk_create(to_sync, ignore_conflicts=True)
+        synced: list[Playlist] = self.bulk_create(
+            (
+                self.model(**playlist.model_dump(), user_id=user_pk)
+                for playlist in playlists
+            ),
+            ignore_conflicts=True,
+        )
 
         for record in synced:
             record.refresh_from_db()

@@ -27,21 +27,42 @@ class UserModelTestCase(TestCase):
 
 class PlaylistSyncManagerTestCase(TestCase):
     def setUp(self):
-        self.playlists = [
-            SyncPlaylist(
-                name=faker.name(), spotify_id=faker.uuid4(), owner_id=faker.uuid4()
-            )
-            for _ in range(3)
+        # self.playlists = [
+        #     SyncPlaylist(
+        #         name=faker.name(), spotify_id=faker.uuid4(), owner_id=faker.uuid4()
+        #     )
+        #     for _ in range(3)
+        # ]
+        self.data = [
+            {
+                "name": faker.name(),
+                "id": faker.uuid4(),
+                "owner": {"id": faker.uuid4()},
+                "snapshot_id": faker.uuid4(),
+                "images": [{"url": faker.url()}],
+                "public": faker.boolean(),
+                "collaborative": faker.boolean(),
+                "description": faker.text(),
+            }
+            for _ in range(faker.random_int(min=1, max=4))
         ]
 
         self.user = AppUser.objects.get(is_staff=True)
 
-    def test_create_to_sync(self):
-        initial_count = Playlist.sync.count()
+    def test_validate_iterator(self):
+        result = Playlist.sync.before_sync(self.data)
 
-        result = Playlist.sync.create_to_sync(self.playlists, self.user.pk)
+        for playlist in result:
+            self.assertIsInstance(playlist, SyncPlaylist)
 
-        for pk, spotify_id in result:
-            self.assertTrue(Playlist.sync.filter(pk=pk, spotify_id=spotify_id).exists())
+    def test_sync(self):
+        initial_count = Playlist.objects.count()
+        data = Playlist.sync.before_sync(self.data)
 
-        self.assertEqual(Playlist.sync.count(), initial_count + 3)
+        # TODO: change the name of the method to `call_sync`
+        result = Playlist.sync.sync(playlists=data, user_pk=self.user.pk)
+
+        for playlist_pk, _ in result:
+            self.assertIsNotNone(playlist_pk)
+
+        self.assertEqual(Playlist.objects.count(), initial_count + len(self.data))

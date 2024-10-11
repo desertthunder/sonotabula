@@ -39,14 +39,13 @@ class SpotifyAuthServiceTestCase(SerializeMixin, TestCase):
 
     def test_refresh_access_token(self):
         original_access_token = self.user.access_token
-        status, user = self.service.refresh_access_token(self.user.refresh_token)
+        user = self.service.refresh_access_token(self.user.refresh_token)
 
-        self.assertTrue(status)
         self.assertIsNotNone(user)
         self.assertNotEqual(original_access_token, user.access_token)
 
     def test_get_current_user(self):
-        _, user = self.service.refresh_access_token(self.user.refresh_token)
+        user = self.service.refresh_access_token(self.user.refresh_token)
         data = self.service.get_current_user(user.access_token)
 
         self.assertIsNotNone(data)
@@ -63,7 +62,7 @@ class SpotifyPlaybackServiceTestCase(TestCase):
             "refresh_token", flat=True
         ).first()
 
-        _, self.user = self.auth_service.refresh_access_token(user_refresh_token)
+        self.user = self.auth_service.refresh_access_token(user_refresh_token)
 
     def test_recently_played(self):
         data = self.service.recently_played(self.user, items=2)
@@ -87,7 +86,7 @@ class SpotifyLibraryServiceTestCase(TestCase):
             "refresh_token", flat=True
         ).first()
 
-        _, self.user = self.auth_service.refresh_access_token(user_refresh_token)
+        self.user = self.auth_service.refresh_access_token(user_refresh_token)
 
     def test_library_albums(self):
         data = self.service.library_albums(self.user, limit=2)
@@ -123,7 +122,7 @@ class SpotifyDataServiceTestCase(TestCase):
         self.auth_service = SpotifyAuthService()
         self.user = AppUser.objects.get(is_staff=True)
 
-        _, self.user = self.auth_service.refresh_access_token(self.user.refresh_token)
+        self.user = self.auth_service.refresh_access_token(self.user.refresh_token)
 
     def test_fetch_saved_items(self):
         data = self.service.fetch_saved_items(self.user, limit=1)

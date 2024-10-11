@@ -16,7 +16,7 @@ class PlaybackViewTestCase(TestCase):
         self.auth_service = SpotifyAuthService()
         self.user = AppUser.objects.get(is_staff=True)
 
-        _, user = self.auth_service.refresh_access_token(self.user.refresh_token)
+        user = self.auth_service.refresh_access_token(self.user.refresh_token)
 
         self.user = user or self.user
         self.jwt = Token(self.user).encode()
@@ -53,7 +53,7 @@ class LibraryViewTestCase(TestCase):
         self.auth_service = SpotifyAuthService()
         self.user = AppUser.objects.get(is_staff=True)
 
-        _, user = self.auth_service.refresh_access_token(self.user.refresh_token)
+        user = self.auth_service.refresh_access_token(self.user.refresh_token)
 
         self.user = user or self.user
         self.jwt = Token(self.user).encode()

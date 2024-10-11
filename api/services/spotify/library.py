@@ -3,13 +3,14 @@
 # TODO: Rename to library.
 """
 
+import json
 import logging
 import typing
 
 import httpx
 
 from api.libs.constants import SpotifyAPIEndpoints
-from api.libs.exceptions import SpotifyAPIError
+from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
 
 if typing.TYPE_CHECKING:
     from api.models import AppUser
@@ -20,6 +21,20 @@ logger = logging.getLogger("spotify_data_service")
 class SpotifyLibraryService:
     """API actions for fetching data from the Spotify API."""
 
+    def handle_error(self, response: httpx.Response) -> None:
+        """Handle Spotify API errors."""
+        logger.error(f"Error: {response.text}")
+
+        error = json.loads(response.text).get("error")
+
+        if (
+            error.get("status") == 401
+            and error.get("message") == "The access token expired"
+        ):
+            raise SpotifyExpiredTokenError("The access token expired")
+
+        raise SpotifyAPIError(response.text)
+
     def library_playlists(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
@@ -27,33 +42,41 @@ class SpotifyLibraryService:
         yielded = 0
         next = f"{SpotifyAPIEndpoints.SavedPlaylists}"
 
-        with httpx.Client(
-            base_url=SpotifyAPIEndpoints.BASE_URL,
-            headers={"Authorization": f"Bearer {user.access_token}"},
-        ) as client:
-            response = client.get(
-                url=next,
-                params={"limit": limit},
-            )
+        if all:
+            limit = 50
 
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
+        while next:
+            with httpx.Client(
+                base_url=SpotifyAPIEndpoints.BASE_URL,
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            ) as client:
+                if not all and yielded >= limit:
+                    client.close()
+                    break
 
-                raise SpotifyAPIError(response.text)
+                response = client.get(
+                    url=next,
+                    params={"limit": limit},
+                )
 
-            resp = response.json()
+                if response.is_error:
+                    logger.error(f"Error: {response.text}")
 
-            logger.debug(f"Response: {resp}")
+                    self.handle_error(response)
 
-            next = resp.get("next")
+                resp = response.json()
 
-            if next is not None:
-                next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+                logger.debug(f"Response: {resp}")
 
-            if not all:
-                yielded += len(resp.get("items"))
+                next = resp.get("next")
 
-            yield from resp.get("items")
+                if next is not None:
+                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+
+                if not all:
+                    yielded += len(resp.get("items"))
+
+                yield from resp.get("items")
 
     def library_albums(
         self, user: "AppUser", limit: int = 50, all: bool = False

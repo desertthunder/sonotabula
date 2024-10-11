@@ -41,3 +41,9 @@ class SpotifyAPIError(Exception):
     def __init__(self, message: str) -> None:
         """Spotify API Error."""
         super().__init__(message)
+
+
+class SpotifyExpiredTokenError(SpotifyAPIError):
+    """Expired Token Error."""
+
+    pass
