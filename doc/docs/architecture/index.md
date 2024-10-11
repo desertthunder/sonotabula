@@ -39,7 +39,10 @@ These endpoints also *only* return lists.
 
 ### Endpoints
 
-1. Playlists
+1. [Playlists](./playlists.md)
+The asynchronouse playlist endpoint is visible on the home page of the dashboard.
+For synchronous, it is visible on the playlist page.
+
 2. Tracks
 3. Artists
 4. Albums
