@@ -103,6 +103,7 @@ class Track(Serializer):
     artist_id: str
     album_name: str
     album_id: str
+    image_url: str
     duration_ms: int
     link: str
 
@@ -116,6 +117,7 @@ class Track(Serializer):
             "artist_id": "track.artists.0.id",
             "album_name": "track.album.name",
             "album_id": "track.album.id",
+            "image_url": "track.album.images.0.url",
             "duration_ms": "track.duration_ms",
             "link": "track.external_urls.spotify",
         }

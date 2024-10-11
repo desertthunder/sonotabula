@@ -1,11 +1,8 @@
-import { ResourceKey } from "@/libs/hooks";
-import { RESOURCE_KEYS } from "@/libs/hooks/fetch";
-import { Dispatch, SetStateAction } from "react";
+import { ResourceKey, RESOURCE_KEYS } from "@/libs/types";
 
-type TabState = [ResourceKey, Dispatch<SetStateAction<ResourceKey>>];
-
-interface TabsProps {
-  current: TabState;
+interface Props {
+  scope: ResourceKey;
+  onChange: (key: ResourceKey) => void;
 }
 
 const textMap = {
@@ -15,18 +12,16 @@ const textMap = {
   [ResourceKey.LibraryArtists]: "Artists",
 } as const;
 
-export function Tabs({ current }: TabsProps) {
-  const [tab, setTab] = current;
-
+export function Tabs({ scope, onChange }: Props) {
   return (
     <nav>
       {RESOURCE_KEYS.map((resource) => {
         return (
           <button
             key={resource}
-            onClick={() => setTab(resource)}
-            className={tab === resource ? "active" : ""}
-            disabled={tab === resource}
+            onClick={onChange.bind(null, resource)}
+            className={scope === resource ? "active" : ""}
+            disabled={scope === resource}
           >
             {textMap[resource]}
           </button>

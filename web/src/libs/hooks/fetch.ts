@@ -1,43 +1,13 @@
+import type { Resource, FetchError } from "@libs/types";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { useToken } from "./query";
 import { BASE_URL } from "@libs/services";
-import type { Playlist, Track, Album, Artist } from "@libs/types/api";
-
-type FetchError = {
-  code: number;
-  message: string;
-};
-
-export enum ResourceKey {
-  LibraryPlaylists = "library-playlists",
-  LibrarySongs = "library-songs",
-  LibraryTracks = "library-tracks",
-  LibraryAlbums = "library-albums",
-  LibraryArtists = "library-artists",
-}
-
-export const RESOURCE_KEYS = [
-  ResourceKey.LibraryPlaylists,
-  ResourceKey.LibraryTracks,
-  ResourceKey.LibraryAlbums,
-  ResourceKey.LibraryArtists,
-] as const;
-
-type Resource<T extends ResourceKey> = T extends ResourceKey.LibraryPlaylists
-  ? Playlist[]
-  : T extends ResourceKey.LibraryTracks
-  ? Track[]
-  : T extends ResourceKey.LibraryAlbums
-  ? Album[]
-  : T extends ResourceKey.LibraryArtists
-  ? Artist[]
-  : never;
+import { ResourceKey } from "@libs/types";
 
 function getEndpoint(resourceKey: string) {
   switch (resourceKey) {
     case ResourceKey.LibraryPlaylists:
       return `${BASE_URL}/api/library/playlists`;
-    case ResourceKey.LibrarySongs:
     case ResourceKey.LibraryTracks:
       return `${BASE_URL}/api/library/tracks`;
     case ResourceKey.LibraryAlbums:

@@ -1,2 +1,2 @@
 export { useToken, useTokenValidator } from "./query";
-export { useFetch, ResourceKey } from "./fetch";
+export { useFetch } from "./fetch";

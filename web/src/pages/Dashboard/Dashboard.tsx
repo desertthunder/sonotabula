@@ -17,8 +17,8 @@ export default function Dashboard() {
         <Sidebar />
         <div className="relative flex-1 overflow-y-auto overscroll-none lg:ml-64">
           <main className="main">
-            <section className="px-4 pt-6">
-              <h1 className="font-headings text-gray-50 text-[1.5rem] font-semibold">
+            <section className="p-6 pb-0 space-y-2">
+              <h1 className="font-headings text-gray-50 text-[1.5rem] font-medium">
                 Dashboard
               </h1>
               <h3 className="font-headings text-gray-200">
@@ -26,10 +26,10 @@ export default function Dashboard() {
               </h3>
             </section>
             <section className="grid grid-cols-12 p-6 flex-1 space-x-4">
-              <div className="col-span-9 max-h-[600px]">
+              <div className="col-span-9 h-[600px]">
                 <LibraryCard />
               </div>
-              <div className="col-span-3 flex flex-col">
+              <div className="col-span-3 flex flex-col h-[600px]">
                 <div className="card flex-1">
                   <header>
                     <h1 className="kpi">Last Played</h1>
