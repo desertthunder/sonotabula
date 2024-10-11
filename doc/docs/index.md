@@ -10,3 +10,11 @@ extending the application.
 
 Dashspot is a music analysis and visualization tool that uses the Spotify API
 on top of a Django backend serving a single-page React application.
+
+## Core Features
+
+1. **Spotify Library Integration**
+
+2. **Music Analysis**
+
+3. **Music Metadata**

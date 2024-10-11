@@ -11,6 +11,7 @@ from api.models.users import AppUser
 from api.serializers.authentication import CurrentUser
 from api.services.spotify import (
     SpotifyAuthService,
+    SpotifyDataService,
     SpotifyLibraryService,
     SpotifyPlaybackService,
 )
@@ -71,7 +72,7 @@ class SpotifyPlaybackServiceTestCase(TestCase):
         self.assertIsInstance(data, typing.Iterable)
         self.assertEqual(len(list(data)), 2)
 
-        # time.sleep(1)
+        time.sleep(1)
 
     def test_now_playing(self):
         self.assertRaises(NotImplementedError, self.service.now_playing)
@@ -112,5 +113,26 @@ class SpotifyLibraryServiceTestCase(TestCase):
         self.assertIsNotNone(data)
         self.assertIsInstance(data, typing.Iterable)
         self.assertEqual(len(list(data)), 2)
+
+        time.sleep(1)
+
+
+class SpotifyDataServiceTestCase(TestCase):
+    def setUp(self):
+        self.service = SpotifyDataService()
+        self.auth_service = SpotifyAuthService()
+        self.user = AppUser.objects.get(is_staff=True)
+
+        _, self.user = self.auth_service.refresh_access_token(self.user.refresh_token)
+
+    def test_fetch_saved_items(self):
+        data = self.service.fetch_saved_items(self.user, limit=1)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, typing.Iterable)
+
+        data = list(data)
+
+        self.assertEqual(len(data), 5)
 
         time.sleep(1)

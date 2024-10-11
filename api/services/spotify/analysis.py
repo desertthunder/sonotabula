@@ -15,6 +15,7 @@ import typing
 import httpx
 from pydantic import BaseModel
 
+from api.libs.constants import SpotifyAPIEndpoints
 from server import settings
 
 if typing.TYPE_CHECKING:
@@ -235,12 +236,14 @@ class SpotifyAnalysisService:
         self,
         track_ids: list[str],
         user: "AppUser",
-    ) -> list[dict]:
+    ) -> typing.Iterable[dict]:
         """Get audio features for a batch of tracks."""
-        with httpx.Client(base_url=settings.SPOTIFY_BASE_URL) as client:
-            response = client.get(
-                url="/audio-features",
-                params={"ids": ",".join(track_ids)},
+        id_segments = [track_ids[i : i + 100] for i in range(0, len(track_ids), 100)]
+
+        for segment in id_segments:
+            response = httpx.get(
+                f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.TrackAudioFeatures}",
+                params={"ids": ",".join(segment)},
                 headers={"Authorization": f"Bearer {user.access_token}"},
             )
 
@@ -249,9 +252,7 @@ class SpotifyAnalysisService:
 
             resp = response.json()
 
-            client.close()
-
-            return resp.get("audio_features", [])
+            yield from resp.get("audio_features", [])
 
     def get_artist_batch(self, artist_ids: list[str], user: "AppUser") -> list[dict]:
         """Get artist information for a batch of artists."""

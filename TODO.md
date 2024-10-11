@@ -3,20 +3,19 @@
 ## Technical Debt
 
 - Tests for tasks package
-- Reused serializer code across packages. Create a single serializer package
+- [x] Reused serializer code across packages. Create a single serializer package
 that covers each database model.
     1. `api.libs`
     2. `api.models`
     3. `api.services`
-- Useless views (expand playlist) - this could actually be a single task
-- Service Structure?
+- [x] Useless views (expand playlist) - this could actually be a single task
+- [x] Service Structure?
     - Authentication
     - Library
     - Analysis
-- Complete test coverage for services package
-
+- [x] Complete test coverage for services package
 - Put flower in compose file
-- Hot reload for celery
+- Hot reload for celery with [watchdog](https://watchfiles.helpmanual.io/cli/)
 
 ## Server Side
 
@@ -24,7 +23,7 @@ that covers each database model.
 - [X] Expanded Playlist Endpoint
     - [X] Service
     - [X] View
-- [ ] Top Items Endpoint
+- [ ] Home page stats Endpoint
 
 ## Client Side (Web)
 

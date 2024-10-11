@@ -1,7 +1,12 @@
 # Spotify Dashboard
 
-A spotify stats dashboard and playlist organizer built with Django + DRF,
-Postgres, React & Tailwind.
+DashSpot is a dynamic visualizing dashboard designed to explore and analyze
+Spotify libraries meant to be like an itunes style library browser.
+
+It is built with Django, Postgres, Celery, and React on top of the Spotify API.
+
+By adding additional integration with Wikipedia and MusicBrainz, DashSpot builds
+a comprehensive database of music metadata relevant to them.
 
 ## Setup
 
