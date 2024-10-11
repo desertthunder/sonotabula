@@ -30,6 +30,7 @@ class TimestampedModel(models.Model):
 class SpotifyModel(models.Model):
     """Base model for Spotify API models."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     spotify_id = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255, blank=False)
 
@@ -42,7 +43,7 @@ class SpotifyModel(models.Model):
 class Library(TimestampedModel):
     """Library metadata model."""
 
-    user_id: models.ForeignKey["AppUser", "Library"] = models.ForeignKey(
+    user: models.ForeignKey["AppUser", "Library"] = models.ForeignKey(
         "AppUser", related_name="libraries", on_delete=models.CASCADE
     )
 
@@ -50,29 +51,6 @@ class Library(TimestampedModel):
     artists = models.ManyToManyField("api.Artist", related_name="libraries")
     albums = models.ManyToManyField("api.Album", related_name="libraries")
     tracks = models.ManyToManyField("api.Track", related_name="libraries")
-
-
-class Playlist(SpotifyModel, TimestampedModel):
-    """Spotify playlist model.
-
-    Required fields for creation:
-        - name
-        - spotify_id
-        - owner_id
-    """
-
-    version = models.CharField(max_length=255, blank=True, null=True)  # snapshot_id
-    image_url = models.URLField(blank=True, null=True)
-    public = models.BooleanField(null=True, blank=True)
-    shared = models.BooleanField(null=True, blank=True)  # collaborative
-    description = models.TextField(blank=True, null=True)
-
-    user_id = models.ForeignKey(
-        "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
-    )
-    owner_id = models.CharField(max_length=255, null=False, blank=False)
-
-    tracks = models.ManyToManyField("api.Track", related_name="playlists")
 
 
 class Track(SpotifyModel, TimestampedModel):

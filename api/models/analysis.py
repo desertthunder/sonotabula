@@ -2,7 +2,8 @@
 
 from django.db import models
 
-from api.models.music import Playlist, TimestampedModel, Track
+from api.models.music import TimestampedModel, Track
+from api.models.playlist import Playlist
 
 
 class TrackFeatures(TimestampedModel):
@@ -42,8 +43,8 @@ class Analysis(TimestampedModel):
     """
 
     version = models.CharField(max_length=255, unique=True, null=False)
-    playlist_id = models.OneToOneField(
+    playlist = models.OneToOneField(
         Playlist, on_delete=models.CASCADE, related_name="analysis"
     )
-    user_id = models.ForeignKey("api.AppUser", on_delete=models.CASCADE)
+    user = models.ForeignKey("api.AppUser", on_delete=models.CASCADE)
     tracks = models.ManyToManyField(Track, related_name="analyses")
