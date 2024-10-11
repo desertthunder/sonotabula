@@ -13,7 +13,7 @@
 /*          COMPONENTS         */
 .sidebar {
     @apply fixed top-0 left-0 z-20 lg:flex;
-    @apply flex flex-col flex-shrink-0 w-64 h-full pt-8;
+    @apply flex flex-col flex-shrink-0 w-64 h-screen pt-8;
     @apply font-medium duration-75 transition-all drop-shadow-xl;
 }
 
@@ -28,19 +28,23 @@
 }
 
 .card {
-    @apply py-8 px-8 bg-gray-200 rounded-xl shadow-lg flex flex-col mb-4 last:mb-0;
+    @apply bg-gray-200 rounded-xl shadow-lg flex flex-col mb-4 last:mb-0;
+}
+
+.card.library {
+    @apply p-8;
+}
+
+.card.stat {
+    @apply p-4;
+}
+
+.stat main {
+    @apply flex items-center justify-between;
 }
 
 .card header {
     @apply flex-shrink-0;
-}
-
-.card header h1 {
-    @apply text-xl font-bold leading-none text-gray-900 sm:text-2xl;
-}
-
-.card header .kpi {
-    @apply text-lg font-medium;
 }
 
 .card header h2 {

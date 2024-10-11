@@ -66,3 +66,22 @@ export type Resource<T extends ResourceKey> =
     : T extends ResourceKey.LibraryArtists
     ? Artist[]
     : never;
+
+export enum CountKey {
+  Artists = "artists",
+  Albums = "albums",
+  Tracks = "tracks",
+  Playlists = "playlists",
+  Shows = "shows",
+}
+
+export const COUNT_KEYS: CountKey[] = [
+  CountKey.Artists,
+  CountKey.Albums,
+  CountKey.Tracks,
+  CountKey.Playlists,
+  CountKey.Shows,
+] as const;
+
+export type LibraryCounts = { [key in CountKey]: number };
+export type LibraryCountsResponse = { data: LibraryCounts };

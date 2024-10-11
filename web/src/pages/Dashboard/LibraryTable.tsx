@@ -54,6 +54,8 @@ function translateHeader(header: string): string {
       return "image_url";
     case "#":
       return "total_tracks";
+    case "Size":
+      return "num_tracks";
     case "Year":
       return "release_date";
     case "Artist":
@@ -73,8 +75,16 @@ function tableProps<T extends ResourceKey>(
   headers: string[];
   accessors: (keyof AccessedType<T>)[];
 } {
+  const headers = tableHeaders[scope].map((header) => {
+    if (scope === ResourceKey.LibraryPlaylists && header === "Size") {
+      return "#";
+    }
+
+    return header;
+  });
+
   return {
-    headers: tableHeaders[scope],
+    headers,
     accessors: tableHeaders[scope].map((header) => {
       return translateHeader(header) as keyof AccessedType<T>;
     }),
@@ -107,7 +117,7 @@ function Cell({
       return (
         <td>
           <a
-            className="hover:text-green-500 i-ri-bar-chart-box-line"
+            className="hover:text-green-500 i-ri-external-link-line"
             href={value}
             target="_blank"
             rel="noreferrer"
@@ -116,6 +126,9 @@ function Cell({
           </a>
         </td>
       );
+    case "num_tracks":
+    case "total_tracks":
+      return <td className="text-center">{value}</td>;
     case "genres":
       return <td>{Array.isArray(value) ? value.join(", ") : value}</td>;
     default:

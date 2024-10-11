@@ -2,6 +2,8 @@ import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { LibraryCard } from "./LibraryCard";
 import { useTokenValidator } from "@/libs/hooks";
+import { COUNT_KEYS } from "@/libs/types/api";
+import { StatCard } from "./StatCard";
 
 export default function Dashboard() {
   const { token } = useTokenValidator();
@@ -26,31 +28,13 @@ export default function Dashboard() {
               </h3>
             </section>
             <section className="grid grid-cols-12 p-6 flex-1 space-x-4">
-              <div className="col-span-9 h-[600px]">
+              <div className="col-span-9 max-h-[620px]">
                 <LibraryCard />
               </div>
-              <div className="col-span-3 flex flex-col h-[600px]">
-                <div className="card flex-1">
-                  <header>
-                    <h1 className="kpi">Last Played</h1>
-                  </header>
-                </div>
-                <div className="card flex-1">
-                  <header>
-                    <h1 className="kpi">Tracks</h1>
-                  </header>
-                  <main></main>
-                </div>
-                <div className="card flex-1">
-                  <header>
-                    <h1 className="kpi">Albums</h1>
-                  </header>
-                </div>
-                <div className="card flex-1">
-                  <header>
-                    <h1 className="kpi">Artists</h1>
-                  </header>
-                </div>
+              <div className="col-span-3 flex flex-col max-h-[620px]">
+                {COUNT_KEYS.map((key) => (
+                  <StatCard key={key} scope={key} />
+                ))}
               </div>
             </section>
           </main>

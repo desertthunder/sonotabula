@@ -13,9 +13,11 @@ export function LibraryCard() {
   }, []);
 
   return (
-    <div className="card h-full">
+    <div className="card library h-full">
       <header>
-        <h1 className="">Library</h1>
+        <h1 className="text-xl font-bold leading-none text-gray-900 sm:text-2xl">
+          Library
+        </h1>
         <h2 className="">I dunno</h2>
       </header>
       <Tabs scope={scope} onChange={onTabChange} />

@@ -1,4 +1,4 @@
-import type { Resource, FetchError } from "@libs/types";
+import type { Resource, FetchError, LibraryCountsResponse } from "@libs/types";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { useToken } from "./query";
 import { BASE_URL } from "@libs/services";
@@ -66,6 +66,42 @@ export function useFetch<T extends ResourceKey>(
         }
 
         return await fetcher<T>(resource, token, limit);
+      },
+    },
+    client
+  );
+
+  return query;
+}
+
+export function useSavedCounts() {
+  const { token, client } = useToken();
+
+  const query = useQuery(
+    {
+      queryKey: ["saved-counts"],
+      queryFn: async () => {
+        if (!token) {
+          throw new Error("Token not found");
+        }
+
+        const response = await fetch(`${BASE_URL}/api/data/saved`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          return Promise.reject({
+            code: response.status,
+            message: response.statusText,
+          } as FetchError);
+        }
+
+        const data = (await response.json()) as LibraryCountsResponse;
+
+        return data["data"];
       },
     },
     client

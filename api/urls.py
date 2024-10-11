@@ -2,11 +2,12 @@
 
 from django.urls import path
 
-from api.views import auth, library, playback
+from api.views import auth, data, library, playback
 
 urlpatterns = [
     path("login", auth.LoginView.as_view(), name="login"),
     path("validate", auth.ValidateView.as_view(), name="validate-token"),
+    path("data/saved", data.UserSavedItemsView.as_view(), name="user-saved-items"),
     path("playback/last", playback.LastPlayedView.as_view(), name="last-played"),
     path(
         "playback/recent", playback.RecentlyPlayedView.as_view(), name="recently-played"
