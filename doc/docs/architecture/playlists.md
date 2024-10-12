@@ -49,18 +49,18 @@ and save them to the database.
 
 ## Requirements
 
-- [ ] Batch create query for playlists
-    - [ ] Paginated API Request to `/me/playlists`
-    - [ ] Sync playlists task
-- [ ] Batch create query for playlist tracks
-    - [ ] Version 1: Use the tracks object from the playlist object
-    - [ ] Sync playlist tracks task
-- [ ] Batch create query for playlist artists
-    - [ ] Version 1: Use the album object from the track object
-    - [ ] Sync playlist artists task
-- [ ] Batch create query for playlist albums
-    - [ ] Version 1: Use the album object from the track object
-    - [ ] Sync playlist albums task
+- [x] Batch create query for playlists
+    - [x] Paginated API Request to `/me/playlists`
+    - ~~Sync playlists task~~
+- [x] Batch create query for playlist tracks
+    - [x] Version 1: Use the tracks object from the playlist object
+    - [x] Sync playlist tracks task
+- [x] Batch create query for playlist artists
+    - [x] Version 1: Use the album object from the track object
+    - [x] Sync playlist artists task
+- [x] Batch create query for playlist albums
+    - [x] Version 1: Use the album object from the track object
+    - [x] Sync playlist albums task
 
 ## View Layer
 

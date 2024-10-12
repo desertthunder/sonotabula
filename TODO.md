@@ -27,5 +27,5 @@ that covers each database model.
 
 ## Client Side (Web)
 
-- [ ] Figure out how to deploy docs to netlify
+- [x] Figure out how to deploy docs to netlify
 - [ ] Last played data fetching and display
