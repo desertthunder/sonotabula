@@ -47,7 +47,6 @@ class Library(TimestampedModel):
         "AppUser", related_name="libraries", on_delete=models.CASCADE
     )
 
-    playlists = models.ManyToManyField("api.Playlist", related_name="libraries")
     artists = models.ManyToManyField("api.Artist", related_name="libraries")
     albums = models.ManyToManyField("api.Album", related_name="libraries")
     tracks = models.ManyToManyField("api.Track", related_name="libraries")
@@ -67,8 +66,6 @@ class Album(SpotifyModel, TimestampedModel):
     copyright = models.CharField(max_length=255, blank=True, null=True)
     release_year = models.IntegerField()
 
-    artists = models.ManyToManyField("api.Artist", related_name="albums")
-
 
 class Artist(SpotifyModel, TimestampedModel):
     """Artist model.
@@ -80,6 +77,7 @@ class Artist(SpotifyModel, TimestampedModel):
 
     image_url = models.URLField(blank=True, null=True)
     spotify_follower_count = models.IntegerField(blank=True, null=True)
+    albums = models.ManyToManyField(Album, related_name="artists")
 
 
 class Genre(TimestampedModel):

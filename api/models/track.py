@@ -50,8 +50,9 @@ class SyncArtist(BaseModel):
 class TrackSyncManager(models.Manager["Track"]):
     """Sync tracks, albums, and artists."""
 
-    def before_sync(self, items: typing.Iterable[dict]) -> typing.Iterable[SyncData]:
+    def pre_sync(self, items: list[dict] | typing.Iterable[dict]) -> list[SyncData]:
         """Before sync hook."""
+        cleaned = []
         for item in items:
             track_data = item.get("track", {})
             album_data = track_data.get("album", {})
@@ -88,15 +89,17 @@ class TrackSyncManager(models.Manager["Track"]):
                 for artist in artist_data
             ]
 
-            yield SyncData(
-                track=track,
-                album=album,
-                artists=artists,
+            cleaned.append(
+                SyncData(
+                    track=track,
+                    album=album,
+                    artists=artists,
+                )
             )
 
-    def sync(
-        self, items: typing.Iterable[SyncData]
-    ) -> typing.Iterable[tuple[uuid.UUID, str]]:
+        return cleaned
+
+    def do(self, items: list[SyncData]) -> list[tuple[uuid.UUID, str]]:
         """Sync tracks, albums, and artists.
 
         Dependency Tree:
@@ -104,6 +107,7 @@ class TrackSyncManager(models.Manager["Track"]):
                 - Album
                     - Artist
         """
+        data = []
         for cleaned_data in items:
             artists = cleaned_data.artists
             album = cleaned_data.album
@@ -132,7 +136,8 @@ class TrackSyncManager(models.Manager["Track"]):
                 },
             )
 
-            album_record.artists.set(album_artists.all())
+            for artist in album_artists:
+                artist.albums.add(album_record)
 
             t, _ = self.model.objects.update_or_create(
                 spotify_id=track.spotify_id,
@@ -143,7 +148,19 @@ class TrackSyncManager(models.Manager["Track"]):
                 },
             )
 
-            yield (t.pk, t.spotify_id)
+            data.append((t.pk, t.spotify_id))
+
+        return data
+
+    def complete_sync(
+        self, playlist_pk: uuid.UUID, data: list[tuple[uuid.UUID, str]]
+    ) -> uuid.UUID:
+        """Complete sync."""
+        for track_id, _ in data:
+            track = self.model.objects.get(pk=track_id)
+            track.playlists.add(playlist_pk)  # type: ignore
+
+        return playlist_pk
 
 
 class Track(SpotifyModel, TimestampedModel):
@@ -158,6 +175,7 @@ class Track(SpotifyModel, TimestampedModel):
     album = models.ForeignKey(
         "api.Album", related_name="tracks", on_delete=models.PROTECT, null=True
     )
+    playlists = models.ManyToManyField("api.Playlist", related_name="tracks")
 
     objects: models.Manager["Track"] = models.Manager()
     sync: TrackSyncManager = TrackSyncManager()

@@ -16,17 +16,35 @@ import typing
 import httpx
 
 from api.libs.constants import SpotifyAPIEndpoints
-from api.libs.exceptions import SpotifyAPIError
-
-if typing.TYPE_CHECKING:
-    from api.models.users import AppUser
-
+from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
+from api.models.users import AppUser
+from api.services.spotify.auth import SpotifyAuthService
 
 logger = logging.getLogger(__name__)
 
 
 class SpotifyDataService:
     """Single record data service."""
+
+    def get_user(self, user_pk: int) -> "AppUser":
+        """Get user data."""
+        return AppUser.objects.get(pk=user_pk)
+
+    def fetch_playlist_tracks(
+        self, playlist_id: str, user_pk: int
+    ) -> typing.Iterable[dict]:
+        """Fetch playlist tracks."""
+        user = self.get_user(user_pk)
+
+        try:
+            yield from self._fetch_playlist_tracks(playlist_id, user=user)
+        except SpotifyExpiredTokenError:
+            user_service = SpotifyAuthService()
+            user_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            yield from self._fetch_playlist_tracks(playlist_id, user=user)
 
     def fetch_saved_items(
         self,
@@ -91,7 +109,7 @@ class SpotifyDataService:
 
             return resp
 
-    def fetch_playlist_tracks(
+    def _fetch_playlist_tracks(
         self, playlist_id: str, user: "AppUser"
     ) -> typing.Iterable[dict]:
         """Fetch a playlist's tracks."""
@@ -122,6 +140,22 @@ class SpotifyDataService:
                 yield from resp.get("items", [])
 
     def fetch_audio_features(
+        self, track_ids: list[str], user_pk: int
+    ) -> typing.Iterable[dict]:
+        """Fetch audio features."""
+        user = self.get_user(user_pk)
+
+        try:
+            yield from self._fetch_audio_features(track_ids, user)
+        except SpotifyExpiredTokenError:
+            user_service = SpotifyAuthService()
+            user_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            yield from self._fetch_audio_features(track_ids, user)
+
+    def _fetch_audio_features(
         self, track_ids: list[str], user: "AppUser"
     ) -> typing.Iterable[dict]:
         """Fetch audio features."""

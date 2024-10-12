@@ -5,7 +5,7 @@ from django.test import TestCase
 from faker import Faker
 
 from api.models.analysis import Analysis
-from api.models.music import Album, Artist
+from api.models.music import Album, Artist, Library
 from api.models.playlist import Playlist, SyncPlaylist
 from api.models.track import SyncData, Track
 from api.models.users import AppUser
@@ -13,12 +13,14 @@ from api.models.users import AppUser
 faker = Faker()
 
 
+@unittest.skip("Not implemented")
 class UserManagerTestCase(TestCase):
     @unittest.skip("Not implemented")
     def test_create_user_from_spotify(self):
         pass
 
 
+@unittest.skip("Not implemented")
 class UserModelTestCase(TestCase):
     @unittest.skip("Not implemented")
     def test_token_expired_property(self):
@@ -56,22 +58,31 @@ class PlaylistSyncManagerTestCase(TestCase):
         self.user = AppUser.objects.get(is_staff=True)
 
     def test_validate_iterator(self):
-        result = Playlist.sync.before_sync(self.data)
+        result = Playlist.sync.pre_sync(self.data)
+        self.assertIsNotNone(result)
 
         for playlist in result:
             self.assertIsInstance(playlist, SyncPlaylist)
+            self.assertIsNotNone(playlist.spotify_id)
 
     def test_sync(self):
         initial_count = Playlist.objects.count()
-        data = Playlist.sync.before_sync(self.data)
+        data = Playlist.sync.pre_sync(self.data)
+        results = Playlist.sync.do(playlists=data, user_pk=self.user.pk)
 
-        # TODO: change the name of the method to `call_sync`
-        result = Playlist.sync.sync(playlists=data, user_pk=self.user.pk)
-
-        for playlist_pk, _ in result:
-            self.assertIsNotNone(playlist_pk)
-
+        self.assertIsNotNone(results)
+        self.assertGreater(len(results), 0)
         self.assertEqual(Playlist.objects.count(), initial_count + len(self.data))
+
+    def test_complete(self):
+        library = Library.objects.get(user=self.user)
+        data = Playlist.sync.pre_sync(self.data)
+        playlists = Playlist.sync.do(playlists=list(data), user_pk=self.user.pk)
+        result = Playlist.sync.complete_sync(library.pk, playlists)
+
+        self.assertGreater(len(result), 0)
+        self.assertIsNotNone(library)
+        self.assertEqual(library.playlists.count(), len(self.data))
 
 
 class TrackSyncManagerTestCase(TestCase):
@@ -83,7 +94,7 @@ class TrackSyncManagerTestCase(TestCase):
         yield from self.data.get("items")[:3]
 
     def test_before_sync(self):
-        result = Track.sync.before_sync(self.fake_iterator())
+        result = Track.sync.pre_sync(self.fake_iterator())
 
         for data in result:
             self.assertIsInstance(data, SyncData)
@@ -96,7 +107,7 @@ class TrackSyncManagerTestCase(TestCase):
         initial_album_count = Album.objects.count()
         initial_artist_count = Artist.objects.count()
 
-        data = Track.sync.before_sync(self.fake_iterator())
+        data = Track.sync.pre_sync(self.fake_iterator())
 
         # We need to randomize the spotify ids otherwise
         # we can't properly evaluate that these were added
@@ -114,7 +125,7 @@ class TrackSyncManagerTestCase(TestCase):
             artists_added += len(entry.artists)
             tracks_added += 1
 
-        result = Track.sync.sync(data)
+        result = Track.sync.do(data)
 
         for track_pk, _ in result:
             self.assertIsNotNone(track_pk)
@@ -123,7 +134,22 @@ class TrackSyncManagerTestCase(TestCase):
         self.assertEqual(Album.objects.count(), initial_album_count + tracks_added)
         self.assertEqual(Artist.objects.count(), initial_artist_count + artists_added)
 
+    def test_complete(self):
+        playlist = Playlist.objects.create(
+            name=faker.name(), spotify_id=faker.uuid4(), owner_id=faker.uuid4()
+        )
 
+        data = Track.sync.pre_sync(self.fake_iterator())
+        results = Track.sync.do(data)
+        completed = Track.sync.complete_sync(
+            playlist.pk, [track_pk for track_pk, _ in results]
+        )
+
+        self.assertIsNotNone(completed)
+        self.assertEqual(playlist.tracks.count(), len(results))
+
+
+@unittest.skip("Not implemented")
 class AnalysisManagerTestCase(TestCase):
     def setUp(self):
         self.playlist = Playlist.objects.create(

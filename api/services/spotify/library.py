@@ -9,15 +9,18 @@ import httpx
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
-
-if typing.TYPE_CHECKING:
-    from api.models import AppUser
+from api.models import AppUser
+from api.services.spotify.auth import SpotifyAuthService
 
 logger = logging.getLogger("spotify_data_service")
 
 
 class SpotifyLibraryService:
     """API actions for fetching data from the Spotify API."""
+
+    def get_user(self, user_pk: int) -> "AppUser":
+        """Get a user by primary key."""
+        return AppUser.objects.get(pk=user_pk)
 
     def handle_error(self, response: httpx.Response) -> None:
         """Handle Spotify API errors."""
@@ -34,9 +37,27 @@ class SpotifyLibraryService:
         raise SpotifyAPIError(response.text)
 
     def library_playlists(
+        self, user_pk: int, limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
+        """Get the user's playlists.
+
+        Refresh the access token if it has expired.
+        """
+        user = self.get_user(user_pk)
+
+        try:
+            yield from self._library_playlists(user=user, limit=limit, all=all)
+        except SpotifyExpiredTokenError:
+            user_service = SpotifyAuthService()
+            user_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            yield from self._library_playlists(user=user, limit=limit, all=all)
+
+    def _library_playlists(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
-        """Get the user's playlists."""
         yielded = 0
         next = f"{SpotifyAPIEndpoints.SavedPlaylists}"
 

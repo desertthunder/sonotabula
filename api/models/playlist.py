@@ -6,6 +6,8 @@ import uuid
 
 from django.db import models
 from django.utils import timezone
+from django_stubs_ext.db.models import TypedModelMeta
+from loguru import logger
 from pydantic import BaseModel
 
 from api.models.music import SpotifyModel, TimestampedModel
@@ -34,30 +36,32 @@ class SyncTrack(BaseModel):
 class PlaylistSyncManager(models.Manager["Playlist"]):
     """Manager for syncing user playlists."""
 
-    def before_sync(
-        self, playlists: typing.Iterable[dict]
-    ) -> typing.Iterable[SyncPlaylist]:
+    def pre_sync(self, playlists: typing.Iterable[dict]) -> list[SyncPlaylist]:
         """Validate API data and prepare for syncing."""
+        result = []
         for playlist in playlists:
-            yield SyncPlaylist(
-                name=playlist.get("name", ""),
-                spotify_id=playlist.get("id", ""),
-                owner_id=playlist.get("owner", {}).get("id"),
-                version=playlist.get("snapshot_id"),
-                image_url=playlist.get("images", [{}])[0].get("url"),
-                public=playlist.get("public"),
-                shared=playlist.get("collaborative"),
-                description=playlist.get("description"),
+            logger.debug(playlist.get("id"))
+            result.append(
+                SyncPlaylist(
+                    name=playlist.get("name", ""),
+                    spotify_id=playlist.get("id", ""),
+                    owner_id=playlist.get("owner", {}).get("id"),
+                    version=playlist.get("snapshot_id"),
+                    image_url=playlist.get("images", [{}])[0].get("url"),
+                    public=playlist.get("public"),
+                    shared=playlist.get("collaborative"),
+                    description=playlist.get("description"),
+                )
             )
 
-    def sync(
-        self, playlists: typing.Iterable[SyncPlaylist], user_pk: int
-    ) -> typing.Iterable[tuple[uuid.UUID, str]]:
+        return result
+
+    def do(self, playlists: list[SyncPlaylist], user_pk: int) -> list["Playlist"]:
         """Batch create playlists.
 
         Returns list of tuple of playlist pks and spotify ids.
         """
-        synced: list[Playlist] = self.bulk_create(
+        added: list[Playlist] = self.bulk_create(
             (
                 self.model(**playlist.model_dump(), user_id=user_pk)
                 for playlist in playlists
@@ -65,12 +69,36 @@ class PlaylistSyncManager(models.Manager["Playlist"]):
             ignore_conflicts=True,
         )
 
-        synced_spotify_ids = [playlist.spotify_id for playlist in synced]
-        existing = self.filter(spotify_id__in=synced_spotify_ids).values_list(
-            "pk", "spotify_id"
+        logger.debug(f"Added {len(added)} playlists.")
+        for playlist in added:
+            logger.debug(f"Added playlist {playlist.pk} | {playlist.spotify_id}.")
+        logger.debug([playlist.spotify_id for playlist in playlists])
+
+        return list(
+            self.filter(
+                spotify_id__in=[playlist.spotify_id for playlist in playlists]
+            ).all()
         )
 
-        yield from existing
+    def complete_sync(
+        self, library_pk: int, playlists: list["Playlist"]
+    ) -> list[tuple[uuid.UUID, str]]:
+        """Complete playlist sync.
+
+        Sets is_synced to True and adds library to playlists.
+        """
+        updated = []
+
+        for playlist in playlists:
+            playlist.is_synced = True
+            playlist.libraries.add(library_pk)
+            playlist.save()
+
+            logger.debug(f"Added playlist {playlist.pk} to library {library_pk}.")
+
+            updated.append((playlist.pk, playlist.spotify_id))
+
+        return updated
 
 
 class Playlist(SpotifyModel, TimestampedModel):
@@ -95,7 +123,7 @@ class Playlist(SpotifyModel, TimestampedModel):
         "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )
 
-    tracks = models.ManyToManyField("api.Track", related_name="playlists")
+    libraries = models.ManyToManyField("api.Library", related_name="playlists")
 
     objects: models.Manager["Playlist"] = models.Manager()
     sync = PlaylistSyncManager()
@@ -104,3 +132,9 @@ class Playlist(SpotifyModel, TimestampedModel):
     def stale_data(self) -> bool:
         """Check if playlist data is more than a week old."""
         return self.updated_at < timezone.now() - datetime.timedelta(days=7)
+
+    class Meta(TypedModelMeta):
+        """Playlist model metadata."""
+
+        ordering = ["-is_synced", "-updated_at", "-is_analyzed", "-created_at"]
+        unique_together = ["spotify_id", "user"]
