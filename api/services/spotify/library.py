@@ -1,10 +1,8 @@
-"""Spotify data service.
-
-# TODO: Rename to library.
-"""
+"""Spotify data service."""
 
 import json
 import logging
+import time
 import typing
 
 import httpx
@@ -53,6 +51,8 @@ class SpotifyLibraryService:
                 if not all and yielded >= limit:
                     client.close()
                     break
+
+                time.sleep(1)
 
                 response = client.get(
                     url=next,

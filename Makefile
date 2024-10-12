@@ -36,7 +36,7 @@ shell:
 
 worker:
 	@echo "Starting Celery worker..."
-	@celery -A server worker -l INFO
+	@watchmedo auto-restart --directory=./api/tasks --pattern=*.py --recursive -- celery -A server worker -l INFO
 
 redis-dev:
 	@echo "Starting Redis server..."

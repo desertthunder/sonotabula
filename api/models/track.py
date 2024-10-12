@@ -129,9 +129,10 @@ class TrackSyncManager(models.Manager["Track"]):
                     "release_year": album.release_year,
                     "image_url": album.image_url,
                     "album_type": album.album_type,
-                    "artists": album_artists,
                 },
             )
+
+            album_record.artists.set(album_artists.all())
 
             t, _ = self.model.objects.update_or_create(
                 spotify_id=track.spotify_id,

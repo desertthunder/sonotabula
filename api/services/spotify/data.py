@@ -89,3 +89,33 @@ class SpotifyDataService:
             client.close()
 
             return resp
+
+    def fetch_playlist_tracks(
+        self, playlist_id: str, user: "AppUser"
+    ) -> typing.Iterable[dict]:
+        """Fetch a playlist's tracks."""
+        next = SpotifyAPIEndpoints.PlaylistTracks.format(playlist_id=playlist_id)
+
+        with httpx.Client(
+            base_url=SpotifyAPIEndpoints.BASE_URL,
+            headers={"Authorization": f"Bearer {user.access_token}"},
+        ) as client:
+            while next:
+                response = client.get(url=next)
+
+                if response.is_error:
+                    logger.error(f"Error: {response.text}")
+
+                    raise SpotifyAPIError(response.text)
+
+                resp = response.json()
+
+                logger.debug(f"No. Tracks: {len(resp.get("items", []))} items")
+                logger.debug(f"Next: {resp.get('next')}")
+
+                next = resp.get("next")
+
+                if next:
+                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+
+                yield from resp.get("items", [])
