@@ -3,6 +3,7 @@
 import typing
 import uuid
 
+import pandas as pd
 from django.db import models
 from pydantic import BaseModel
 
@@ -85,6 +86,17 @@ class AnalysisManager(models.Manager["Analysis"]):
         analysis.refresh_from_db()
 
         return analysis.pk
+
+    def computation(self, playlist_pk: uuid.UUID) -> pd.DataFrame:
+        """Calculate playlist analysis."""
+        playlist_track_pks = (
+            Playlist.objects.get(pk=playlist_pk)
+            .tracks.all()
+            .values_list("pk", flat=True)
+        )
+        features = TrackFeatures.objects.filter(track__in=playlist_track_pks).values()
+
+        return pd.DataFrame(features)  # type: ignore
 
 
 class TrackFeatures(TimestampedModel):
