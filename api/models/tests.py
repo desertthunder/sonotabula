@@ -4,6 +4,7 @@ import unittest
 from django.test import TestCase
 from faker import Faker
 
+from api.models.analysis import Analysis
 from api.models.music import Album, Artist
 from api.models.playlist import Playlist, SyncPlaylist
 from api.models.track import SyncData, Track
@@ -30,6 +31,8 @@ class UserModelTestCase(TestCase):
 
 class PlaylistSyncManagerTestCase(TestCase):
     def setUp(self):
+        # Example:
+        #
         # self.playlists = [
         #     SyncPlaylist(
         #         name=faker.name(), spotify_id=faker.uuid4(), owner_id=faker.uuid4()
@@ -119,3 +122,77 @@ class TrackSyncManagerTestCase(TestCase):
         self.assertEqual(Track.objects.count(), initial_track_count + tracks_added)
         self.assertEqual(Album.objects.count(), initial_album_count + tracks_added)
         self.assertEqual(Artist.objects.count(), initial_artist_count + artists_added)
+
+
+class AnalysisManagerTestCase(TestCase):
+    def setUp(self):
+        self.playlist = Playlist.objects.create(
+            name=faker.name(), spotify_id=faker.uuid4(), owner_id=faker.uuid4()
+        )
+
+        self.user = AppUser.objects.get(is_staff=True)
+
+    def test_pre_analysis(self):
+        with open("api/libs/fixtures/playlist-tracks.json") as f:
+            data = json.load(f)
+
+        cleaned_track_data = []
+
+        for entry in Track.sync.before_sync(data.get("items")):
+            cleaned_track_data.append(entry)
+
+        track_results = Track.sync.sync(items=(data for data in cleaned_track_data))
+
+        for track_pk, _ in track_results:
+            self.playlist.tracks.add(track_pk)
+
+        self.playlist.is_synced = True
+        self.playlist.save()
+
+        result = Analysis.sync.pre_analysis(self.playlist.pk, self.user.pk)
+
+        self.assertEqual(len(result), len(data.get("items")))
+
+    def test_analyze(self):
+        with open("api/libs/fixtures/playlist-tracks.json") as f:
+            data = json.load(f)
+
+        cleaned_track_data = []
+
+        for entry in Track.sync.before_sync(data.get("items")):
+            cleaned_track_data.append(entry)
+
+        track_results = Track.sync.sync(items=(data for data in cleaned_track_data))
+
+        for track_pk, _ in track_results:
+            self.playlist.tracks.add(track_pk)
+
+        self.playlist.is_synced = True
+        self.playlist.version = faker.uuid4()
+        self.playlist.save()
+
+        Analysis.sync.pre_analysis(self.playlist.pk, self.user.pk)
+
+        data = [
+            {
+                "id": track_pk,
+                "danceability": faker.random_number(digits=2),
+                "energy": faker.random_number(digits=2),
+                "key": faker.random_number(digits=1),
+                "loudness": faker.random_number(digits=2),
+                "mode": faker.random_number(digits=1),
+                "speechiness": faker.random_number(digits=2),
+                "acousticness": faker.random_number(digits=2),
+                "instrumentalness": faker.random_number(digits=2),
+                "liveness": faker.random_number(digits=2),
+                "valence": faker.random_number(digits=2),
+                "tempo": faker.random_number(digits=2),
+                "duration_ms": faker.random_number(digits=5),
+                "time_signature": faker.random_number(digits=1),
+            }
+            for track_pk, _ in track_results
+        ]
+
+        result = Analysis.sync.analyze(self.playlist.pk, self.user.pk, data)
+
+        self.assertIsNotNone(result)
