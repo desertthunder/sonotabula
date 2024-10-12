@@ -10,6 +10,8 @@ a comprehensive database of music metadata relevant to them.
 
 ![DashSpot Screenshot](./doc/static/img/screencap.png)
 
+Check out the [docs](https://dashspot-dev.netlify.app/)!
+
 ## Setup
 
 Copy the sample `.env` file and fill in the necessary environment variables. I
