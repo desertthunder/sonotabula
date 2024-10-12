@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from api.views import auth, data, library, playback
+from api.views import auth, browser, data, library, playback
 
 urlpatterns = [
     path("login", auth.LoginView.as_view(), name="login"),
@@ -22,4 +22,9 @@ urlpatterns = [
         "library/artists", library.LibraryArtistsView.as_view(), name="library-artists"
     ),
     path("library/tracks", library.LibraryTracksView.as_view(), name="library-tracks"),
+    path(
+        "browser/playlists",
+        browser.BrowserPlaylistView.as_view(),
+        name="list-browser-playlists",
+    ),
 ]

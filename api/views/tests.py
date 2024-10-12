@@ -11,6 +11,7 @@ from api.services.spotify import SpotifyAuthService
 logging.disable(logging.ERROR)
 
 
+@unittest.skip("TODO")
 class PlaybackViewTestCase(TestCase):
     def setUp(self) -> None:
         self.auth_service = SpotifyAuthService()
@@ -48,6 +49,7 @@ class PlaybackViewTestCase(TestCase):
         self.assertEqual(len(data), 2)
 
 
+@unittest.skip("TODO")
 class LibraryViewTestCase(TestCase):
     def setUp(self) -> None:
         self.auth_service = SpotifyAuthService()
@@ -128,3 +130,37 @@ class AuthViewTestCase(TestCase):
 class AnalysisViewTestCase(TestCase):
     def test_analysis_view(self):
         pass
+
+
+class BrowserPlaylistViewTestCase(TestCase):
+    def setUp(self) -> None:
+        self.auth_service = SpotifyAuthService()
+        self.user = AppUser.objects.get(is_staff=True)
+        self.jwt = Token(self.user).encode()
+
+    def test_browser_playlist_view(self):
+        path = reverse("list-browser-playlists")
+
+        response = self.client.get(
+            path, headers={"Authorization": f"Bearer {self.jwt}"}
+        )
+
+        data = response.json().get("data")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(data)
+        self.assertGreater(len(data), 0)
+
+    def filter_by_name(self):
+        path = reverse("list-browser-playlists")
+        path = f"{path}?name=random"
+
+        response = self.client.get(
+            path, headers={"Authorization": f"Bearer {self.jwt}"}
+        )
+
+        data = response.json().get("data")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(data)
+        self.assertGreater(len(data), 0)

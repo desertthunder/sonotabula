@@ -92,3 +92,10 @@ class SpotifyDataView(GetUserMixin, views.APIView):
         self.data_service = data_service
 
         super().__init__(*args, **kwargs)
+
+
+class BrowserView(GetUserMixin, views.APIView):
+    """Get the user's persisted library."""
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SpotifyAuth]
