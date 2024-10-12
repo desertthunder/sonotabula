@@ -18,3 +18,8 @@ on top of a Django backend serving a single-page React application.
 2. **Music Analysis**
 
 3. **Music Metadata**
+
+## Requests
+
+Feel free to submit an issue on Github [here](https://github.com/desertthunder/spotify-dashboard/issues)
+for any bugs or feature requests you may have.

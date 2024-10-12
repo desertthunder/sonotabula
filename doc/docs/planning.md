@@ -1,4 +1,4 @@
-# Feature Lot
+# Planning
 
 This is a parking lot for feature concepts that have popped into my head and
 from feedback I receive from my friends.
