@@ -53,20 +53,6 @@ class Library(TimestampedModel):
     tracks = models.ManyToManyField("api.Track", related_name="libraries")
 
 
-class Track(SpotifyModel, TimestampedModel):
-    """Track model.
-
-    Required fields for creation:
-        - name
-        - spotify_id
-    """
-
-    duration = models.IntegerField()
-    album_id = models.ForeignKey(
-        "api.Album", related_name="tracks", on_delete=models.PROTECT, null=True
-    )
-
-
 class Album(SpotifyModel, TimestampedModel):
     """Album model.
 
@@ -81,7 +67,7 @@ class Album(SpotifyModel, TimestampedModel):
     copyright = models.CharField(max_length=255, blank=True, null=True)
     release_year = models.IntegerField()
 
-    artist = models.ManyToManyField("api.Artist", related_name="albums")
+    artists = models.ManyToManyField("api.Artist", related_name="albums")
 
 
 class Artist(SpotifyModel, TimestampedModel):

@@ -2,8 +2,9 @@
 
 from django.db import models
 
-from api.models.music import TimestampedModel, Track
+from api.models.music import TimestampedModel
 from api.models.playlist import Playlist
+from api.models.track import Track
 
 
 class TrackFeatures(TimestampedModel):

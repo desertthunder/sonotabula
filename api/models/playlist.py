@@ -63,9 +63,12 @@ class PlaylistSyncManager(models.Manager["Playlist"]):
             ignore_conflicts=True,
         )
 
-        for record in synced:
-            record.refresh_from_db()
-            yield record.pk, record.spotify_id
+        synced_spotify_ids = [playlist.spotify_id for playlist in synced]
+        existing = self.filter(spotify_id__in=synced_spotify_ids).values_list(
+            "pk", "spotify_id"
+        )
+
+        yield from existing
 
 
 class Playlist(SpotifyModel, TimestampedModel):
