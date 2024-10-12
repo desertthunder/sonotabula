@@ -71,6 +71,7 @@ class SpotifyAPIEndpoints(enum.StrEnum):
     Track = "tracks/{track_id}"
     TrackAudioAnalysis = "audio-analysis/{track_id}"
     TrackAudioFeatures = "audio-features/{track_id}"
+    BulkTrackAudioFeatures = "audio-features"
 
 
 class SpotifyAPIStates(enum.StrEnum):

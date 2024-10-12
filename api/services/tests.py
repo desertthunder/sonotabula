@@ -7,6 +7,7 @@ import typing
 from django.test import TestCase
 from django.test.testcases import SerializeMixin
 
+from api.models.playlist import Playlist
 from api.models.users import AppUser
 from api.serializers.authentication import CurrentUser
 from api.services.spotify import (
@@ -16,7 +17,7 @@ from api.services.spotify import (
     SpotifyPlaybackService,
 )
 
-logging.disable(logging.ERROR)
+logging.disable(logging.INFO)
 
 
 class SpotifyAuthServiceTestCase(SerializeMixin, TestCase):
@@ -123,6 +124,7 @@ class SpotifyDataServiceTestCase(TestCase):
         self.user = AppUser.objects.get(is_staff=True)
 
         self.user = self.auth_service.refresh_access_token(self.user.refresh_token)
+        self.playlist = Playlist.objects.first()
 
     def test_fetch_saved_items(self):
         data = self.service.fetch_saved_items(self.user, limit=1)
@@ -135,3 +137,29 @@ class SpotifyDataServiceTestCase(TestCase):
         self.assertEqual(len(data), 5)
 
         time.sleep(1)
+
+    def test_fetch_playlist(self):
+        data = self.service.fetch_playlist(self.playlist.spotify_id, self.user)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data.get("id"), self.playlist.spotify_id)
+
+        time.sleep(1)
+
+    def test_fetch_playlist_tracks(self):
+        data = self.service.fetch_playlist_tracks(self.playlist.spotify_id, self.user)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, typing.Iterable)
+
+        time.sleep(1)
+
+    def test_fetch_audio_features(self):
+        track_ids = self.playlist.tracks.values_list("spotify_id", flat=True)
+        data = self.service.fetch_audio_features(track_ids, self.user)
+
+        self.assertIsNotNone(data)
+        self.assertIsInstance(data, typing.Iterable)
+
+        data = list(data)

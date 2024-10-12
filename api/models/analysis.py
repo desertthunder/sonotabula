@@ -59,7 +59,7 @@ class AnalysisManager(models.Manager["Analysis"]):
                 f"Playlist {str(playlist.pk)} | {playlist.name} is not synced."
             )
 
-        analysis = self.create(
+        analysis, _ = self.get_or_create(
             version=playlist.version, playlist_id=playlist.pk, user=user
         )  # type: ignore
 

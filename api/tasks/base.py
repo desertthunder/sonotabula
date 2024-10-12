@@ -5,6 +5,7 @@ import uuid
 from celery import shared_task
 
 from api.libs.exceptions import SpotifyExpiredTokenError
+from api.models.analysis import Analysis
 from api.models.music import Library
 from api.models.playlist import Playlist
 from api.models.track import Track
@@ -53,6 +54,8 @@ def sync_playlist_tracks(spotify_id: str, user_pk: int) -> str:
         user_service.refresh_access_token(user.refresh_token)
         user.refresh_from_db()
 
+        response = data_service.fetch_playlist_tracks(playlist_id=spotify_id, user=user)
+
     data = Track.sync.before_sync(response)
     result = Track.sync.sync(data)
 
@@ -62,3 +65,20 @@ def sync_playlist_tracks(spotify_id: str, user_pk: int) -> str:
     playlist.save()
 
     return playlist.spotify_id
+
+
+@shared_task
+def sync_track_analysis_for_playlist(playlist_pk: uuid.UUID, user_pk: int) -> uuid.UUID:
+    """Sync track analysis for a playlist."""
+    user = AppUser.objects.get(pk=user_pk)
+
+    track_ids = Analysis.sync.pre_analysis(playlist_pk, user_pk)
+    try:
+        data = data_service.fetch_audio_features(track_ids, user)
+    except SpotifyExpiredTokenError:
+        user_service.refresh_access_token(user.refresh_token)
+        user.refresh_from_db()
+
+        data = data_service.fetch_audio_features(track_ids, user)
+
+    return Analysis.sync.analyze(str(playlist_pk), user_pk, data)

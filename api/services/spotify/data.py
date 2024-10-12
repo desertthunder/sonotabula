@@ -10,6 +10,7 @@ Parking Lot:
 """
 
 import logging
+import time
 import typing
 
 import httpx
@@ -119,3 +120,33 @@ class SpotifyDataService:
                     next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
                 yield from resp.get("items", [])
+
+    def fetch_audio_features(
+        self, track_ids: list[str], user: "AppUser"
+    ) -> typing.Iterable[dict]:
+        """Fetch audio features."""
+        batches = [track_ids[i : i + 50] for i in range(0, len(track_ids), 50)]
+
+        with httpx.Client(
+            base_url=SpotifyAPIEndpoints.BASE_URL,
+            headers={"Authorization": f"Bearer {user.access_token}"},
+        ) as client:
+            for batch in batches:
+                time.sleep(0.5)
+                response = client.get(
+                    url=SpotifyAPIEndpoints.BulkTrackAudioFeatures,
+                    params={"ids": ",".join(batch)},
+                )
+
+                if response.is_error:
+                    logger.error(f"Error: {response.text}")
+                    logger.error(batch)
+                    raise SpotifyAPIError(response.text)
+
+                resp = response.json()
+
+                logger.debug(f"Response: {resp}")
+
+                time.sleep(0.5)
+
+                yield from resp.get("audio_features", [])
