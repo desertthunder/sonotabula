@@ -146,5 +146,9 @@ class SpotifyAPIScopes(enum.StrEnum):
                 cls.USER_LIBRARY_READ,
                 cls.USER_FOLLOW_MODIFY,
                 cls.USER_FOLLOW_READ,
+                cls.PLAYLIST_MODIFY_PRIVATE,
+                cls.PLAYLIST_MODIFY_PUBLIC,
+                cls.PLAYLIST_READ_PRIVATE,
+                cls.PLAYLIST_READ_COLLABORATIVE,
             ]
         )

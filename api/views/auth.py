@@ -126,17 +126,8 @@ class ValidateView(SpotifyAuthView):
 
     def refresh_token(self, user: AppUser) -> str:
         """Refresh the token."""
-        success, updated_user = self.auth_service.refresh_access_token(
-            user.refresh_token
-        )
-
-        user = updated_user or user
-
-        if not success:
-            raise SpotifyAPIError("Unable to refresh token.")
-
+        user = self.auth_service.refresh_access_token(user.refresh_token)
         client_jwt = Token(user)
-
         return client_jwt.encode()
 
     def post(self, request: DRFRequest) -> HttpResponse:

@@ -37,6 +37,11 @@ class SpotifyRedirectParams:
         """Return the dataclass as a dictionary."""
         return dataclasses.asdict(self)
 
+    @property
+    def as_query_string(self) -> str:
+        """Build and return the query string."""
+        return "&".join([f"{key}={value}" for key, value in self.as_dict.items()])
+
 
 @dataclasses.dataclass
 class SpotifyTopTracksParams(RequestParams):

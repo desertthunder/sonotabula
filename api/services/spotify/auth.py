@@ -132,13 +132,14 @@ class SpotifyAuthService:
 
         return SpotifyRedirectURI.from_request(req)
 
-    def refresh_access_token(self, refresh_token: str) -> AppUser | None:
+    def refresh_access_token(self, refresh_token: str) -> AppUser:
         """Refresh the access token and update the user's token set."""
         try:
             user = AppUser.objects.get(refresh_token=refresh_token)
-        except AppUser.DoesNotExist:
+        except AppUser.DoesNotExist as exc:
             logger.error(f"User not found with refresh token: {refresh_token}")
-            return None
+
+            raise SpotifyAPIError("User not found.") from exc
 
         request_data = SpotifyRefreshTokenRequest(refresh_token, self.client_id)  # type: ignore
 
@@ -160,7 +161,8 @@ class SpotifyAuthService:
 
         if not resp.get("access_token"):
             logger.error("Access token not found in response")
-            return None
+
+            raise SpotifyAPIError("Access token not found in response.")
 
         logger.debug(f"Access token response: {resp.get('access_token')[1:10]}...")
 

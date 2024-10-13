@@ -6,10 +6,14 @@ import { COUNT_KEYS } from "@/libs/types/api";
 import { StatCard } from "./StatCard";
 
 export default function Dashboard() {
-  const { token } = useTokenValidator();
+  const { query } = useTokenValidator();
 
-  if (!token) {
-    return null;
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
   }
 
   return (

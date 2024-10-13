@@ -1,6 +1,6 @@
 import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
 
 function useQueryParams(): Record<string, string> {
   const location = useLocation();
@@ -26,7 +26,6 @@ export function useToken(): {
 }
 
 export function useTokenValidator() {
-  const navigate = useNavigate();
   const params = useQueryParams();
   const queryClient = useQueryClient();
   const queryData = queryClient.getQueryData<{
@@ -66,16 +65,9 @@ export function useTokenValidator() {
 
       return data;
     },
+    retry: false,
     refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  useEffect(() => {
-    if (query.isError) {
-      navigate("/login");
-    } else if (query.isSuccess && params.token) {
-      navigate("/dashboard");
-    }
-  }, [query, navigate, params]);
-
-  return { token, query };
+  return { query };
 }

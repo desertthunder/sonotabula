@@ -34,12 +34,8 @@ class LibraryPlaylistsView(SpotifyLibraryView):
         Endpoint: GET /api/library/playlists
         """
         limit = request.query_params.get("limit", 10)
-
-        if int(limit) > 50:
-            limit = 50
-
         app_user = self.get_user(request)
-        iterator = self.library_service.library_playlists(app_user, int(limit))
+        iterator = self.library_service.library_playlists(app_user.pk, int(limit))
         response = list(iterator)
         data = library.Playlist.list(response)
         return JsonResponse(data={"data": [playlist.model_dump() for playlist in data]})
