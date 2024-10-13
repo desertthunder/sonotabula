@@ -5,7 +5,7 @@ import typing
 from django.db import models
 from pydantic import BaseModel
 
-from api.models.playlist import Playlist
+from api.models import Playlist, Track, TrackFeatures
 
 
 class PlaylistModelSerializer(BaseModel):
@@ -42,8 +42,91 @@ class PlaylistModelSerializer(BaseModel):
 
     @classmethod
     def list(
-        cls: type["PlaylistModelSerializer"], models: models.QuerySet["Playlist"]
+        cls: type["PlaylistModelSerializer"],
+        models: models.QuerySet["Playlist"],
     ) -> typing.Iterable["PlaylistModelSerializer"]:
+        """Create a list of model serializers from a list of models."""
+        for model in models:
+            yield cls.get(model)
+
+
+class TrackFeaturesModelSerializer(BaseModel):
+    """Track Features model serializer."""
+
+    id: str
+    danceability: float
+    energy: float
+    key: int
+    loudness: float
+    mode: int
+    speechiness: float
+    acousticness: float
+    instrumentalness: float
+    liveness: float
+    valence: float
+    tempo: float
+    duration_ms: int
+    time_signature: int
+
+    @classmethod
+    def get(
+        cls: type["TrackFeaturesModelSerializer"], model: TrackFeatures
+    ) -> "TrackFeaturesModelSerializer":
+        """Create a model serializer from a model."""
+        return cls(
+            id=str(model.id),
+            danceability=model.danceability,
+            energy=model.energy,
+            key=model.key,
+            loudness=model.loudness,
+            mode=model.mode,
+            speechiness=model.speechiness,
+            acousticness=model.acousticness,
+            instrumentalness=model.instrumentalness,
+            liveness=model.liveness,
+            valence=model.valence,
+            tempo=model.tempo,
+            duration_ms=model.duration_ms,
+            time_signature=model.time_signature,
+        )
+
+
+class TrackModelSerializer(BaseModel):
+    """Browser Playlist Track model serializer."""
+
+    album_id: str
+    name: str
+    spotify_id: str
+    duration: int
+    features: TrackFeaturesModelSerializer | None = None
+    album_name: str | None = None
+
+    @classmethod
+    def get(cls: type["TrackModelSerializer"], model: Track) -> "TrackModelSerializer":
+        """Create a model serializer from a model."""
+        album_name = None
+        features = None
+
+        if model.album is not None:
+            album_name = model.album.name
+
+        if model.features is not None:
+            features = TrackFeaturesModelSerializer.get(model.features)
+
+        return cls(
+            album_id=str(model.album_id),
+            name=model.name,
+            spotify_id=model.spotify_id,
+            duration=model.duration,
+            features=features,
+            album_name=album_name,
+        )
+
+    @classmethod
+    def list(
+        cls: type["TrackModelSerializer"],
+        models: models.QuerySet,
+    ) -> typing.Iterable["TrackModelSerializer"]:
         """Create a list of model serializers from a list of models."""
         for model in models:
             yield cls.get(model)

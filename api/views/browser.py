@@ -7,16 +7,25 @@ from django.http import (
 from rest_framework.request import Request as DRFRequest
 
 from api.filters import PlaylistFilterSet
-from api.models.serializers import PlaylistModelSerializer
+from api.filters.tracks import TrackFilterSet
+from api.models.serializers import PlaylistModelSerializer, TrackModelSerializer
 from api.views.base import BrowserView
 
 
 class BrowserPlaylistTracksView(BrowserView):
     """Playlist tracks browser view."""
 
-    def get(self, request: DRFRequest, *args, **kwargs) -> HttpResponse:
+    filterset = TrackFilterSet()
+
+    def get(
+        self, request: DRFRequest, playlist_id: str, *args, **kwargs
+    ) -> HttpResponse:
         """Get request."""
-        raise NotImplementedError
+        records = self.filterset(
+            request, playlist_pk=playlist_id, include_features=True
+        )
+        data = TrackModelSerializer.list(records)
+        return JsonResponse(data={"data": [record.model_dump() for record in data]})
 
 
 class BrowserPlaylistView(BrowserView):

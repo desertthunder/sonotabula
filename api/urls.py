@@ -27,4 +27,9 @@ urlpatterns = [
         browser.BrowserPlaylistView.as_view(),
         name="list-browser-playlists",
     ),
+    path(
+        "browser/playlist/<str:playlist_id>/tracks",
+        browser.BrowserPlaylistTracksView.as_view(),
+        name="list-browser-playlist-tracks",
+    ),
 ]

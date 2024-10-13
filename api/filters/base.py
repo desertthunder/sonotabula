@@ -9,7 +9,7 @@ from api.models.users import AppUser
 class FilterMeta:
     """Metaclass for FilterSet."""
 
-    default_queryset: models.Manager | models.QuerySet
+    default_queryset: models.QuerySet
     filter_fields: list[str] = []
     sort_fields: list[str] = []
     search_fields: list[str] = []
@@ -26,15 +26,13 @@ class FilterSet:
         else:
             raise ValueError("User is not authenticated.")
 
-    def get_queryset(
-        self, request: Request, *args, **kwargs
-    ) -> models.Manager | models.QuerySet:
+    def get_queryset(self, request: Request, *args, **kwargs) -> models.QuerySet:
         """Access initial queryset."""
         return self.Meta.default_queryset
 
     def __call__(
         self, request: Request, queryset: models.QuerySet | None = None, *args, **kwargs
-    ) -> models.Manager | models.QuerySet:
+    ) -> models.QuerySet:
         """Return the filtered queryset."""
         qs = self.get_queryset(request, queryset, *args, **kwargs)
 
