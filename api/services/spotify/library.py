@@ -59,44 +59,38 @@ class SpotifyLibraryService:
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
         yielded = 0
-        next = f"{SpotifyAPIEndpoints.SavedPlaylists}"
+        next: str | None = f"{SpotifyAPIEndpoints.SavedPlaylists}"
 
         if all:
-            limit = 50
+            limit = 50  # Default page size is 20
 
-        while next:
-            with httpx.Client(
-                base_url=SpotifyAPIEndpoints.BASE_URL,
-                headers={"Authorization": f"Bearer {user.access_token}"},
-            ) as client:
+        with httpx.Client(
+            base_url=SpotifyAPIEndpoints.BASE_URL,
+            headers={"Authorization": f"Bearer {user.access_token}"},
+        ) as client:
+            while next:
                 if not all and yielded >= limit:
                     client.close()
                     break
 
                 time.sleep(1)
 
-                response = client.get(
-                    url=next,
-                    params={"limit": limit},
-                )
+                response = client.get(url=next, params={"limit": limit})
 
                 if response.is_error:
-                    logger.error(f"Error: {response.text}")
-
                     self.handle_error(response)
 
                 resp = response.json()
 
                 logger.debug(f"Response: {resp}")
 
-                next = resp.get("next")
+                next = (
+                    resp.get("next").replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+                    if resp.get("next")
+                    else None
+                )
 
-                if next is not None:
-                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
-
-                if not all:
-                    yielded += len(resp.get("items"))
-
+                yielded += len(resp.get("items"))
                 yield from resp.get("items")
 
     def library_albums(
