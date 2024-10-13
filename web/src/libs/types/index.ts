@@ -7,5 +7,7 @@ export type {
   FetchError,
   LibraryCounts,
   LibraryCountsResponse,
+  Auth,
 } from "./api";
+
 export { ResourceKey, RESOURCE_KEYS } from "./api";

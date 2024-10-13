@@ -1,6 +1,6 @@
 import { DataTable } from "@/components/DataTable/DataTable";
 import { ResourceKey } from "@/libs/types";
-import { useBrowse } from "@/libs/hooks/fetch";
+import { useBrowse } from "@/libs/hooks";
 import { Playlist } from "./Playlist";
 
 export function BrowserPage() {

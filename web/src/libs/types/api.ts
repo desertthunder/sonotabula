@@ -42,6 +42,11 @@ export type FetchError = {
   message: string;
 };
 
+export type Auth = {
+  message: string;
+  token: string;
+};
+
 export enum ResourceKey {
   LibraryPlaylists = "library-playlists",
   LibraryTracks = "library-tracks",

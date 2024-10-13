@@ -14,8 +14,8 @@ that covers each database model.
     - Library
     - Analysis
 - [x] Complete test coverage for services package
-- Put flower in compose file
-- Hot reload for celery with [watchdog](https://watchfiles.helpmanual.io/cli/)
+- [ ] Put flower in compose file
+- [x] Hot reload for celery with [watchdog](https://watchfiles.helpmanual.io/cli/)
 
 ## Server Side
 
@@ -23,9 +23,18 @@ that covers each database model.
 - [X] Expanded Playlist Endpoint
     - [X] Service
     - [X] View
-- [ ] Home page stats Endpoint
+- [x] Home page stats Endpoint
+- [X] Playlist Tracks List
+    - [x] Playlist Tracks Filters
+    - [X] Playlist Track Serializer
+        - [X] Playlist Track Features Serializer
 
 ## Client Side (Web)
 
 - [x] Figure out how to deploy docs to netlify
-- [ ] Last played data fetching and display
+- [ ] Last played
+    - [ ] Query
+    - [ ] Component
+- [ ] Playlists Page
+    - [ ] Datatable Component
+    - [ ] Track List Drawer

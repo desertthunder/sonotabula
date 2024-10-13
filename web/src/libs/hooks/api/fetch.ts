@@ -1,10 +1,8 @@
-import type { Resource, FetchError, LibraryCountsResponse } from "@libs/types";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { useToken } from "./query";
+import type { Resource, FetchError } from "@libs/types";
 import { BASE_URL } from "@libs/services";
 import { ResourceKey } from "@libs/types";
 
-function getEndpoint(resourceKey: string) {
+export function getEndpoint(resourceKey: string) {
   switch (resourceKey) {
     case ResourceKey.LibraryPlaylists:
       return `${BASE_URL}/api/library/playlists`;
@@ -19,7 +17,7 @@ function getEndpoint(resourceKey: string) {
   }
 }
 
-function getBrowserEndpoint(resourceKey: string) {
+export function getBrowserEndpoint(resourceKey: string) {
   switch (resourceKey) {
     case ResourceKey.LibraryPlaylists:
       return `${BASE_URL}/api/browser/playlists`;
@@ -66,7 +64,7 @@ export async function fetcher<T extends ResourceKey>(
   return data["data"] as Resource<T>;
 }
 
-export function browserFetcher<T extends ResourceKey>(
+export async function browserFetcher<T extends ResourceKey>(
   resource: ResourceKey,
   token: string
 ): Promise<Resource<T>> {
@@ -89,85 +87,4 @@ export function browserFetcher<T extends ResourceKey>(
 
     return data["data"] as Resource<T>;
   });
-}
-
-export function useFetch<T extends ResourceKey>(
-  resource: ResourceKey,
-  limit?: number | null
-): UseQueryResult<Resource<T>> {
-  const { token, client } = useToken();
-
-  const query = useQuery<Resource<T>>(
-    {
-      queryKey: [resource],
-      queryFn: async () => {
-        if (!token) {
-          throw new Error("Token not found");
-        }
-
-        return await fetcher<T>(resource, token, limit);
-      },
-    },
-    client
-  );
-
-  return query;
-}
-
-export function useBrowse<T extends ResourceKey>(
-  resource: ResourceKey
-): UseQueryResult<Resource<T>> {
-  const { token, client } = useToken();
-
-  const query = useQuery<Resource<T>>(
-    {
-      queryKey: [resource],
-      queryFn: async () => {
-        if (!token) {
-          throw new Error("Token not found");
-        }
-
-        return await browserFetcher<T>(resource, token);
-      },
-    },
-    client
-  );
-
-  return query;
-}
-
-export function useSavedCounts() {
-  const { token, client } = useToken();
-
-  const query = useQuery(
-    {
-      queryKey: ["saved-counts"],
-      queryFn: async () => {
-        if (!token) {
-          throw new Error("Token not found");
-        }
-
-        const response = await fetch(`${BASE_URL}/api/data/saved`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          return Promise.reject({
-            code: response.status,
-            message: response.statusText,
-          } as FetchError);
-        }
-
-        const data = (await response.json()) as LibraryCountsResponse;
-
-        return data["data"];
-      },
-    },
-    client
-  );
-
-  return query;
 }
