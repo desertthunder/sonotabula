@@ -102,7 +102,7 @@ function Cell({
     case "image_url":
       return (
         <td>
-          <img src={value} alt="album" height="100px" width={"100px"} />
+          <img src={value} alt="album" />
         </td>
       );
     case "release_date":

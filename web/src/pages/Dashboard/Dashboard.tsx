@@ -1,22 +1,10 @@
 import { LibraryCard } from "./LibraryCard";
-import { useTokenValidator } from "@/libs/hooks";
 import { COUNT_KEYS } from "@/libs/types/api";
 import { StatCard } from "./StatCard";
-import { DashboardLayout } from "@/layouts";
 
 export default function Dashboard() {
-  const { query } = useTokenValidator();
-
-  if (query.isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (query.isError) {
-    return <div>Error: {query.error.message}</div>;
-  }
-
   return (
-    <DashboardLayout>
+    <>
       <section className="p-6 pb-0 space-y-2">
         <h1 className="font-headings text-gray-50 text-[1.5rem] font-medium">
           Dashboard
@@ -35,6 +23,6 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
-    </DashboardLayout>
+    </>
   );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 interface SidebarLinkProps {
   href: string;
@@ -7,30 +7,27 @@ interface SidebarLinkProps {
 }
 
 function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
-  const location = useLocation();
-
   const attrs = React.useMemo(() => {
     const internal = href.startsWith("/") || !href.startsWith("http");
 
     return {
-      internal,
-      isActive:
-        (internal && location.pathname === href) ||
-        location.pathname.includes(href),
       target: internal ? undefined : "_blank",
       rel: internal ? undefined : "noopener noreferrer",
     };
-  }, [location, href]);
+  }, [href]);
 
   return (
-    <Link
+    <NavLink
       to={href}
       target={attrs.target}
       rel={attrs.rel}
-      className={`sidebar-link ${attrs.isActive ? "active" : ""}`}
+      className={({ isActive }) =>
+        ["sidebar-link", isActive ? "active" : ""].join(" ")
+      }
+      end={!href.includes("browser")}
     >
       <span className="ml-3">{linkText}</span>
-    </Link>
+    </NavLink>
   );
 }
 
@@ -41,7 +38,7 @@ export function Sidebar() {
         <div className="flex-1">
           <section>
             <SidebarLink href="/dashboard" linkText="Dashboard" />
-            <SidebarLink href="/profile" linkText="Profile" />
+            <SidebarLink href="/dashboard/browser" linkText="Browser" />
             <SidebarLink href="/playlists" linkText="Playlists" />
             <SidebarLink href="/top-tracks" linkText="Top Tracks" />
             <SidebarLink href="/top-artists" linkText="Top Artists" />

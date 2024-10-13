@@ -4,16 +4,18 @@ import "@fontsource-variable/rubik";
 import "@fontsource-variable/noto-sans-jp";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Signup, Dashboard } from "./pages";
+import { Signup, Dashboard, Browser } from "./pages";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { DashboardLayout } from "./layouts";
+import { Playlist } from "./pages/Browser/Playlist";
 
 // TODO: Move to libs
 enum Routes {
   Home = "/",
   Signup = "/signup",
   Login = "/login",
-  Dashboard = "/dashboard/",
+  Dashboard = "/dashboard",
 }
 
 const queryClient = new QueryClient({
@@ -52,7 +54,20 @@ export const BrowserRouter = createBrowserRouter([
   },
   {
     path: Routes.Dashboard,
-    element: <Dashboard />,
+    element: <DashboardLayout />,
+    children: [
+      {
+        path: "/dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "/dashboard/browser",
+        element: <Browser />,
+        children: [
+          { path: "/dashboard/browser/playlist/:id", element: <Playlist /> },
+        ],
+      },
+    ],
   },
 ]);
 

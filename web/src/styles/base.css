@@ -60,7 +60,7 @@
 }
 
 .card table {
-    @apply flex-1 border-gray-400 rounded-full my-2 border-separate max-h-96;
+    @apply flex-1 border-gray-400 rounded-full border-separate max-h-96;
 }
 
 .card table thead {
@@ -68,11 +68,15 @@
 }
 
 .card table thead th {
-    @apply bg-gray-300 p-4 text-left;
+    @apply bg-gray-300 px-4 py-2 text-left;
+}
+
+th img {
+    @apply w-8 h-8;
 }
 
 .card table thead {
-    @apply border-b border-b-gray-400 rounded-lg sticky top-0;
+    @apply border-b border-b-gray-400 rounded-lg;
 }
 
 .card table tbody td {

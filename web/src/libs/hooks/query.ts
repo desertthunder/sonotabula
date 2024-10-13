@@ -19,6 +19,8 @@ export function useToken(): {
     token: string;
   }>(["token"]);
 
+  console.log(queryData);
+
   return {
     token: queryData?.token ?? null,
     client: queryClient,
@@ -41,33 +43,36 @@ export function useTokenValidator() {
     }
   }, [params.token, queryData]);
 
-  const query = useQuery({
-    queryKey: ["token"],
-    queryFn: async () => {
-      console.debug("Checking token validity");
+  const query = useQuery(
+    {
+      queryKey: ["token"],
+      queryFn: async () => {
+        console.debug("Checking token validity");
 
-      if (!token) {
-        throw new Error("Token not found");
-      }
+        if (!token) {
+          throw new Error("Token not found");
+        }
 
-      const response = await fetch("/api/validate", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const response = await fetch("/api/validate", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error("Token invalid");
-      }
+        if (!response.ok) {
+          throw new Error("Token invalid");
+        }
 
-      const data: { message: string; token: string } = await response.json();
+        const data: { message: string; token: string } = await response.json();
 
-      return data;
+        return data;
+      },
+      retry: false,
+      refetchInterval: 5 * 60 * 1000, // 5 minutes
     },
-    retry: false,
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
-  });
+    queryClient
+  );
 
-  return { query };
+  return { query, token };
 }
