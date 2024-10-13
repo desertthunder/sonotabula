@@ -3,20 +3,12 @@
 from django.db import models
 from rest_framework.request import Request
 
+from api.filters.base import FilterMeta, FilterSet
 from api.models.playlist import Playlist
-from api.models.users import AppUser
 
 
-class PlaylistFilterSet:
+class PlaylistFilterSet(FilterSet):
     """Filter queryset by fields available in the Playlist model."""
-
-    def get_user(self, request: Request) -> AppUser:
-        """Get the authenticated user."""
-        user = request.user
-        if isinstance(user, AppUser):
-            return user
-        else:
-            raise ValueError("User is not authenticated.")
 
     def filter_name(self, qs: models.QuerySet, value: str) -> models.QuerySet:
         """Filter by playlist name."""
@@ -68,38 +60,13 @@ class PlaylistFilterSet:
         return qs.order_by("is_analyzed")
 
     def get_queryset(
-        self, request: Request, queryset: models.QuerySet | None = None
-    ) -> models.QuerySet:
+        self, request: Request, *args, **kwargs
+    ) -> models.QuerySet | models.Manager:
         """Access initial queryset."""
         user = self.get_user(request)
+        return self.Meta.default_queryset.filter(libraries__user=user)
 
-        if queryset is None:
-            qs = self.Meta.default_queryset.filter(libraries__user=user)
-        else:
-            qs = queryset.filter(libraries__user=user)
-
-        return qs
-
-    def __call__(
-        self, request: Request, queryset: models.QuerySet | None = None
-    ) -> models.QuerySet:
-        """Return the filtered queryset."""
-        qs = self.get_queryset(request, queryset)
-
-        params = request.query_params.copy()
-        sort_params = params.pop("sort", None)
-
-        for key, value in params.items():
-            if key in self.Meta.filter_fields:
-                qs = getattr(self, f"filter_{key}")(qs, value)
-
-        if sort_params:
-            for key in sort_params:
-                if key in self.Meta.sort_fields:
-                    qs = getattr(self, f"sort_{key}")(qs)
-        return qs
-
-    class Meta:
+    class Meta(FilterMeta):
         """Meta options."""
 
         default_queryset = Playlist.objects.all()
