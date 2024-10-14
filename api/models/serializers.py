@@ -2,10 +2,23 @@
 
 import typing
 
+from django.core.paginator import Paginator
 from django.db import models
 from pydantic import BaseModel
 
 from api.models import Playlist, Track, TrackFeatures
+from api.models.analysis import Computation, ComputationValidator
+
+
+class ComputationModelSerializer(ComputationValidator):
+    """Computation model serializer."""
+
+    @classmethod
+    def get(
+        cls: type["ComputationModelSerializer"], model: Computation
+    ) -> "ComputationModelSerializer":
+        """Create a model serializer from a model."""
+        return cls(**model.data)
 
 
 class PlaylistModelSerializer(BaseModel):
@@ -105,6 +118,42 @@ class TrackModelSerializer(BaseModel):
     features: TrackFeaturesModelSerializer | None = None
     album_name: str | None = None
     album_art: str | None = None
+
+    @classmethod
+    def from_paginator(
+        cls: type["TrackModelSerializer"],
+        paginator: Paginator,
+        page: int = 1,
+        playlist: Playlist | None = None,
+        computation: Computation | None = None,
+    ) -> dict[str, typing.Any]:
+        """Create a model serializer from a paginator."""
+        objects = paginator.page(page).object_list
+
+        data: dict[str, typing.Any] = {
+            "data": {
+                "playlist": None,
+                "tracks": [cls.get(record).model_dump() for record in objects],
+                "computations": None,
+            },
+            "paginator": {
+                "total": paginator.count,
+                "per_page": paginator.per_page,
+                "page": paginator.page(page).number,
+            },
+        }
+
+        if playlist is not None:
+            data["data"]["playlist"] = PlaylistModelSerializer.get(
+                playlist
+            ).model_dump()
+
+        if computation is not None:
+            data["data"]["computations"] = ComputationModelSerializer.get(
+                computation
+            ).model_dump()
+
+        return data
 
     @classmethod
     def get(cls: type["TrackModelSerializer"], model: Track) -> "TrackModelSerializer":

@@ -3,6 +3,7 @@ import {
   LibraryCountsResponse,
   Resource,
   ResourceKey,
+  BrowserPlaylistResponse,
 } from "@/libs/types";
 import {
   useQuery,
@@ -179,8 +180,8 @@ export function usePlaylistTracks(id: string) {
         if (!response.ok) {
           throw new Error("Failed to fetch playlist tracks");
         }
-        const data = await response.json();
-        return data["data"];
+
+        return (await response.json()) as BrowserPlaylistResponse;
       },
     },
     client

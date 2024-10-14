@@ -90,3 +90,83 @@ export const COUNT_KEYS: CountKey[] = [
 
 export type LibraryCounts = { [key in CountKey]: number };
 export type LibraryCountsResponse = { data: LibraryCounts };
+
+/**
+ * Browser Types
+ */
+export type PlaylistTrackFeatures = {
+  danceability: number;
+  energy: number;
+  key: number;
+  loudness: number;
+  mode: number;
+  speechiness: number;
+  acousticness: number;
+  instrumentalness: number;
+  liveness: number;
+  valence: number;
+  tempo: number;
+  duration_ms: number;
+  time_signature: number;
+};
+
+type ComputedKey = keyof Omit<
+  PlaylistTrackFeatures,
+  "duration_ms" | "time_signature" | "key" | "mode"
+>;
+export type PlaylistComputations = {
+  superlatives: Record<
+    ComputedKey,
+    {
+      min: number;
+      min_track_id: string;
+      max: number;
+      max_track_id: string;
+    }
+  >;
+  averages: Record<ComputedKey, number>;
+  count: {
+    key: Record<number, number>;
+    mode: Record<number, number>;
+    time_signature: Record<number, number>;
+  };
+};
+
+export type PlaylistTrack = {
+  id: string;
+  album_id: string;
+  name: string;
+  spotify_id: string;
+  duration: number;
+  spotify_url: string;
+  features: PlaylistTrackFeatures | null;
+  album_name: string | null;
+  album_art: string | null;
+};
+
+export type BrowserPlaylist = {
+  id: string;
+  name: string;
+  spotify_url: string;
+  is_synced: boolean;
+  is_analyzed: boolean;
+  description: string | null;
+  owner_id: string | null;
+  version: string | null;
+  image_url: string | null;
+  public: boolean | null;
+  shared: boolean | null;
+};
+
+export type BrowserPlaylistResponse = {
+  data: {
+    playlist: BrowserPlaylist;
+    tracks: PlaylistTrack[];
+    computations: PlaylistComputations;
+  };
+  paginator: {
+    total: number;
+    per_page: number;
+    current_page: number;
+  };
+};
