@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export function Navbar() {
   return (
     <Flex
-      className="border-b-4 border-green-500 px-4 pr-8 py-1"
+      className="border-b-4 border-green-500 px-4 pr-8 py-1 bg-white"
       justify="between"
     >
       <Link

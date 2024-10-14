@@ -1,13 +1,8 @@
-import { useFetch } from "@/libs/hooks";
 import { useMemo } from "react";
 import type { Artist, Playlist, Album, Track } from "@/libs/types";
 import { ResourceKey } from "@/libs/types";
 import { decodeUnicode } from "@/libs/helpers";
 import { Link, ScrollArea, Table, Text } from "@radix-ui/themes";
-
-interface Props {
-  scope: ResourceKey;
-}
 
 type TableHeaders = Record<ResourceKey, string[]>;
 
@@ -131,20 +126,15 @@ function Cell({
   }
 }
 
-export function LibraryTable({ scope }: Props) {
-  const context = useFetch<typeof scope>(scope, 10);
+interface Props<T extends ResourceKey> {
+  scope: T;
+  data: AccessedType<T>[];
+}
 
+export function LibraryTable<T extends ResourceKey>({ scope, data }: Props<T>) {
   const { headers, accessors } = useMemo(() => {
     return tableProps(scope);
   }, [scope]);
-
-  if (context.isError) {
-    return <div>Error: {context.error.message}</div>;
-  }
-
-  if (context.isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <ScrollArea
@@ -162,7 +152,7 @@ export function LibraryTable({ scope }: Props) {
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {context.data?.map((item) => (
+          {data?.map((item) => (
             <Table.Row key={item.spotify_id} align="center">
               {accessors.map((accessor, i) =>
                 i === 0 ? (

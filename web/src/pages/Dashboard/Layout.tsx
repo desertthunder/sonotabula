@@ -27,9 +27,12 @@ export function DashboardLayout() {
   }
 
   return (
-    <Flex direction="column" className="h-screen">
+    <Flex
+      direction="column"
+      className="h-screen bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%"
+    >
       <Navbar />
-      <Flex flexGrow="1" gap="8">
+      <Flex flexGrow="1">
         <Sidebar />
 
         <Outlet />

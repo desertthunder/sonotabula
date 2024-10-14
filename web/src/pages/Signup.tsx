@@ -1,10 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { redirect } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useTokenValidator } from "@/libs/hooks";
 
 // TODO: Create a proper index page
 export default function Signup() {
-  const navigate = useNavigate();
   const query = useTokenValidator();
 
   // Login
@@ -28,7 +27,7 @@ export default function Signup() {
   }
 
   if (query.isSuccess) {
-    navigate("/dashboard");
+    redirect("/dashboard");
   } else if (query.isError) {
     console.error(query.error);
   }

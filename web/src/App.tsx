@@ -5,12 +5,15 @@ import "@fontsource-variable/noto-sans-jp";
 import "@radix-ui/themes/styles.css";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Signup, Dashboard, Browser } from "./pages";
+import { Signup, Browser } from "./pages";
+import { Dashboard, DashboardLayout } from "./pages/Dashboard";
+
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
-import { DashboardLayout, BrowserLayout } from "./layouts";
+import { BrowserLayout } from "./layouts";
 import { Playlist } from "./pages/Browser/Playlist";
 import { Theme } from "@radix-ui/themes";
+
 // TODO: Move to libs
 enum Routes {
   Home = "/",

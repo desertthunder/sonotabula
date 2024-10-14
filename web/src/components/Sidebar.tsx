@@ -44,7 +44,7 @@ export function Sidebar() {
       height="100%"
       direction="column"
       minWidth="15%"
-      className="bg-jade-3 border-r"
+      className="bg-jade-3 border-r pr-8"
     >
       <Flex direction="column">
         <SidebarLink href="/dashboard" linkText="Dashboard" />

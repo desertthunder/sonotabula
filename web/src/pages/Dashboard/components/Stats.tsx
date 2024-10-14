@@ -1,6 +1,7 @@
 import { useSavedCounts } from "@/libs/hooks";
 import { CountKey } from "@/libs/types/api";
 import { Card, Flex, Heading, Inset, Text } from "@radix-ui/themes";
+
 interface Props {
   scope: CountKey;
 }
