@@ -2,6 +2,7 @@ import "./styles/base.css";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/rubik";
 import "@fontsource-variable/noto-sans-jp";
+import "@radix-ui/themes/styles.css";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Signup, Dashboard, Browser } from "./pages";
@@ -9,7 +10,7 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { DashboardLayout, BrowserLayout } from "./layouts";
 import { Playlist } from "./pages/Browser/Playlist";
-
+import { Theme } from "@radix-ui/themes";
 // TODO: Move to libs
 enum Routes {
   Home = "/",
@@ -82,8 +83,17 @@ export const BrowserRouter = createBrowserRouter([
 
 export default function Root() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={BrowserRouter} />
-    </QueryClientProvider>
+    <Theme
+      appearance="light"
+      accentColor="jade"
+      grayColor="sage"
+      panelBackground="solid"
+      scaling="100%"
+      radius="medium"
+    >
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={BrowserRouter} />
+      </QueryClientProvider>
+    </Theme>
   );
 }

@@ -3,21 +3,6 @@ import React, { useCallback, useMemo } from "react";
 import { useMatch, useNavigate, useParams } from "react-router-dom";
 import { Drawer } from "vaul";
 
-type Playlist = {
-  id: string;
-  name: string;
-  album_name: string;
-  is_analyzed: boolean;
-  is_synced: boolean;
-  image_url: string;
-  tracks: {
-    id: string;
-    name: string;
-    album_name: string;
-    features: Record<string, string>;
-  }[];
-};
-
 function translateKey(key: string) {
   const title = key.charAt(0).toUpperCase() + key.slice(1);
 
@@ -108,6 +93,16 @@ export function Playlist() {
     return <div>Error: {query.error.message}</div>;
   }
 
+  if (!query.isSuccess || !query.data) {
+    return null;
+  }
+
+  const data = query.data.data;
+  const pagination = query.data.paginator;
+
+  console.log(data);
+  console.log(pagination);
+
   return (
     <Drawer.Root direction="right" open={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Portal>
@@ -118,31 +113,35 @@ export function Playlist() {
               {query.isSuccess && query.data ? (
                 <>
                   <Drawer.Title className="font-medium mb-4  flex flex-row justify-between">
+                    {/* TODO: Title component */}
                     <div className="flex justify-between gap-x-1 items-center w-full flex-row-reverse">
-                      <img
-                        src={query.data.playlist.image_url}
-                        className="w-8 h-8"
-                        alt="Playlist Cover"
-                      />
+                      {data.playlist.image_url ? (
+                        <img
+                          src={data.playlist.image_url}
+                          className="w-8 h-8"
+                          alt="Playlist Cover"
+                        />
+                      ) : null}
                       <h1 className="text-zinc-900 text-lg">
-                        {query.data.playlist.name}
+                        {data.playlist.name}
                       </h1>
                     </div>
 
                     <div className="flex flex-shrink-0 gap-x-2 ml-2">
-                      {query.data.tracks.length === 0 ? (
+                      {/* TODO: Toolbar Component */}
+                      {data.tracks.length === 0 ? (
                         <button className="bg-emerald-300 hover:bg-emerald-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
                           Analyze
                         </button>
                       ) : null}
 
-                      {!query.data.playlist.is_analyzed ? (
+                      {data.playlist.is_analyzed ? (
                         <button className="bg-sky-300 hover:bg-sky-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
-                          Sync
+                          Resync
                         </button>
                       ) : (
                         <button className="bg-sky-300 hover:bg-sky-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
-                          Resync
+                          Sync
                         </button>
                       )}
                     </div>
@@ -150,67 +149,75 @@ export function Playlist() {
                   <Drawer.Description className="font-medium text-zinc-600 ">
                     Track List
                   </Drawer.Description>
-                  {/* @ts-expect-error any */}
-                  {query.data.tracks.map((track) => (
-                    <section
-                      className="border-b border-b-zinc-300 py-4 first:pt-0"
-                      key={track.id}
-                    >
-                      <dd className="grid grid-cols-3 gap-2">
-                        <dl className="py-2" key={track.id}>
-                          <dt className="font-semibold text-sm leading-7 text-gray-900">
-                            Title
-                          </dt>
-                          <dd className="mt-1 text-xs leading-6 text-gray-500">
-                            {track.name}
-                          </dd>
-                        </dl>
-                        <dl className="py-2">
-                          <dt className="font-semibold text-sm leading-7 text-gray-900">
-                            Album
-                          </dt>
-                          <dd className="mt-1 text-xs leading-6 text-gray-500">
-                            {track.album_name}
-                          </dd>
-                        </dl>
-                        <dl className="py-2">
-                          <dt className="font-semibold text-sm leading-7 text-gray-900">
-                            Artist
-                          </dt>
-                          <dd className="mt-1 text-xs leading-6 text-gray-500">
-                            <em>Placeholder</em>
-                          </dd>
-                        </dl>
-                      </dd>
-                      {track.features ? (
-                        <dl className="py-2">
-                          <dt className="font-semibold leading-7 text-zinc-600">
-                            Features
-                          </dt>
-                          <dd className="mt-1 text-sm leading-6 text-gray-500">
-                            <dl className="grid grid-cols-2 gap-2">
-                              {Object.entries(track.features).map(
-                                ([key, value]) => (
-                                  <React.Fragment key={`${track.id}-${key}`}>
-                                    {key === "id" ? null : (
-                                      <React.Fragment>
-                                        <dt className="font-semibold text-sm leading-7 text-gray-900">
-                                          {translateKey(key)}
-                                        </dt>
-                                        <dd className="mt-1 text-xs leading-6 text-gray-500">
-                                          {parseValue(key, value as string)}
-                                        </dd>
-                                      </React.Fragment>
-                                    )}
-                                  </React.Fragment>
-                                )
-                              )}
+                  {/* TODO: Track Component */}
+                  {data.tracks
+                    ? data.tracks.map((track) => (
+                        <section
+                          className="border-b border-b-zinc-300 py-4 first:pt-0"
+                          key={track.id}
+                        >
+                          <dd className="grid grid-cols-3 gap-2">
+                            <dl className="py-2" key={track.id}>
+                              <dt className="font-semibold text-sm leading-7 text-gray-900">
+                                Title
+                              </dt>
+                              <dd className="mt-1 text-xs leading-6 text-gray-500">
+                                {track.name}
+                              </dd>
+                            </dl>
+                            <dl className="py-2">
+                              <dt className="font-semibold text-sm leading-7 text-gray-900">
+                                Album
+                              </dt>
+                              <dd className="mt-1 text-xs leading-6 text-gray-500">
+                                {track.album_name}
+                              </dd>
+                            </dl>
+                            <dl className="py-2">
+                              <dt className="font-semibold text-sm leading-7 text-gray-900">
+                                Artist
+                              </dt>
+                              <dd className="mt-1 text-xs leading-6 text-gray-500">
+                                <em>Placeholder</em>
+                              </dd>
                             </dl>
                           </dd>
-                        </dl>
-                      ) : null}
-                    </section>
-                  ))}
+                          {track.features ? (
+                            <dl className="py-2">
+                              <dt className="font-semibold leading-7 text-zinc-600">
+                                Features
+                              </dt>
+                              <dd className="mt-1 text-sm leading-6 text-gray-500">
+                                <dl className="grid grid-cols-2 gap-2">
+                                  {Object.entries(track.features).map(
+                                    ([key, value]) => (
+                                      <React.Fragment
+                                        key={`${track.id}-${key}`}
+                                      >
+                                        {key === "id" ? null : (
+                                          <React.Fragment>
+                                            <dt className="font-semibold text-sm leading-7 text-gray-900">
+                                              {translateKey(key)}
+                                            </dt>
+                                            <dd className="mt-1 text-xs leading-6 text-gray-500">
+                                              {parseValue(key, value)}
+                                            </dd>
+                                          </React.Fragment>
+                                        )}
+                                      </React.Fragment>
+                                    )
+                                  )}
+                                </dl>
+                              </dd>
+                            </dl>
+                          ) : null}
+                        </section>
+                      ))
+                    : null}
+                  {/* TODO: Computations Component */}
+                  {data.computations ? <>Computed Data</> : null}
+                  {/* TODO: Pager Component */}
+                  {pagination ? <div>Pagination</div> : null}
                 </>
               ) : null}
             </div>

@@ -2,10 +2,11 @@ import { Tabs } from "./Tabs";
 import { ResourceKey } from "@/libs/types";
 import React, { useCallback } from "react";
 import { LibraryTable } from "./LibraryTable";
+import { Box } from "@radix-ui/themes";
 
 const defaultKey = ResourceKey.LibraryPlaylists;
 
-export function LibraryCard() {
+export function Library() {
   const [scope, setScope] = React.useState(defaultKey);
 
   const onTabChange = useCallback((key: ResourceKey) => {
@@ -13,17 +14,13 @@ export function LibraryCard() {
   }, []);
 
   return (
-    <div className="card library h-full">
-      <header>
-        <h1 className="text-xl font-bold leading-none text-gray-900 sm:text-2xl">
-          Library
-        </h1>
-        <h2 className="">I dunno</h2>
-      </header>
-      <Tabs scope={scope} onChange={onTabChange} />
-      <main>
+    <>
+      <Box flexShrink="1">
+        <Tabs scope={scope} onChange={onTabChange} />
+      </Box>
+      <Box className="pt-4">
         <LibraryTable scope={scope} />
-      </main>
-    </div>
+      </Box>
+    </>
   );
 }

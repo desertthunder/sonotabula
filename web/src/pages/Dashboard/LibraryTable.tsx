@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { Artist, Playlist, Album, Track } from "@/libs/types";
 import { ResourceKey } from "@/libs/types";
 import { decodeUnicode } from "@/libs/helpers";
+import { Link, ScrollArea, Table, Text } from "@radix-ui/themes";
 
 interface Props {
   scope: ResourceKey;
@@ -100,39 +101,33 @@ function Cell({
 }) {
   switch (accessor) {
     case "image_url":
-      return (
-        <td className="text-center w-16">
-          <img src={value} alt="album" className="w-full" />
-        </td>
-      );
+      return <img src={value} alt="album" className="w-8 h-8" />;
     case "release_date":
-      return <td>{value.split("-")[0]}</td>;
+      return <Text>{value.split("-")[0]}</Text>;
     case "description":
       return (
-        <td>
+        <Text>
           <em>{value ? decodeUnicode(value) : "None"}</em>
-        </td>
+        </Text>
       );
     case "link":
       return (
-        <td>
-          <a
-            className="hover:text-green-500 i-ri-external-link-line"
-            href={value}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {value}
-          </a>
-        </td>
+        <Link
+          className="hover:text-green-500 text-lg"
+          href={value}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <i className="i-ri-external-link-line" />
+        </Link>
       );
     case "num_tracks":
     case "total_tracks":
-      return <td className="text-center">{value}</td>;
+      return <Text className="text-center">{value}</Text>;
     case "genres":
-      return <td>{Array.isArray(value) ? value.join(", ") : value}</td>;
+      return <Text>{Array.isArray(value) ? value.join(", ") : value}</Text>;
     default:
-      return <td>{value}</td>;
+      return <Text>{value}</Text>;
   }
 }
 
@@ -147,38 +142,49 @@ export function LibraryTable({ scope }: Props) {
     return <div>Error: {context.error.message}</div>;
   }
 
+  if (context.isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <table className="table-auto w-full py-0 my-0 overflow-scroll h-full text-xs text-left text-gray-800 ">
-      <thead className="sticky top-0">
-        <tr>
-          {headers.map((header) => (
-            <th key={header}>{header !== "Data" ? header : ""}</th>
-          ))}
-        </tr>
-      </thead>
-      {context.isLoading ? (
-        <tbody>
-          <tr>
-            <td>Loading...</td>
-          </tr>
-        </tbody>
-      ) : (
-        context.data && (
-          <tbody>
-            {context.data.map((item) => (
-              <tr key={item.spotify_id}>
-                {accessors.map((accessor) => (
-                  <Cell
-                    key={accessor}
-                    accessor={accessor}
-                    value={item[accessor]}
-                  />
-                ))}
-              </tr>
+    <ScrollArea
+      scrollbars="vertical"
+      style={{ minHeight: "400px", height: "500px" }}
+    >
+      <Table.Root variant="surface" size="2" layout="fixed">
+        <Table.Header>
+          <Table.Row>
+            {headers.map((header) => (
+              <Table.ColumnHeaderCell key={header}>
+                {header !== "Data" ? header : " "}
+              </Table.ColumnHeaderCell>
             ))}
-          </tbody>
-        )
-      )}
-    </table>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {context.data?.map((item) => (
+            <Table.Row key={item.spotify_id} align="center">
+              {accessors.map((accessor, i) =>
+                i === 0 ? (
+                  <Table.RowHeaderCell key={accessor}>
+                    <Cell
+                      accessor={accessor}
+                      value={item[accessor] as string}
+                    />
+                  </Table.RowHeaderCell>
+                ) : (
+                  <Table.Cell key={accessor}>
+                    <Cell
+                      accessor={accessor}
+                      value={item[accessor] as string}
+                    />
+                  </Table.Cell>
+                )
+              )}
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+    </ScrollArea>
   );
 }

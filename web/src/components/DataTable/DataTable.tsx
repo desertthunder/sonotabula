@@ -1,6 +1,7 @@
 import { decodeUnicode } from "@/libs/helpers";
 import { Playlist } from "./types";
 import { useNavigate } from "react-router-dom";
+import { Table } from "@radix-ui/themes";
 
 interface Props<T> {
   response: T[];
@@ -25,53 +26,53 @@ export function DataTable<T>({ response }: Props<T>) {
   const data = response as Playlist[];
 
   return (
-    <table className="table-auto w-full my-0 overflow-scroll h-full text-xs text-left text-gray-800 ">
-      <thead className="sticky top-0">
-        <tr className="bg-gray-700">
+    <Table.Root variant="surface">
+      <Table.Header>
+        <Table.Row>
           {headers.map((header) => (
-            <th key={header}>
+            <Table.ColumnHeaderCell key={header}>
               {header === "Cover" ? (
                 <span className="sr-only">Cover</span>
               ) : (
                 header
               )}
-            </th>
+            </Table.ColumnHeaderCell>
           ))}
-        </tr>
-      </thead>
-      <tbody className="border-b bg-gray-50 border-gray-300">
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
         {data.map((item) => (
-          <tr key={item.id}>
-            <td>
+          <Table.Row key={item.id}>
+            <Table.RowHeaderCell>
               <img
                 src={item.image_url}
                 alt="Cover"
                 width="100px"
                 height="100px"
               />
-            </td>
-            <td>{item.name}</td>
+            </Table.RowHeaderCell>
+            <Table.Cell>{item.name}</Table.Cell>
 
-            <td>
+            <Table.Cell>
               <em>
                 {item.description ? decodeUnicode(item.description) : "None"}
               </em>
-            </td>
-            <td className="text-center">
+            </Table.Cell>
+            <Table.Cell className="text-center">
               {item.is_synced ? (
                 <i className="i-ri-check-fill text-bold text-2xl text-green-500"></i>
               ) : (
                 <i className="i-ri-close-fill text-bold text-2xl text-red-500"></i>
               )}
-            </td>
-            <td className="text-center">
+            </Table.Cell>
+            <Table.Cell className="text-center">
               {item.is_analyzed ? (
                 <i className="i-ri-check-fill text-bold text-2xl text-green-500"></i>
               ) : (
                 <i className="i-ri-close-fill text-bold text-2xl text-red-500"></i>
               )}
-            </td>
-            <td className="text-center">
+            </Table.Cell>
+            <Table.Cell className="text-center">
               <button
                 data-id={item.id}
                 type="button"
@@ -81,10 +82,10 @@ export function DataTable<T>({ response }: Props<T>) {
               >
                 <i className="text-3xl i-ri-more-fill"></i>
               </button>
-            </td>
-          </tr>
+            </Table.Cell>
+          </Table.Row>
         ))}
-      </tbody>
-    </table>
+      </Table.Body>
+    </Table.Root>
   );
 }
