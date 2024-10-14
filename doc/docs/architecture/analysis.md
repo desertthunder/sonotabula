@@ -12,7 +12,7 @@ class TrackFeatures(BaseModel):
     energy: float
     key: int
     loudness: float
-    mode: int
+    mode: int # Modality - 0 for minor, 1 for major
     speechiness: float
     acousticness: float
     instrumentalness: float
@@ -31,3 +31,6 @@ organizing their music.
 
 Note: the pydantic models are used to clean and validate data before it is
 saved to the database.
+
+See [computation](./computation.md) for more information on how the data will be
+analyzed and presented.

@@ -4,7 +4,10 @@ import typing
 import uuid
 
 import pandas as pd
+import pydantic
+from django.core.exceptions import ValidationError
 from django.db import models
+from loguru import logger
 from pydantic import BaseModel
 
 from api.models.music import TimestampedModel
@@ -73,7 +76,7 @@ class AnalysisManager(models.Manager["Analysis"]):
 
             track = playlist.tracks.get(spotify_id=spotify_id)
 
-            TrackFeatures.objects.create(**feature_data, track_id=track.pk)
+            _ = TrackFeatures.objects.get_or_create(**feature_data, track_id=track.pk)
 
             tracks.append(track)
 
@@ -87,16 +90,70 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         return analysis.pk
 
-    def computation(self, playlist_pk: uuid.UUID) -> pd.DataFrame:
+    def build_dataset(self, analysis_pk: uuid.UUID) -> pd.DataFrame:
         """Calculate playlist analysis."""
-        playlist_track_pks = (
-            Playlist.objects.get(pk=playlist_pk)
-            .tracks.all()
-            .values_list("pk", flat=True)
+        features = (
+            TrackFeatures.objects.filter(track__analyses__id=analysis_pk).all().values()
         )
-        features = TrackFeatures.objects.filter(track__in=playlist_track_pks).values()
 
-        return pd.DataFrame(features)  # type: ignore
+        df = pd.DataFrame(features)  # type: ignore
+
+        return df
+
+    def compute(self, analysis_pk: uuid.UUID) -> dict:
+        """Compute playlist analysis."""
+        data = self.build_dataset(analysis_pk)
+
+        logger.debug(f"Data: {data.head()}")
+
+        computation_fields = [
+            "danceability",
+            "energy",
+            "key",
+            "loudness",
+            "mode",
+            "speechiness",
+            "acousticness",
+            "instrumentalness",
+            "liveness",
+            "valence",
+            "tempo",
+            "duration_ms",
+            "time_signature",
+        ]
+
+        counting_fields = ["key", "mode", "time_signature"]
+
+        computed_data: dict[str, dict] = {
+            "superlatives": {},
+            "averages": {},
+            "count": {},
+        }
+
+        for field in computation_fields:
+            computed_data["averages"][field] = data[field].mean()
+
+            computed_data["superlatives"][field] = {
+                "min": data[field].min(),
+                "min_track_id": str(data["track_id"].loc[data[field].idxmin()]),
+                "max": data[field].max(),
+                "max_track_id": str(data["track_id"].loc[data[field].idxmax()]),
+            }
+
+        for field in counting_fields:
+            computed_data["count"][field] = data[field].value_counts().to_dict()
+
+        return computed_data
+
+    def set_computation(self, analysis_pk: uuid.UUID, data: dict) -> uuid.UUID:
+        """Set computation data."""
+        analysis = Analysis.objects.get(id=analysis_pk)
+
+        computation, _ = Computation.objects.get_or_create(
+            analysis_id=analysis.pk, playlist_id=analysis.playlist.pk, data=data
+        )
+
+        return computation.pk
 
 
 class TrackFeatures(TimestampedModel):
@@ -150,3 +207,103 @@ class Analysis(TimestampedModel):
 
     objects: models.Manager["Analysis"] = models.Manager()
     sync: AnalysisManager = AnalysisManager()
+
+
+class Averages(BaseModel):
+    """Computed fields for a playlist."""
+
+    danceability: float
+    energy: float
+    loudness: float
+    speechiness: float
+    acousticness: float
+    instrumentalness: float
+    liveness: float
+    valence: float
+    tempo: float
+    duration_ms: int | float
+
+
+class Superlative(BaseModel):
+    """Computed fields for a playlist."""
+
+    min: float
+    min_track_id: str
+    max: float
+    max_track_id: str
+
+
+class MinMax(BaseModel):
+    """Computed fields for a playlist."""
+
+    danceability: Superlative
+    energy: Superlative
+    loudness: Superlative
+    speechiness: Superlative
+    acousticness: Superlative
+    instrumentalness: Superlative
+    liveness: Superlative
+    valence: Superlative
+    tempo: Superlative
+    duration_ms: Superlative
+
+
+class CountedFields(BaseModel):
+    """Counted fields for a playlist."""
+
+    key: dict[int, int]
+    mode: dict[int, int]
+    time_signature: dict[int, int]
+
+
+class ComputationValidator(BaseModel):
+    """Computation data validator."""
+
+    superlatives: MinMax
+    averages: Averages
+    count: CountedFields
+
+    @classmethod
+    def validate_data(cls: type["ComputationValidator"], data: dict) -> None:
+        """Validate computation data."""
+        try:
+            cls(**data)
+        except pydantic.ValidationError as e:
+            raise ValidationError(e.errors()) from e
+
+
+class Computation(TimestampedModel):
+    """Computation model.
+
+    Represents a computed analysis of a playlist.
+
+    Averages, Max, Min of the following:
+    - Danceability
+    - Energy
+    - Loudness
+    - Speechiness
+    - Acousticness
+    - Instrumentalness
+    - Liveness
+    - Valence
+    - Tempo
+    - Duration
+
+    Frequency of the following:
+    - Key
+    - Mode
+    - Time Signature
+    """
+
+    id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, primary_key=True
+    )
+    analysis = models.OneToOneField(
+        Analysis, on_delete=models.CASCADE, related_name="data"
+    )
+    playlist = models.ForeignKey(
+        Playlist, on_delete=models.CASCADE, related_name="computation"
+    )
+    data = models.JSONField(validators=[ComputationValidator.validate_data], null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

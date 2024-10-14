@@ -24,6 +24,31 @@ combined = {**track_artists, **album_artists}
 
 ```
 
+## Demo
+
+In order to setup the demo and view some of my playlists' information, I ran this
+query on my data:
+
+```python
+me = AppUser.objects.get(spotify_id="my-spotify-id")
+
+# Spotify Wrapped playlists are titled 'Your Top Songs 20XX'
+playlists = Playlist.objects.filter(name__icontains="your top songs") \
+              .all()
+sids = playlists.values_list("spotify_id", flat=True)
+pks = playlists.values_list("id", flat=True)
+
+tasks = [
+  chain(sync_playlist_tasks.s(sid, me.pk), \
+    sync_track_analysis_for_playlist.s(me.pk)) \
+      for sid in sids
+]
+
+for task in tasks:
+  task.apply_async()
+  time.sleep(5)
+```
+
 ## Mappings
 
 | Model | Spotify Field | Internal Field | Required? |

@@ -34,6 +34,9 @@ class TrackFilterSet(FilterSet):
         if kwargs.get("include_features"):
             qs = qs.prefetch_related("features")
 
+        if kwargs.get("include_computation"):
+            qs = qs.prefetch_related("computation")
+
         return qs
 
     class Meta:

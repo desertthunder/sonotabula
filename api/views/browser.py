@@ -22,11 +22,11 @@ class BrowserPlaylistTracksView(BrowserView):
         self, request: DRFRequest, playlist_id: str, *args, **kwargs
     ) -> HttpResponse:
         """Get request."""
-        # import ipdb
-
-        # ipdb.set_trace()
         records = self.filterset(
-            request, playlist_pk=playlist_id, include_features=True
+            request,
+            playlist_pk=playlist_id,
+            include_features=True,
+            include_computations=True,
         )
         playlist = Playlist.objects.get(pk=playlist_id)
         data = TrackModelSerializer.list(records)
@@ -35,6 +35,7 @@ class BrowserPlaylistTracksView(BrowserView):
                 "data": {
                     "playlist": PlaylistModelSerializer.get(playlist).model_dump(),
                     "tracks": [record.model_dump() for record in data],
+                    "computations": [],
                 }
             }
         )

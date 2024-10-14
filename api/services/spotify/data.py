@@ -175,7 +175,13 @@ class SpotifyDataService:
                 if response.is_error:
                     logger.error(f"Error: {response.text}")
                     logger.error(batch)
-                    raise SpotifyAPIError(response.text)
+                    if (
+                        response.status_code == 401
+                        and "The access token expired" in response.text
+                    ):
+                        raise SpotifyExpiredTokenError(response.text)
+                    else:
+                        raise SpotifyAPIError(response.text)
 
                 resp = response.json()
 
