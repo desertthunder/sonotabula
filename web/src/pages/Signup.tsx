@@ -5,7 +5,7 @@ import { useTokenValidator } from "@/libs/hooks";
 // TODO: Create a proper index page
 export default function Signup() {
   const navigate = useNavigate();
-  const { query } = useTokenValidator();
+  const query = useTokenValidator();
 
   // Login
   const mutation = useMutation({

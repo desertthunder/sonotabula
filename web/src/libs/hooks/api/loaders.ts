@@ -1,15 +1,21 @@
-import type { Auth, FetchError } from "@/libs/types";
+import type { FetchError } from "@/libs/types";
 import { QueryClient, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import type { LoaderFunction, Params } from "react-router-dom";
-import { useToken } from "./query";
-type PlaylistTracks = {
+import { useTokenStore } from "@/store";
+
+export type PlaylistTracks = {
   playlist: Record<string, string>;
   tracks: Array<Record<string, string>>;
 };
+
 export function playlistTracksQuery(
   id: string,
   token: string | null
 ): UseQueryOptions<PlaylistTracks, FetchError> {
+  if (!token) {
+    throw new Error("Token is required to fetch playlist tracks");
+  }
+
   return {
     queryKey: ["playlist", id],
     queryFn: async () => {
@@ -33,13 +39,13 @@ export function playlistTracksLoader(
   client: QueryClient
 ): LoaderFunction<PlaylistTracks> {
   return async function ({ params }: { params: Params }) {
-    const auth = client.getQueryData<Auth>(["token"]);
+    const token = useTokenStore((state) => state.token);
 
-    if (!auth) {
-      throw new Error("Token not found");
+    if (!token) {
+      throw new Error("Token is required to fetch playlist tracks");
     }
 
-    const query = playlistTracksQuery(params.id as string, auth.token);
+    const query = playlistTracksQuery(params.id as string, token);
     const data = client.getQueryData(query.queryKey);
 
     if (data) {
@@ -51,7 +57,7 @@ export function playlistTracksLoader(
 }
 
 export function usePlaylistTracks(id: string) {
-  const { token } = useToken();
+  const token = useTokenStore((state) => state.token);
   const query = useQuery(playlistTracksQuery(id, token));
 
   return query;

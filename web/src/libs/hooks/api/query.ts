@@ -5,7 +5,6 @@ import {
   ResourceKey,
 } from "@/libs/types";
 import {
-  QueryClient,
   useQuery,
   useQueryClient,
   UseQueryResult,
@@ -14,28 +13,13 @@ import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { browserFetcher, fetcher } from "./fetch";
 import { BASE_URL } from "@/libs/services";
+import { useTokenStore } from "@/store";
 
 export function useQueryParams(): Record<string, string> {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
 
   return Object.fromEntries(params.entries());
-}
-
-export function useToken(): {
-  token: string | null;
-  client: QueryClient;
-} {
-  const queryClient = useQueryClient();
-  const queryData = queryClient.getQueryData<{
-    message: string;
-    token: string;
-  }>(["token"]);
-
-  return {
-    token: queryData?.token ?? null,
-    client: queryClient,
-  };
 }
 
 export function useTokenValidator() {
@@ -46,6 +30,8 @@ export function useTokenValidator() {
     token: string;
   }>(["token"]);
 
+  const setToken = useTokenStore((state) => state.setToken);
+
   const token = useMemo(() => {
     if (params.token) {
       return params.token;
@@ -53,6 +39,10 @@ export function useTokenValidator() {
       return queryData?.token ?? null;
     }
   }, [params.token, queryData]);
+
+  if (token) {
+    setToken(token);
+  }
 
   const query = useQuery(
     {
@@ -85,14 +75,15 @@ export function useTokenValidator() {
     queryClient
   );
 
-  return { query, token };
+  return query;
 }
 
 export function useFetch<T extends ResourceKey>(
   resource: ResourceKey,
   limit?: number | null
 ): UseQueryResult<Resource<T>> {
-  const { token, client } = useToken();
+  const token = useTokenStore((state) => state.token);
+  const client = useQueryClient();
 
   const query = useQuery<Resource<T>>(
     {
@@ -114,7 +105,8 @@ export function useFetch<T extends ResourceKey>(
 export function useBrowse<T extends ResourceKey>(
   resource: ResourceKey
 ): UseQueryResult<Resource<T>> {
-  const { token, client } = useToken();
+  const token = useTokenStore((state) => state.token);
+  const client = useQueryClient();
 
   const query = useQuery<Resource<T>>(
     {
@@ -134,7 +126,8 @@ export function useBrowse<T extends ResourceKey>(
 }
 
 export function useSavedCounts() {
-  const { token, client } = useToken();
+  const token = useTokenStore((state) => state.token);
+  const client = useQueryClient();
 
   const query = useQuery(
     {

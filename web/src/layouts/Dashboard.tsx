@@ -1,23 +1,21 @@
 import { Navbar, Sidebar } from "@/components";
 import { useTokenValidator } from "@/libs/hooks";
+import { useTokenStore } from "@/store";
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 
 export function DashboardLayout() {
-  const { query, token } = useTokenValidator();
+  const query = useTokenValidator();
+  const token = useTokenStore((state) => state.token);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (query.isFetching || query.isLoading) {
-      return;
-    }
-
     if (!token) {
       navigate("/login");
     } else {
       navigate("/dashboard");
     }
-  }, [token, query.isFetching, query.isLoading, navigate]);
+  }, [token, navigate]);
 
   if (query.isLoading) {
     return <div>Loading...</div>;
