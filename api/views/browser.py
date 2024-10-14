@@ -8,6 +8,7 @@ from rest_framework.request import Request as DRFRequest
 
 from api.filters import PlaylistFilterSet
 from api.filters.tracks import TrackFilterSet
+from api.models.playlist import Playlist
 from api.models.serializers import PlaylistModelSerializer, TrackModelSerializer
 from api.views.base import BrowserView
 
@@ -21,11 +22,22 @@ class BrowserPlaylistTracksView(BrowserView):
         self, request: DRFRequest, playlist_id: str, *args, **kwargs
     ) -> HttpResponse:
         """Get request."""
+        # import ipdb
+
+        # ipdb.set_trace()
         records = self.filterset(
             request, playlist_pk=playlist_id, include_features=True
         )
+        playlist = Playlist.objects.get(pk=playlist_id)
         data = TrackModelSerializer.list(records)
-        return JsonResponse(data={"data": [record.model_dump() for record in data]})
+        return JsonResponse(
+            data={
+                "data": {
+                    "playlist": PlaylistModelSerializer.get(playlist).model_dump(),
+                    "tracks": [record.model_dump() for record in data],
+                }
+            }
+        )
 
 
 class BrowserPlaylistView(BrowserView):

@@ -1,11 +1,72 @@
+import { usePlaylistTracks } from "@/libs/hooks";
+import React from "react";
 import { useCallback, useMemo } from "react";
-import { useMatch, useNavigate } from "react-router-dom";
+import { useMatch, useNavigate, useParams } from "react-router-dom";
 import { Drawer } from "vaul";
+
+function translateKey(key: string) {
+  const title = key.charAt(0).toUpperCase() + key.slice(1);
+
+  if (title === "Duration_ms") {
+    return "Duration";
+  }
+
+  if (title === "Time_signature") {
+    return "Time Signature";
+  }
+
+  return title.replace(/_/g, " ");
+}
+
+function keyToPitchClass(key: number) {
+  const pitchClasses = [
+    "C",
+    "C♯",
+    "D",
+    "D♯",
+    "E",
+    "F",
+    "F♯",
+    "G",
+    "G♯",
+    "A",
+    "A♯",
+    "B",
+  ];
+
+  return pitchClasses[key];
+}
+
+function parseValue(key: string, value: string | number): string {
+  switch (key) {
+    case "key":
+      return keyToPitchClass(value as number);
+    case "tempo":
+      return `${value} BPM`;
+    case "loudness":
+      return `${value} dB`;
+    case "time_signature":
+      return `${value} / 4`;
+    case "duration_ms":
+      return translateDuration(value as number);
+    default:
+      return value as string;
+  }
+}
+
+function translateDuration(duration_ms: number | string) {
+  const ms = parseInt(duration_ms as string);
+  const minutes = Math.floor(ms / 60000);
+  const seconds = ((ms % 60000) / 1000).toFixed(0);
+
+  return `${minutes}:${+seconds < 10 ? "0" : ""}${seconds}`;
+}
 
 export function Playlist() {
   const match = useMatch("/dashboard/browser/playlist/:id");
-
+  const params = useParams();
   const navigate = useNavigate();
+  const query = usePlaylistTracks(params.id as string);
 
   const isOpen = useMemo(() => {
     return !!match;
@@ -26,13 +87,93 @@ export function Playlist() {
         <Drawer.Overlay className="fixed inset-0 bg-black/40" />
         <Drawer.Content className="right-0 top-12 bottom-0 fixed z-10 flex outline-none">
           <div className="bg-zinc-50 rounded-md w-1/2 grow mt-2 mr-2 mb-2 p-5 flex flex-col">
-            <div className="max-w-md mx-auto">
-              <Drawer.Title className="font-medium mb-2 text-zinc-900">
-                {match?.params.id}
-              </Drawer.Title>
-              <Drawer.Description className="text-zinc-600 mb-2">
-                Playlist Tracks & Analysis
-              </Drawer.Description>
+            <div className="max-w-md mx-auto overflow-y-auto flex-1">
+              {query.isLoading ? <div>Loading...</div> : null}
+              {query.isError ? <div>Error: {query.error.message}</div> : null}
+              {query.isSuccess && query.data ? (
+                <>
+                  <Drawer.Title className="font-medium mb-4  flex flex-row justify-between">
+                    <div className="flex justify-between gap-x-1 items-center w-full flex-row-reverse">
+                      <img
+                        src={query.data.playlist.image_url}
+                        className="w-8 h-8"
+                        alt="Playlist Cover"
+                      />
+                      <h1 className="text-zinc-900 text-lg">
+                        {query.data.playlist.name}{" "}
+                      </h1>
+                    </div>
+
+                    {query.data.tracks.length === 0 ||
+                    !query.data.playlist.is_analyzed ? (
+                      <div className="flex flex-shrink-0 gap-x-2">
+                        <button className="bg-emerald-300 hover:bg-emerald-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
+                          Analyze
+                        </button>
+                        <button className="bg-sky-300 hover:bg-sky-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
+                          Resync
+                        </button>
+                      </div>
+                    ) : null}
+                  </Drawer.Title>
+                  <Drawer.Description className="font-medium text-zinc-600 ">
+                    <h2>Track List</h2>
+                  </Drawer.Description>
+
+                  {query.data.tracks.map((track) => (
+                    <section
+                      className="border-b border-b-zinc-300 py-4 first:pt-0"
+                      key={track.id}
+                    >
+                      <dd className="grid grid-cols-2 gap-2">
+                        <dl className="py-2" key={track.id}>
+                          <dt className="font-semibold text-sm leading-7 text-gray-900">
+                            Title
+                          </dt>
+                          <dd className="mt-1 text-xs leading-6 text-gray-500">
+                            {track.name}
+                          </dd>
+                        </dl>
+                        <dl className="py-2">
+                          <dt className="font-semibold text-sm leading-7 text-gray-900">
+                            Album
+                          </dt>
+                          <dd className="mt-1 text-xs leading-6 text-gray-500">
+                            {track.album_name}
+                          </dd>
+                        </dl>
+                      </dd>
+                      {track.features ? (
+                        <dl className="py-2">
+                          <dt className="font-semibold leading-7 text-zinc-600">
+                            Features
+                          </dt>
+                          <dd className="mt-1 text-sm leading-6 text-gray-500">
+                            <dl className="grid grid-cols-2 gap-2">
+                              {Object.entries(track.features).map(
+                                ([key, value]) => (
+                                  <React.Fragment key={`${track.id}-${key}`}>
+                                    {key === "id" ? null : (
+                                      <React.Fragment>
+                                        <dt className="font-semibold text-sm leading-7 text-gray-900">
+                                          {translateKey(key)}
+                                        </dt>
+                                        <dd className="mt-1 text-xs leading-6 text-gray-500">
+                                          {parseValue(key, value)}
+                                        </dd>
+                                      </React.Fragment>
+                                    )}
+                                  </React.Fragment>
+                                )
+                              )}
+                            </dl>
+                          </dd>
+                        </dl>
+                      ) : null}
+                    </section>
+                  ))}
+                </>
+              ) : null}
             </div>
           </div>
         </Drawer.Content>

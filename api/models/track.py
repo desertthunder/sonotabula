@@ -179,3 +179,8 @@ class Track(SpotifyModel, TimestampedModel):
 
     objects: models.Manager["Track"] = models.Manager()
     sync: TrackSyncManager = TrackSyncManager()
+
+    @property
+    def spotify_url(self) -> str:
+        """Spotify URL."""
+        return f"https://open.spotify.com/track/{self.spotify_id}"

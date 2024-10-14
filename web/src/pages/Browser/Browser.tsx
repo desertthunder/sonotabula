@@ -2,8 +2,10 @@ import { DataTable } from "@/components/DataTable/DataTable";
 import { ResourceKey } from "@/libs/types";
 import { useBrowse } from "@/libs/hooks";
 import { Playlist } from "./Playlist";
+import { useParams } from "react-router-dom";
 
 export function BrowserPage() {
+  const params = useParams();
   const context = useBrowse<ResourceKey.LibraryPlaylists>(
     ResourceKey.LibraryPlaylists
   );
@@ -23,7 +25,7 @@ export function BrowserPage() {
           Data Browser
         </h1>
         <h3 className="font-headings text-gray-200">View synced library</h3>
-        <Playlist />
+        {params.id ? <Playlist /> : null}
       </section>
       <section className="p-8 flex-1 space-x-4 grid grid-rows-12 max-h-[620px]">
         <div className="card col-span-12 p-4 row-span-12">

@@ -8,7 +8,8 @@ enum Title {
 }
 
 export type Playlist = {
-  id: number;
+  id: string;
+  spotify_id: string;
   name: string;
   is_synced: boolean;
   is_analyzed: boolean;

@@ -32,8 +32,6 @@ export function useToken(): {
     token: string;
   }>(["token"]);
 
-  console.log(queryData);
-
   return {
     token: queryData?.token ?? null,
     client: queryClient,
@@ -120,7 +118,7 @@ export function useBrowse<T extends ResourceKey>(
 
   const query = useQuery<Resource<T>>(
     {
-      queryKey: [resource],
+      queryKey: [`${resource}-browser`],
       queryFn: async () => {
         if (!token) {
           throw new Error("Token not found");

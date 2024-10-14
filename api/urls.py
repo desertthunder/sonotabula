@@ -23,13 +23,13 @@ urlpatterns = [
     ),
     path("library/tracks", library.LibraryTracksView.as_view(), name="library-tracks"),
     path(
-        "browser/playlists",
-        browser.BrowserPlaylistView.as_view(),
-        name="list-browser-playlists",
-    ),
-    path(
         "browser/playlist/<str:playlist_id>/tracks",
         browser.BrowserPlaylistTracksView.as_view(),
         name="list-browser-playlist-tracks",
+    ),
+    path(
+        "browser/playlists",
+        browser.BrowserPlaylistView.as_view(),
+        name="list-browser-playlists",
     ),
 ]

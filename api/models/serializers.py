@@ -13,6 +13,7 @@ class PlaylistModelSerializer(BaseModel):
 
     id: str
     name: str
+    spotify_url: str
     is_synced: bool | None = False
     is_analyzed: bool | None = False
     description: str | None = None
@@ -30,6 +31,7 @@ class PlaylistModelSerializer(BaseModel):
         return cls(
             id=str(model.id),
             name=model.name,
+            spotify_url=model.spotify_url,
             is_synced=model.is_synced,
             is_analyzed=model.is_analyzed,
             description=model.description,
@@ -94,30 +96,38 @@ class TrackFeaturesModelSerializer(BaseModel):
 class TrackModelSerializer(BaseModel):
     """Browser Playlist Track model serializer."""
 
+    id: str
     album_id: str
     name: str
     spotify_id: str
     duration: int
+    spotify_url: str
     features: TrackFeaturesModelSerializer | None = None
     album_name: str | None = None
+    album_art: str | None = None
 
     @classmethod
     def get(cls: type["TrackModelSerializer"], model: Track) -> "TrackModelSerializer":
         """Create a model serializer from a model."""
         album_name = None
         features = None
+        album_art = None
 
-        if model.album is not None:
+        if hasattr(model, "album") and model.album is not None:
             album_name = model.album.name
+            album_art = model.album.image_url
 
-        if model.features is not None:
+        if hasattr(model, "features") and model.features is not None:
             features = TrackFeaturesModelSerializer.get(model.features)
 
         return cls(
-            album_id=str(model.album_id),
+            id=str(model.id),
             name=model.name,
-            spotify_id=model.spotify_id,
+            spotify_url=model.spotify_url,
             duration=model.duration,
+            spotify_id=model.spotify_id,
+            album_id=str(model.album_id),
+            album_art=album_art,
             features=features,
             album_name=album_name,
         )

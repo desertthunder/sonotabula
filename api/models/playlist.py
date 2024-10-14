@@ -133,8 +133,13 @@ class Playlist(SpotifyModel, TimestampedModel):
         """Check if playlist data is more than a week old."""
         return self.updated_at < timezone.now() - datetime.timedelta(days=7)
 
+    @property
+    def spotify_url(self) -> str:
+        """Spotify URL for playlist."""
+        return f"https://open.spotify.com/playlist/{self.spotify_id}"
+
     class Meta(TypedModelMeta):
         """Playlist model metadata."""
 
-        ordering = ["-is_synced", "-updated_at", "-is_analyzed", "-created_at"]
+        ordering = ["-is_synced", "-is_analyzed", "-updated_at", "-created_at"]
         unique_together = ["spotify_id", "user"]

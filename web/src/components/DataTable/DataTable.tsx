@@ -6,25 +6,19 @@ interface Props<T> {
   response: T[];
 }
 
+const headers = [
+  "Cover",
+  "Name",
+  "Description",
+  "Synced",
+  "Analyzed",
+  "Actions",
+];
+
 export function DataTable<T>({ response }: Props<T>) {
   const navigate = useNavigate();
-  console.log(response);
-  // const title = "Playlists";
-  const headers = [
-    "Cover",
-    "Name",
-    "Description",
-    "Synced",
-    "Analyzed",
-    // "Owner ID",
-    // "Version",
-    // "Public",
-    // "Shared",
-    "Actions",
-  ];
 
   const onClick = (id: string | number) => {
-    console.log(id);
     navigate(`/dashboard/browser/playlist/${id}`);
   };
 
@@ -79,6 +73,7 @@ export function DataTable<T>({ response }: Props<T>) {
             </td>
             <td className="text-center">
               <button
+                data-id={item.id}
                 type="button"
                 title="Open details"
                 className="rounded-md p-0 text-gray-500 hover:text-green-300 focus:text-secondary"

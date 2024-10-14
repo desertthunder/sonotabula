@@ -13,6 +13,7 @@ function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
     return {
       target: internal ? undefined : "_blank",
       rel: internal ? undefined : "noopener noreferrer",
+      disabled: !internal || !href.includes("dashboard"),
     };
   }, [href]);
 
@@ -22,7 +23,11 @@ function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
       target={attrs.target}
       rel={attrs.rel}
       className={({ isActive }) =>
-        ["sidebar-link", isActive ? "active" : ""].join(" ")
+        [
+          "sidebar-link",
+          isActive ? "active" : "",
+          attrs.disabled ? "cursor-none pointer-events-none" : "",
+        ].join(" ")
       }
       end={!href.includes("browser")}
     >
