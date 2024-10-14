@@ -1,20 +1,18 @@
+/**
+ * @todo move routes enum to a libs/types
+ * @todo add proper static pages
+ */
 import "./styles/base.css";
 import "@fontsource-variable/inter";
-import "@fontsource-variable/rubik";
-import "@fontsource-variable/noto-sans-jp";
-import "@radix-ui/themes/styles.css";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Signup, Browser } from "./pages";
+import { Signup } from "./pages";
 import { Dashboard, DashboardLayout } from "./pages/Dashboard";
-
+import { BrowserLayout, BrowserPage } from "./pages/Browser";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
-import { BrowserLayout } from "./layouts";
 import { Playlist } from "./pages/Browser/Playlist";
-import { Theme } from "@radix-ui/themes";
 
-// TODO: Move to libs
 enum Routes {
   Home = "/",
   Signup = "/signup",
@@ -48,7 +46,6 @@ persistQueryClient({
 
 export const BrowserRouter = createBrowserRouter([
   {
-    // TODO: Add a home page
     path: Routes.Home,
     element: <Signup />,
   },
@@ -70,7 +67,7 @@ export const BrowserRouter = createBrowserRouter([
         children: [
           {
             path: "/dashboard/browser/playlists",
-            element: <Browser />,
+            element: <BrowserPage />,
             children: [
               {
                 path: "/dashboard/browser/playlists/:id",
@@ -86,17 +83,8 @@ export const BrowserRouter = createBrowserRouter([
 
 export default function Root() {
   return (
-    <Theme
-      appearance="light"
-      accentColor="jade"
-      grayColor="sage"
-      panelBackground="solid"
-      scaling="100%"
-      radius="medium"
-    >
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={BrowserRouter} />
-      </QueryClientProvider>
-    </Theme>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={BrowserRouter} />
+    </QueryClientProvider>
   );
 }

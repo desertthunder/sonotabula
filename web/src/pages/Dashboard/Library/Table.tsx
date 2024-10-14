@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import type { Artist, Playlist, Album, Track } from "@/libs/types";
 import { ResourceKey } from "@/libs/types";
 import { decodeUnicode } from "@/libs/helpers";
-import { Link, ScrollArea, Table, Text } from "@radix-ui/themes";
 
 type TableHeaders = Record<ResourceKey, string[]>;
 
@@ -98,31 +97,31 @@ function Cell({
     case "image_url":
       return <img src={value} alt="album" className="w-8 h-8" />;
     case "release_date":
-      return <Text>{value.split("-")[0]}</Text>;
+      return <span>{value.split("-")[0]}</span>;
     case "description":
       return (
-        <Text>
+        <span>
           <em>{value ? decodeUnicode(value) : "None"}</em>
-        </Text>
+        </span>
       );
     case "link":
       return (
-        <Link
+        <a
           className="hover:text-green-500 text-lg"
           href={value}
           target="_blank"
           rel="noreferrer"
         >
           <i className="i-ri-external-link-line" />
-        </Link>
+        </a>
       );
     case "num_tracks":
     case "total_tracks":
-      return <Text className="text-center">{value}</Text>;
+      return <span className="text-center">{value}</span>;
     case "genres":
-      return <Text>{Array.isArray(value) ? value.join(", ") : value}</Text>;
+      return <span>{Array.isArray(value) ? value.join(", ") : value}</span>;
     default:
-      return <Text>{value}</Text>;
+      return <span>{value}</span>;
   }
 }
 
@@ -137,44 +136,45 @@ export function LibraryTable<T extends ResourceKey>({ scope, data }: Props<T>) {
   }, [scope]);
 
   return (
-    <ScrollArea
-      scrollbars="vertical"
-      style={{ minHeight: "400px", height: "500px" }}
-    >
-      <Table.Root variant="surface" size="2" layout="fixed">
-        <Table.Header>
-          <Table.Row>
+    <div className="overflow-y-auto flex-1 max-h-[600px] rounded-lg">
+      <table className="text-sm w-full">
+        <thead className="rounded-md">
+          <tr className="border-b bg-white">
             {headers.map((header) => (
-              <Table.ColumnHeaderCell key={header}>
+              <th
+                key={header}
+                className={[
+                  "h-10 px-2 text-left align-middle font-medium text-slate-800",
+                ].join(" ")}
+              >
                 {header !== "Data" ? header : " "}
-              </Table.ColumnHeaderCell>
+              </th>
             ))}
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
+          </tr>
+        </thead>
+        <tbody className="last:border-b-0">
           {data?.map((item) => (
-            <Table.Row key={item.spotify_id} align="center">
-              {accessors.map((accessor, i) =>
-                i === 0 ? (
-                  <Table.RowHeaderCell key={accessor}>
-                    <Cell
-                      accessor={accessor}
-                      value={item[accessor] as string}
-                    />
-                  </Table.RowHeaderCell>
-                ) : (
-                  <Table.Cell key={accessor}>
-                    <Cell
-                      accessor={accessor}
-                      value={item[accessor] as string}
-                    />
-                  </Table.Cell>
-                )
-              )}
-            </Table.Row>
+            <tr
+              key={item.spotify_id}
+              className={[
+                "border-b transition-colors",
+                "bg-white",
+                "even:bg-slate-100",
+              ].join(" ")}
+            >
+              {accessors.map((accessor) => (
+                <td key={accessor} className={["p-2 align-middle"].join(" ")}>
+                  <Cell
+                    key={accessor}
+                    accessor={accessor}
+                    value={item[accessor] as string}
+                  />
+                </td>
+              ))}
+            </tr>
           ))}
-        </Table.Body>
-      </Table.Root>
-    </ScrollArea>
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 import { Navbar, Sidebar } from "@/components";
 import { useTokenValidator } from "@/libs/hooks";
 import { useTokenStore } from "@/store";
-import { Flex } from "@radix-ui/themes";
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 
@@ -27,16 +26,12 @@ export function DashboardLayout() {
   }
 
   return (
-    <Flex
-      direction="column"
-      className="h-screen bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%"
-    >
+    <div className="flex flex-col h-screen bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%">
       <Navbar />
-      <Flex flexGrow="1">
+      <section className="flex flex-1">
         <Sidebar />
-
         <Outlet />
-      </Flex>
-    </Flex>
+      </section>
+    </div>
   );
 }

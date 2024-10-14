@@ -80,7 +80,7 @@ export enum CountKey {
   Shows = "shows",
 }
 
-export const COUNT_KEYS: CountKey[] = [
+export const Counts: CountKey[] = [
   CountKey.Artists,
   CountKey.Albums,
   CountKey.Tracks,

@@ -1,5 +1,4 @@
 import { ResourceKey, RESOURCE_KEYS } from "@/libs/types";
-import { Tabs as RadixTabs } from "@radix-ui/themes";
 
 interface Props {
   scope: ResourceKey;
@@ -15,22 +14,33 @@ const textMap = {
 
 export function Tabs({ scope, onChange }: Props) {
   return (
-    <RadixTabs.Root>
-      <RadixTabs.List size="2">
-        {RESOURCE_KEYS.map((resource) => {
-          return (
-            <RadixTabs.Trigger
-              key={resource}
-              onClick={onChange.bind(null, resource)}
-              className={scope === resource ? "active" : ""}
-              disabled={scope === resource}
-              value={resource}
-            >
-              {textMap[resource]}
-            </RadixTabs.Trigger>
-          );
-        })}
-      </RadixTabs.List>
-    </RadixTabs.Root>
+    <div className="mb-4">
+      {RESOURCE_KEYS.map((resource) => {
+        return (
+          <button
+            key={resource}
+            onClick={onChange.bind(null, resource)}
+            // className={scope === resource ? "active" : ""}
+            className={[
+              "px-4 py-2",
+              "text-sm font-semibold",
+              "text-zinc-100",
+              "cursor-pointer",
+              "hover:text-white",
+              "hover:bg-emerald-500",
+              "focus:outline-none",
+              "focus:ring-2 focus:ring-emerald-500",
+              "focus:ring-offset-2 focus:ring-offset-zinc-100",
+              "transition-all",
+              scope === resource ? "pointer-events-none bg-emerald-500" : "",
+            ].join(" ")}
+            disabled={scope === resource}
+            value={resource}
+          >
+            {textMap[resource]}
+          </button>
+        );
+      })}
+    </div>
   );
 }

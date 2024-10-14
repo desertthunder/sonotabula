@@ -1,4 +1,3 @@
-import { Flex, Separator } from "@radix-ui/themes";
 import React from "react";
 import { NavLink } from "react-router-dom";
 
@@ -25,10 +24,10 @@ function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
       rel={attrs.rel}
       className={({ isActive }) =>
         [
-          "hover:border-l-4 hover:border-l-jade-indicator p-4 text-sm font-medium",
+          "hover:border-l-4 hover:border-l-jade-indicator p-4 text-sm font-medium hover:bg-slate-300",
           "sidebar-link",
           isActive ? "active" : "",
-          attrs.disabled ? "cursor-none pointer-events-none" : "",
+          attrs.disabled ? "cursor-none pointer-events-none text-zinc-500" : "",
         ].join(" ")
       }
       end={!href.includes("browser")}
@@ -40,13 +39,8 @@ function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
 
 export function Sidebar() {
   return (
-    <Flex
-      height="100%"
-      direction="column"
-      minWidth="15%"
-      className="bg-jade-3 border-r pr-8"
-    >
-      <Flex direction="column">
+    <section className="flex flex-col h-full bg-slate-200 border-r w-1/6 shadow-2xl">
+      <section className="flex flex-col border-b border-b-black">
         <SidebarLink href="/dashboard" linkText="Dashboard" />
         <SidebarLink href="/dashboard/browser" linkText="Browser" />
         <SidebarLink href="/playlists" linkText="Playlists" />
@@ -54,9 +48,9 @@ export function Sidebar() {
         <SidebarLink href="/top-artists" linkText="Top Artists" />
         <SidebarLink href="/recently-played" linkText="Recently Played" />
         <SidebarLink href="/library" linkText="Library" />
-      </Flex>
-      <Separator orientation="horizontal" size="4" />
-      <Flex direction="column" height="100%">
+      </section>
+
+      <section className="flex flex-col flex-1">
         <SidebarLink
           href="https://github.com/desertthunder/spotify-dashboard"
           linkText="GitHub"
@@ -66,7 +60,7 @@ export function Sidebar() {
           href="https://developer.spotify.com/documentation/web-api/reference/#category-playlists"
         />
         <SidebarLink linkText="Help" href="https://desertthunder.github.io" />
-      </Flex>
-    </Flex>
+      </section>
+    </section>
   );
 }

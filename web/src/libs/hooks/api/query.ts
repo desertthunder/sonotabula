@@ -1,3 +1,6 @@
+/**
+ * @todo paginate queries
+ */
 import {
   FetchError,
   LibraryCountsResponse,
@@ -163,7 +166,6 @@ export function useSavedCounts() {
   return query;
 }
 
-// TODO: Paginate this query
 export function usePlaylistTracks(id: string) {
   const token = useTokenStore((state) => state.token);
   const client = useQueryClient();

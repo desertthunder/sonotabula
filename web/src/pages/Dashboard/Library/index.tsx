@@ -2,7 +2,6 @@ import { Tabs } from "./Tabs";
 import { ResourceKey } from "@/libs/types";
 import { useCallback, useState } from "react";
 import { LibraryTable } from "./Table";
-import { Box } from "@radix-ui/themes";
 import { useFetch } from "@/libs/hooks";
 
 const defaultKey = ResourceKey.LibraryPlaylists;
@@ -17,16 +16,12 @@ export function Library() {
 
   return (
     <>
-      <Box flexShrink="1">
+      <div className="flex-shrink">
         <Tabs scope={scope} onChange={onTabChange} />
-      </Box>
-      <Box className="pt-4">
-        {context.isLoading ? <p>Loading...</p> : null}
-        {context.isError ? <p>Error</p> : null}
-        {context.data ? (
-          <LibraryTable scope={scope} data={context.data} />
-        ) : null}
-      </Box>
+      </div>
+      {context.isLoading ? <p>Loading...</p> : null}
+      {context.isError ? <p>Error</p> : null}
+      {context.data ? <LibraryTable scope={scope} data={context.data} /> : null}
     </>
   );
 }

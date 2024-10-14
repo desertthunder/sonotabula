@@ -2,7 +2,6 @@ import { redirect } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useTokenValidator } from "@/libs/hooks";
 
-// TODO: Create a proper index page
 export default function Signup() {
   const query = useTokenValidator();
 
