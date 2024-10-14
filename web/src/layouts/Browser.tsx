@@ -1,9 +1,12 @@
-import { DashboardLayout } from "./Dashboard";
+import { useNavigate, Outlet } from "react-router-dom";
+import { useEffect } from "react";
 
-interface Props {
-  children: React.ReactNode;
-}
+export function BrowserLayout() {
+  const navigate = useNavigate();
 
-export function BrowserLayout({ children }: Props) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  useEffect(() => {
+    navigate("/dashboard/browser/playlists");
+  }, [navigate]);
+
+  return <Outlet />;
 }

@@ -18,8 +18,8 @@ const headers = [
 export function DataTable<T>({ response }: Props<T>) {
   const navigate = useNavigate();
 
-  const onClick = (id: string | number) => {
-    navigate(`/dashboard/browser/playlist/${id}`);
+  const handleClick = (id: string | number) => {
+    navigate(`/dashboard/browser/playlists/${id}`);
   };
 
   const data = response as Playlist[];
@@ -77,7 +77,7 @@ export function DataTable<T>({ response }: Props<T>) {
                 type="button"
                 title="Open details"
                 className="rounded-md p-0 text-gray-500 hover:text-green-300 focus:text-secondary"
-                onClick={() => onClick(item.id)}
+                onClick={() => handleClick(item.id)}
               >
                 <i className="text-3xl i-ri-more-fill"></i>
               </button>

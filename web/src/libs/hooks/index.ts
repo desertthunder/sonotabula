@@ -3,6 +3,5 @@ export {
   useBrowse,
   useSavedCounts,
   useTokenValidator,
+  usePlaylistTracks,
 } from "./api/query";
-
-export { usePlaylistTracks } from "./api/loaders";

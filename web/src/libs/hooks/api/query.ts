@@ -161,3 +161,30 @@ export function useSavedCounts() {
 
   return query;
 }
+
+export function usePlaylistTracks(id: string) {
+  const token = useTokenStore((state) => state.token);
+  const client = useQueryClient();
+  const query = useQuery(
+    {
+      queryKey: ["playlist", id],
+      queryFn: async () => {
+        const response = await fetch(`/api/browser/playlist/${id}/tracks`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch playlist tracks");
+        }
+        const data = await response.json();
+        return data["data"];
+      },
+    },
+    client
+  );
+
+  return query;
+}

@@ -101,8 +101,8 @@ function Cell({
   switch (accessor) {
     case "image_url":
       return (
-        <td>
-          <img src={value} alt="album" />
+        <td className="text-center w-16">
+          <img src={value} alt="album" className="w-full" />
         </td>
       );
     case "release_date":
@@ -148,8 +148,8 @@ export function LibraryTable({ scope }: Props) {
   }
 
   return (
-    <table className="table-auto h-full">
-      <thead>
+    <table className="table-auto w-full py-0 my-0 overflow-scroll h-full text-xs text-left text-gray-800 ">
+      <thead className="sticky top-0">
         <tr>
           {headers.map((header) => (
             <th key={header}>{header !== "Data" ? header : ""}</th>

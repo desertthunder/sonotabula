@@ -3,17 +3,12 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/rubik";
 import "@fontsource-variable/noto-sans-jp";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  createBrowserRouter,
-  LoaderFunction,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Signup, Dashboard, Browser } from "./pages";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
-import { DashboardLayout } from "./layouts";
+import { DashboardLayout, BrowserLayout } from "./layouts";
 import { Playlist } from "./pages/Browser/Playlist";
-import { playlistTracksLoader } from "./libs/hooks/api/loaders";
 
 // TODO: Move to libs
 enum Routes {
@@ -67,15 +62,17 @@ export const BrowserRouter = createBrowserRouter([
       },
       {
         path: "/dashboard/browser",
-        element: <Browser />,
+        element: <BrowserLayout />,
         children: [
           {
-            path: "/dashboard/browser/playlist/:id",
-            element: <Playlist />,
-            loader: playlistTracksLoader(queryClient) as LoaderFunction<{
-              playlist: Record<string, string>;
-              tracks: Array<Record<string, string>>;
-            }>,
+            path: "/dashboard/browser/playlists",
+            element: <Browser />,
+            children: [
+              {
+                path: "/dashboard/browser/playlists/:id",
+                element: <Playlist />,
+              },
+            ],
           },
         ],
       },

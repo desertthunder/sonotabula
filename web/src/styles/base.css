@@ -68,7 +68,11 @@
 }
 
 .card table thead th {
-    @apply bg-gray-300 px-4 py-2 text-left;
+    @apply bg-gray-300 text-left;
+}
+
+th {
+    @apply px-4 py-2;
 }
 
 th img {
@@ -79,7 +83,7 @@ th img {
     @apply border-b border-b-gray-400 rounded-lg;
 }
 
-.card table tbody td {
+.card table td {
     @apply p-4;
 }
 

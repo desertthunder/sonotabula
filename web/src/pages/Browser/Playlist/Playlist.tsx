@@ -1,8 +1,22 @@
 import { usePlaylistTracks } from "@/libs/hooks";
-import React from "react";
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useMatch, useNavigate, useParams } from "react-router-dom";
 import { Drawer } from "vaul";
+
+type Playlist = {
+  id: string;
+  name: string;
+  album_name: string;
+  is_analyzed: boolean;
+  is_synced: boolean;
+  image_url: string;
+  tracks: {
+    id: string;
+    name: string;
+    album_name: string;
+    features: Record<string, string>;
+  }[];
+};
 
 function translateKey(key: string) {
   const title = key.charAt(0).toUpperCase() + key.slice(1);
@@ -62,8 +76,13 @@ function translateDuration(duration_ms: number | string) {
   return `${minutes}:${+seconds < 10 ? "0" : ""}${seconds}`;
 }
 
+/**
+ * @todo - make a hook to generate a description list
+ * @todo - meta properties - name, album_name, artist_name
+ * @todo - traits - all of features
+ */
 export function Playlist() {
-  const match = useMatch("/dashboard/browser/playlist/:id");
+  const match = useMatch("/dashboard/browser/playlists/:id");
   const params = useParams();
   const navigate = useNavigate();
   const query = usePlaylistTracks(params.id as string);
@@ -75,11 +94,19 @@ export function Playlist() {
   const onOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        navigate("/dashboard/browser");
+        navigate("/dashboard/browser/playlists");
       }
     },
     [navigate]
   );
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
 
   return (
     <Drawer.Root direction="right" open={isOpen} onOpenChange={onOpenChange}>
@@ -88,8 +115,6 @@ export function Playlist() {
         <Drawer.Content className="right-0 top-12 bottom-0 fixed z-10 flex outline-none">
           <div className="bg-zinc-50 rounded-md w-1/2 grow mt-2 mr-2 mb-2 p-5 flex flex-col">
             <div className="max-w-md mx-auto overflow-y-auto flex-1">
-              {query.isLoading ? <div>Loading...</div> : null}
-              {query.isError ? <div>Error: {query.error.message}</div> : null}
               {query.isSuccess && query.data ? (
                 <>
                   <Drawer.Title className="font-medium mb-4  flex flex-row justify-between">
@@ -100,32 +125,38 @@ export function Playlist() {
                         alt="Playlist Cover"
                       />
                       <h1 className="text-zinc-900 text-lg">
-                        {query.data.playlist.name}{" "}
+                        {query.data.playlist.name}
                       </h1>
                     </div>
 
-                    {query.data.tracks.length === 0 ||
-                    !query.data.playlist.is_analyzed ? (
-                      <div className="flex flex-shrink-0 gap-x-2">
+                    <div className="flex flex-shrink-0 gap-x-2 ml-2">
+                      {query.data.tracks.length === 0 ? (
                         <button className="bg-emerald-300 hover:bg-emerald-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
                           Analyze
                         </button>
+                      ) : null}
+
+                      {!query.data.playlist.is_analyzed ? (
+                        <button className="bg-sky-300 hover:bg-sky-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
+                          Sync
+                        </button>
+                      ) : (
                         <button className="bg-sky-300 hover:bg-sky-400 text-grey-900 py-1 px-4 rounded-lg inline-flex items-center text-xs">
                           Resync
                         </button>
-                      </div>
-                    ) : null}
+                      )}
+                    </div>
                   </Drawer.Title>
                   <Drawer.Description className="font-medium text-zinc-600 ">
-                    <h2>Track List</h2>
+                    Track List
                   </Drawer.Description>
-
+                  {/* @ts-expect-error any */}
                   {query.data.tracks.map((track) => (
                     <section
                       className="border-b border-b-zinc-300 py-4 first:pt-0"
                       key={track.id}
                     >
-                      <dd className="grid grid-cols-2 gap-2">
+                      <dd className="grid grid-cols-3 gap-2">
                         <dl className="py-2" key={track.id}>
                           <dt className="font-semibold text-sm leading-7 text-gray-900">
                             Title
@@ -140,6 +171,14 @@ export function Playlist() {
                           </dt>
                           <dd className="mt-1 text-xs leading-6 text-gray-500">
                             {track.album_name}
+                          </dd>
+                        </dl>
+                        <dl className="py-2">
+                          <dt className="font-semibold text-sm leading-7 text-gray-900">
+                            Artist
+                          </dt>
+                          <dd className="mt-1 text-xs leading-6 text-gray-500">
+                            <em>Placeholder</em>
                           </dd>
                         </dl>
                       </dd>
@@ -159,7 +198,7 @@ export function Playlist() {
                                           {translateKey(key)}
                                         </dt>
                                         <dd className="mt-1 text-xs leading-6 text-gray-500">
-                                          {parseValue(key, value)}
+                                          {parseValue(key, value as string)}
                                         </dd>
                                       </React.Fragment>
                                     )}

@@ -13,7 +13,7 @@ function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
     return {
       target: internal ? undefined : "_blank",
       rel: internal ? undefined : "noopener noreferrer",
-      disabled: !internal || !href.includes("dashboard"),
+      disabled: internal && !href.includes("dashboard"),
     };
   }, [href]);
 
@@ -53,7 +53,7 @@ export function Sidebar() {
           <hr className="border-t border-slate-700" />
           <section>
             <SidebarLink
-              href="https://github.com/desertthunder/dashspot"
+              href="https://github.com/desertthunder/spotify-dashboard"
               linkText="GitHub"
             />
             <SidebarLink
