@@ -45,8 +45,10 @@ class FilterSet:
 
         if sort_params:
             for key in sort_params:
+                direction = params.pop(key, "asc")
                 if key in self.Meta.sort_fields:
-                    qs = getattr(self, f"sort_{key}")(qs)
+                    qs = getattr(self, f"sort_{key}")(qs, direction)
+
         return qs
 
     class Meta(FilterMeta):

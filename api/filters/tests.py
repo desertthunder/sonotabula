@@ -5,11 +5,10 @@ from django.test import TestCase
 from faker import Faker
 from rest_framework.request import Request
 
+from api.filters.albums import AlbumFilterSet
 from api.filters.playlist import PlaylistFilterSet
 from api.filters.tracks import TrackFilterSet
-from api.models import Analysis, AppUser, Library, Playlist
-from api.models.music import Album
-from api.models.track import Track
+from api.models import Album, Analysis, AppUser, Library, Playlist, Track
 
 faker = Faker()
 
@@ -182,3 +181,70 @@ class TrackFilterSetTestCase(TestCase):
         queryset = self.filters.Meta.default_queryset
         filtered_queryset = self.filters.filter_album(queryset, name)
         self.assertEqual(filtered_queryset.count(), 1)
+
+
+class AlbumFilterSetTestCase(TestCase):
+    """Test AlbumFilterSet."""
+
+    def setUp(self) -> None:
+        """Set up test data."""
+        self.user = AppUser.objects.get(is_staff=True)
+        self.filters = AlbumFilterSet()
+        self.request = Request(HttpRequest())
+        self.library = Library.objects.get(user=self.user)
+        self.year = int(faker.year())
+
+        self.years = (
+            [self.year + 10 for _ in range(5)]
+            + [self.year for _ in range(5)]
+            + [self.year - 10 for _ in range(5)]
+        )
+
+        for year in self.years:
+            Album.objects.create(
+                name=faker.name() + "__FILTER__",
+                spotify_id=str(faker.uuid4()),
+                release_year=year,
+                image_url=faker.image_url(),
+                album_type=faker.word(),
+            )
+
+        self.album = random.choice(Album.objects.all())
+        self.request.user = self.user
+
+    def test_get_queryset(self):
+        """Test get_queryset."""
+        queryset = self.filters.get_queryset(self.request)
+        self.assertIsNotNone(queryset)
+        self.assertEqual(
+            queryset.count(),
+            Album.objects.filter(libraries__user=self.user).count(),
+        )
+
+    def test_filter_name(self):
+        """Test filter_name."""
+        name = "__FILTER__"
+        queryset = Album.objects.all()
+        filtered_queryset = self.filters.search_name(queryset, name)
+        self.assertEqual(filtered_queryset.count(), 15)
+
+    def test_filter_release_year(self):
+        """Test filter_release_year."""
+        name = "__FILTER__"
+        queryset = self.filters.search_name(Album.objects.all(), name)
+        filtered_queryset = self.filters.filter_release_year(queryset, self.year)
+        self.assertEqual(filtered_queryset.count(), 5)
+
+    def test_filter_released_before(self):
+        """Test filter_released_before."""
+        name = "__FILTER__"
+        queryset = self.filters.search_name(Album.objects.all(), name)
+        filtered_queryset = self.filters.filter_released_before(queryset, self.year)
+        self.assertEqual(filtered_queryset.count(), 5)
+
+    def test_filter_released_after(self):
+        """Test filter_released_after."""
+        name = "__FILTER__"
+        queryset = self.filters.search_name(Album.objects.all(), name)
+        filtered_queryset = self.filters.filter_released_after(queryset, self.year)
+        self.assertEqual(filtered_queryset.count(), 5)

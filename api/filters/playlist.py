@@ -51,16 +51,29 @@ class PlaylistFilterSet(FilterSet):
         """Filter/search for a playlist by track name."""
         return qs.prefetch_related("tracks").filter(tracks__name__icontains=value)
 
-    def sort_name(self, qs: models.QuerySet) -> models.QuerySet:
+    def sort_name(self, qs: models.QuerySet, direction: str = "asc") -> models.QuerySet:
         """Sort by playlist name."""
+        if direction == "desc":
+            return qs.order_by("-name")
+
         return qs.order_by("name")
 
-    def sort_is_synced(self, qs: models.QuerySet) -> models.QuerySet:
+    def sort_is_synced(
+        self, qs: models.QuerySet, direction: str = "asc"
+    ) -> models.QuerySet:
         """Sort by is_synced."""
+        if direction == "desc":
+            return qs.order_by("-is_synced")
+
         return qs.order_by("is_synced")
 
-    def sort_is_analyzed(self, qs: models.QuerySet) -> models.QuerySet:
+    def sort_is_analyzed(
+        self, qs: models.QuerySet, direction: str = "asc"
+    ) -> models.QuerySet:
         """Sort by is_active."""
+        if direction == "desc":
+            return qs.order_by("-is_analyzed")
+
         return qs.order_by("is_analyzed")
 
     def get_queryset(self, request: Request, *args, **kwargs) -> models.QuerySet:

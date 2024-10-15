@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from api.models import Playlist, Track, TrackFeatures
 from api.models.analysis import Computation, ComputationValidator
+from api.models.music import Album
 
 
 class ComputationModelSerializer(ComputationValidator):
@@ -189,3 +190,67 @@ class TrackModelSerializer(BaseModel):
         """Create a list of model serializers from a list of models."""
         for model in models:
             yield cls.get(model)
+
+
+class SimpleArtistModelSerializer(BaseModel):
+    """Simple Artist model serializer."""
+
+    id: str
+    name: str
+    spotify_id: str
+
+
+class AlbumModelSerializer(BaseModel):
+    """Album model serializer."""
+
+    id: str
+    name: str
+    artists: list[SimpleArtistModelSerializer]
+    spotify_id: str
+    release_year: int
+    image_url: str | None = None
+
+    @classmethod
+    def get(
+        cls: type["AlbumModelSerializer"],
+        model: Album,
+    ) -> "AlbumModelSerializer":
+        """Create a model serializer from a model."""
+        return cls(
+            id=str(model.id),
+            name=model.name,
+            artists=[
+                SimpleArtistModelSerializer(
+                    id=str(artist.id), name=artist.name, spotify_id=artist.spotify_id
+                )
+                for artist in model.artists.all()
+            ],
+            spotify_id=model.spotify_id,
+            release_year=model.release_year,
+            image_url=model.image_url,
+        )
+
+
+class PaginatedAlbumSerializer(BaseModel):
+    """Paginated Album Serializer."""
+
+    data: list[dict]
+    pagination: dict[str, int]
+
+    @classmethod
+    def from_paginator(
+        cls: type["PaginatedAlbumSerializer"],
+        paginator: Paginator,
+        page: int = 1,
+    ) -> "PaginatedAlbumSerializer":
+        """Create a model serializer from a paginator."""
+        objects = paginator.page(page).object_list
+
+        return cls(
+            data=[AlbumModelSerializer.get(record).model_dump() for record in objects],
+            pagination={
+                "total": paginator.count,
+                "per_page": paginator.per_page,
+                "page": paginator.page(page).number,
+            },
+        )
