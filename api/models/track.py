@@ -6,6 +6,7 @@ import uuid
 from django.db import models
 from pydantic import BaseModel
 
+from api.models.mixins import CanBeAnalyzedMixin
 from api.models.music import Album, Artist, SpotifyModel, TimestampedModel
 
 
@@ -163,7 +164,7 @@ class TrackSyncManager(models.Manager["Track"]):
         return playlist_pk
 
 
-class Track(SpotifyModel, TimestampedModel):
+class Track(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     """Track model.
 
     Required fields for creation:

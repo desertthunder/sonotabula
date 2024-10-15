@@ -20,3 +20,25 @@ class TokenSetMixin(models.Model):
         """TokenSet meta class."""
 
         abstract = True
+
+
+class CanBeSyncedMixin(models.Model):
+    """Sync attributes."""
+
+    is_synced = models.BooleanField(default=False, null=True, blank=True)
+
+    class Meta(TypedModelMeta):
+        """CanBeSynced meta class."""
+
+        abstract = True
+
+
+class CanBeAnalyzedMixin(CanBeSyncedMixin):
+    """Analyze attributes."""
+
+    is_analyzed = models.BooleanField(default=False, null=True, blank=True)
+
+    class Meta(TypedModelMeta):
+        """CanBeAnalyzed meta class."""
+
+        abstract = True

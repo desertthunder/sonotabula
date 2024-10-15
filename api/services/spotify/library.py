@@ -1,22 +1,24 @@
 """Spotify data service."""
 
 import json
-import logging
 import time
 import typing
 
 import httpx
+from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
 from api.models import AppUser
 from api.services.spotify.auth import SpotifyAuthService
 
-logger = logging.getLogger("spotify_data_service")
-
 
 class SpotifyLibraryService:
     """API actions for fetching data from the Spotify API."""
+
+    def __init__(self, auth_service: SpotifyAuthService | None = None) -> None:
+        """Add dependencies to the service."""
+        self.auth_service = auth_service or SpotifyAuthService()
 
     def get_user(self, user_pk: int) -> "AppUser":
         """Get a user by primary key."""
@@ -48,12 +50,29 @@ class SpotifyLibraryService:
         try:
             yield from self._library_playlists(user=user, limit=limit, all=all)
         except SpotifyExpiredTokenError:
-            user_service = SpotifyAuthService()
-            user_service.refresh_access_token(user.refresh_token)
+            self.auth_service.refresh_access_token(user.refresh_token)
 
             user.refresh_from_db()
 
             yield from self._library_playlists(user=user, limit=limit, all=all)
+
+    def library_albums(
+        self, user_pk: int, limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
+        """Get the user's albums.
+
+        Refresh the access token if it has expired.
+        """
+        user = self.get_user(user_pk)
+
+        try:
+            yield from self._library_albums(user=user, limit=limit, all=all)
+        except SpotifyExpiredTokenError:
+            self.auth_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            yield from self._library_albums(user=user, limit=limit, all=all)
 
     def _library_playlists(
         self, user: "AppUser", limit: int = 50, all: bool = False
@@ -82,8 +101,6 @@ class SpotifyLibraryService:
 
                 resp = response.json()
 
-                logger.debug(f"Response: {resp}")
-
                 next = (
                     resp.get("next").replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
                     if resp.get("next")
@@ -91,9 +108,12 @@ class SpotifyLibraryService:
                 )
 
                 yielded += len(resp.get("items"))
+
+                logger.debug(f"Fetched {yielded} {resp.get("total")}")
+
                 yield from resp.get("items")
 
-    def library_albums(
+    def _library_albums(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's albums."""
@@ -104,29 +124,33 @@ class SpotifyLibraryService:
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {user.access_token}"},
         ) as client:
-            response = client.get(
-                url=next,
-                params={"limit": limit},
-            )
+            while next:
+                if not all and yielded >= limit:
+                    client.close()
+                    break
 
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
+                time.sleep(1)
 
-                raise SpotifyAPIError(response.text)
+                response = client.get(
+                    url=next,
+                    params={"limit": limit},
+                )
 
-            resp = response.json()
+                if response.is_error:
+                    self.handle_error(response)
 
-            logger.debug(f"Response: {resp}")
+                resp = response.json()
 
-            next = resp.get("next")
+                logger.debug(f"Response: {resp}")
 
-            if next is not None:
-                next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+                next = resp.get("next")
 
-            if not all:
-                yielded += len(resp.get("items"))
+                if next is not None:
+                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-            yield from resp.get("items")
+                logger.debug(f"Fetched {yielded} {resp.get("total")}")
+
+                yield from resp.get("items")
 
     def library_artists(
         self, user: "AppUser", limit: int = 50, all: bool = False

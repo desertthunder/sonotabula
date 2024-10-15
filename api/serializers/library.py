@@ -74,6 +74,8 @@ class Album(Serializer):
     release_date: str
     total_tracks: int
     image_url: str
+    label: str | None = None
+    genres: list[str] | None = None
 
     @classmethod
     def mappings(cls: type["Album"]) -> dict[str, str]:
@@ -91,7 +93,10 @@ class Album(Serializer):
     @classmethod
     def nullable_fields(cls: type["Album"]) -> tuple:
         """Fields that can be null."""
-        return ("",)
+        return (
+            "label",
+            "genres",
+        )
 
 
 class Track(Serializer):

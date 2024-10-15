@@ -1,3 +1,5 @@
+import random
+
 from django.http import HttpRequest
 from django.test import TestCase
 from faker import Faker
@@ -30,6 +32,26 @@ class PlaylistFilterSetTestCase(TestCase):
                 public=True,
                 shared=True,
             )
+
+        self.playlist = random.choice(Playlist.objects.all())
+
+        self.fake_album = Album.objects.create(
+            name=faker.name() + "__ALBUM__",
+            spotify_id=str(faker.uuid4()),
+            release_year=faker.year(),
+            image_url=faker.image_url(),
+            album_type=faker.word(),
+        )
+
+        self.fake_track = Track.objects.create(
+            name=faker.name() + "__TRACK__",
+            spotify_id=str(faker.uuid4()),
+            duration=faker.random_number(digits=3),
+            album=self.fake_album,
+        )
+
+        self.fake_track.playlists.add(self.playlist)
+        self.fake_track.save()
 
         self.request.user = self.user
 
@@ -92,6 +114,12 @@ class PlaylistFilterSetTestCase(TestCase):
         queryset = Playlist.objects.all()
         filtered_queryset = self.filters.filter_num_tracks(queryset, 5)
         self.assertGreater(filtered_queryset.count(), 0)
+
+    def test_filter_track_name(self):
+        """Test filter_track_name."""
+        queryset = Playlist.objects.all()
+        filtered_queryset = self.filters.filter_track_name(queryset, "__TRACK__")
+        self.assertEqual(filtered_queryset.count(), 1)
 
 
 class TrackFilterSetTestCase(TestCase):

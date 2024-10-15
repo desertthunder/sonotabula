@@ -10,6 +10,7 @@ from django_stubs_ext.db.models import TypedModelMeta
 from loguru import logger
 from pydantic import BaseModel
 
+from api.models.mixins import CanBeAnalyzedMixin
 from api.models.music import SpotifyModel, TimestampedModel
 
 
@@ -101,7 +102,7 @@ class PlaylistSyncManager(models.Manager["Playlist"]):
         return updated
 
 
-class Playlist(SpotifyModel, TimestampedModel):
+class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     """Spotify playlist model.
 
     Required fields for creation:
@@ -116,8 +117,6 @@ class Playlist(SpotifyModel, TimestampedModel):
     shared = models.BooleanField(null=True, blank=True)  # collaborative
     description = models.TextField(blank=True, null=True)
     owner_id = models.CharField(max_length=255, null=False, blank=False)
-    is_synced = models.BooleanField(default=False, null=True, blank=True)
-    is_analyzed = models.BooleanField(default=False, null=True, blank=True)
 
     user = models.ForeignKey(
         "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True

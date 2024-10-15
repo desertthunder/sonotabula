@@ -47,6 +47,10 @@ class PlaylistFilterSet(FilterSet):
             num_tracks__gte=value
         )
 
+    def filter_track_name(self, qs: models.QuerySet, value: str) -> models.QuerySet:
+        """Filter/search for a playlist by track name."""
+        return qs.prefetch_related("tracks").filter(tracks__name__icontains=value)
+
     def sort_name(self, qs: models.QuerySet) -> models.QuerySet:
         """Sort by playlist name."""
         return qs.order_by("name")
@@ -59,9 +63,7 @@ class PlaylistFilterSet(FilterSet):
         """Sort by is_active."""
         return qs.order_by("is_analyzed")
 
-    def get_queryset(
-        self, request: Request, *args, **kwargs
-    ) -> models.QuerySet | models.Manager:
+    def get_queryset(self, request: Request, *args, **kwargs) -> models.QuerySet:
         """Access initial queryset."""
         user = self.get_user(request)
         return self.Meta.default_queryset.filter(libraries__user=user)

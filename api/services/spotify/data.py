@@ -190,3 +190,10 @@ class SpotifyDataService:
                 time.sleep(0.5)
 
                 yield from resp.get("audio_features", [])
+
+    def _fetch_album_tracks(self, album_id: str, user: "AppUser") -> dict:
+        raise NotImplementedError
+
+    def fetch_album_tracks(self, album_id: str, user: "AppUser") -> dict:
+        """Fetch an albums tracks."""
+        raise NotImplementedError
