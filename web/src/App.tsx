@@ -1,6 +1,8 @@
 /**
  * @todo move routes enum to a libs/types
  * @todo add proper static pages
+ * @todo tracks page
+ * @todo artists page
  */
 import "./styles/base.css";
 import "@fontsource-variable/inter";
@@ -8,11 +10,12 @@ import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Signup } from "./pages";
 import { Dashboard, DashboardLayout } from "./pages/Dashboard";
-import { BrowserLayout, BrowserPage } from "./pages/Browser";
+import { BrowserLayout } from "./pages/Browser";
+import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Playlist } from "./pages/Browser/Playlist";
-import { BrowseAlbumsPage } from "./pages/Browser/Albums";
+import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
 
 enum Routes {
   Home = "/",
@@ -68,7 +71,7 @@ export const BrowserRouter = createBrowserRouter([
         children: [
           {
             path: "/dashboard/browser/playlists",
-            element: <BrowserPage />,
+            element: <BrowserPlaylists />,
             children: [
               {
                 path: "/dashboard/browser/playlists/:id",
@@ -78,7 +81,7 @@ export const BrowserRouter = createBrowserRouter([
           },
           {
             path: "/dashboard/browser/albums",
-            element: <BrowseAlbumsPage />,
+            element: <BrowserAlbums />,
           },
         ],
       },
