@@ -5,12 +5,6 @@ import type { BrowserContext } from "./context";
 export function BrowserLayout() {
   const [title, setTitle] = React.useState("Browser");
   const [description, setDescription] = React.useState("View synced data");
-  const [pager, setPager] = React.useState<{
-    total: number;
-    per_page: number;
-    page: number;
-    count?: number;
-  }>();
 
   React.useEffect(() => {
     if (title === "Browser") {
@@ -30,28 +24,12 @@ export function BrowserLayout() {
             <Outlet
               context={
                 {
-                  title,
                   setTitle,
-                  description,
                   setDescription,
-                  setPagination: setPager,
                 } satisfies BrowserContext
               }
             />
           </div>
-          {pager ? (
-            <>
-              <span className="text-xs text-gray-500">
-                Viewing Page {pager.page} of{" "}
-                {Math.ceil(pager.total / pager.per_page)}.{" "}
-              </span>
-              {pager.count && pager.count >= 0 ? (
-                <span className="text-xs text-gray-500">
-                  Showing {pager.count} of {pager.total}
-                </span>
-              ) : null}
-            </>
-          ) : null}
         </div>
       </section>
     </div>

@@ -24,7 +24,7 @@ class BrowserPlaylistView(BrowserView):
     GET /api/browser/playlists/{playlist_id}/tracks
     """
 
-    filterset = TrackFilterSet()
+    filterset = None
 
     def get(
         self, request: DRFRequest, playlist_id: str, *args, **kwargs
@@ -78,7 +78,25 @@ class BrowserTrackView(BrowserView):
 class BrowserTrackListView(BrowserView):
     """Get the user's persisted tracks."""
 
-    pass
+    filterset = TrackFilterSet()
+
+    def get(self, request: DRFRequest, *args, **kwargs) -> HttpResponse:
+        """Get the user's tracks.
+
+        Endpoint: GET /api/browser/tracks
+        """
+        page = request.query_params.get("page", 1)
+        page_size = request.query_params.get("page_size", 10)
+
+        records = self.filterset(request)
+        paginator = Paginator(object_list=records, per_page=page_size)
+
+        return JsonResponse(
+            data=responses.PaginatedTrackListSerializer.from_paginator(
+                paginator=paginator,
+                page=int(page),
+            ).model_dump()
+        )
 
 
 # /browser/albums/

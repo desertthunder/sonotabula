@@ -4,18 +4,19 @@
  * @todo tracks page
  * @todo artists page
  */
-import "./styles/base.css";
 import "@fontsource-variable/inter";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Signup } from "./pages";
-import { Dashboard, DashboardLayout } from "./pages/Dashboard";
 import { BrowserLayout } from "./pages/Browser";
-import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { persistQueryClient } from "@tanstack/react-query-persist-client";
-import { Playlist } from "./pages/Browser/Playlist";
 import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
+import { Playlist } from "./pages/Browser/Playlist";
+import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
+import { Dashboard, DashboardLayout } from "./pages/Dashboard";
+import { TracksPage as BrowserTracks } from "./pages/Browser/Tracks";
+import "./styles/base.css";
 
 enum Routes {
   Home = "/",
@@ -82,6 +83,10 @@ export const BrowserRouter = createBrowserRouter([
           {
             path: "/dashboard/browser/albums",
             element: <BrowserAlbums />,
+          },
+          {
+            path: "/dashboard/browser/tracks",
+            element: <BrowserTracks />,
           },
         ],
       },

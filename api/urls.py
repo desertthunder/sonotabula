@@ -37,4 +37,9 @@ urlpatterns = [
         browser.BrowserAlbumListView.as_view(),
         name="list-browser-albums",
     ),
+    path(
+        "browser/tracks",
+        browser.BrowserTrackListView.as_view(),
+        name="list-browser-tracks",
+    ),
 ]

@@ -335,3 +335,76 @@ class PaginatedPlaylistListSerializer(BaseModel):
                 "page": paginator.page(page).number,
             },
         )
+
+
+# /browser/tracks/
+class TrackModelSerializer(BaseModel):
+    """Track model serializer."""
+
+    id: str
+    name: str
+    spotify_id: str
+    duration: int
+    spotify_url: str
+    album_id: str
+    is_synced: bool | None = False
+    is_analyzed: bool | None = False
+    album_name: str | None = None
+    album_art: str | None = None
+
+    @classmethod
+    def get(cls: type["TrackModelSerializer"], model: Track) -> "TrackModelSerializer":
+        """Create a model serializer from a model."""
+        album_name = None
+        album_art = None
+
+        if hasattr(model, "album") and model.album is not None:
+            album_name = model.album.name
+            album_art = model.album.image_url
+
+        return cls(
+            id=str(model.id),
+            name=model.name,
+            spotify_url=model.spotify_url,
+            duration=model.duration,
+            spotify_id=model.spotify_id,
+            album_id=str(model.album_id),
+            album_name=album_name,
+            album_art=album_art,
+            is_synced=model.is_synced,
+            is_analyzed=model.is_analyzed,
+        )
+
+    @classmethod
+    def list(
+        cls: type["TrackModelSerializer"],
+        models: models.QuerySet,
+    ) -> typing.Iterable["TrackModelSerializer"]:
+        """Create a list of model serializers from a list of models."""
+        for model in models:
+            yield cls.get(model)
+
+
+class PaginatedTrackListSerializer(BaseModel):
+    """Paginated Track Serializer."""
+
+    data: list[dict]
+    pagination: Pagination
+
+    @classmethod
+    def from_paginator(
+        cls: type["PaginatedTrackListSerializer"],
+        paginator: Paginator,
+        page: int = 1,
+    ) -> "PaginatedTrackListSerializer":
+        """Create a model serializer from a paginator."""
+        objects = paginator.page(page).object_list
+
+        return cls(
+            data=[TrackModelSerializer.get(record).model_dump() for record in objects],
+            pagination={
+                "total": paginator.count,
+                "per_page": paginator.per_page,
+                "page": paginator.page(page).number,
+            },
+        )

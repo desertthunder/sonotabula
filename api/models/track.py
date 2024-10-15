@@ -151,3 +151,8 @@ class Track(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     def spotify_url(self) -> str:
         """Spotify URL."""
         return f"https://open.spotify.com/track/{self.spotify_id}"
+
+    class Meta:
+        """Track Meta options."""
+
+        ordering = ["-is_analyzed", "-is_synced", "-created_at", "-updated_at"]

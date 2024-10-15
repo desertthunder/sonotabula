@@ -9,7 +9,7 @@ import { useBrowserContext } from "./context";
 import React from "react";
 
 export function BrowseAlbumsPage() {
-  const { setTitle, setDescription, setPagination } = useBrowserContext();
+  const { setTitle, setDescription } = useBrowserContext();
   const query = usePaginatedBrowser<ResourceKey.BrowserAlbums>(
     ResourceKey.BrowserAlbums,
     { page: 1, page_size: 25 }
@@ -19,17 +19,6 @@ export function BrowseAlbumsPage() {
     setTitle("Albums");
     setDescription("View synced albums");
   }, [setTitle, setDescription]);
-
-  React.useEffect(() => {
-    if (query.data?.pagination) {
-      setPagination({
-        total: query.data.pagination.total,
-        per_page: query.data.pagination.per_page,
-        page: query.data.pagination.page,
-        count: query.data.data.length,
-      });
-    }
-  }, [query.data?.pagination, query.data?.data, setPagination]);
 
   if (query.isLoading) {
     return <div>Loading...</div>;

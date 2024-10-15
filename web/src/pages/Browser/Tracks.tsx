@@ -1,4 +1,3 @@
-import { decodeUnicode } from "@/libs/helpers";
 import { FetchError } from "@/libs/types";
 import { useTokenStore } from "@/store";
 import { useQuery } from "@tanstack/react-query";
@@ -8,36 +7,36 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Outlet } from "react-router-dom";
-import { useBrowserContext } from "./context";
 import React from "react";
+import { Outlet } from "react-router-dom";
 import type { Pagination } from "./context";
+import { useBrowserContext } from "./context";
+import { formatDuration } from "@/libs/helpers";
 
-type Playlist = {
+type Track = {
   id: string;
-  spotify_id: string;
   name: string;
+  spotify_id: string;
+  duration: number;
+  album_id: string;
+  album_name: string;
+  album_art: string;
+  spotify_url: string;
   is_synced: boolean;
   is_analyzed: boolean;
-  description?: string;
-  owner_id?: string;
-  version?: string;
-  image_url?: string;
-  public?: boolean;
-  shared?: boolean;
 };
 
-const columnHelper = createColumnHelper<Playlist>();
+const columnHelper = createColumnHelper<Track>();
 
 const columns = [
   columnHelper.display({
-    header: "Cover",
-    id: "image_url",
+    header: "Album Art",
+    id: "album_art",
     cell: (props) => (
       <img
-        src={props.row.original.image_url}
+        src={props.row.original.album_art}
         className="w-16"
-        alt={`Cover for ${props.row.original.spotify_id}`}
+        alt={`Album art for ${props.row.original.album_name}`}
       />
     ),
   }),
@@ -46,21 +45,20 @@ const columns = [
     id: "name",
     meta: { className: "w-1/4 max-w-1/3" },
   }),
-  columnHelper.accessor("description", {
-    header: "Description",
-    id: "description",
+  columnHelper.accessor("album_name", {
+    header: "Album",
+    id: "album_name",
+    meta: { className: "w-1/4 max-w-1/3" },
+  }),
+  columnHelper.accessor("duration", {
+    header: "Duration",
+    id: "duration",
     cell: (props) => (
       <span className="text-xs">
-        {props.row.original.description ? (
-          decodeUnicode(props.row.original.description)
-        ) : (
-          <em className="text-gray-400">None set</em>
-        )}
+        {formatDuration(props.row.original.duration)}
       </span>
     ),
-    meta: {
-      className: "w-1/3 max-w-1/2",
-    },
+    meta: { className: "w-1/4" },
   }),
   columnHelper.accessor("is_synced", {
     header: "Synced",
@@ -95,14 +93,14 @@ const columns = [
     },
   }),
   columnHelper.display({
-    header: "Link",
-    id: "spotify_id",
+    header: "Open",
+    id: "spotify_url",
     cell: (props) => (
       <a
-        href={`https://open.spotify.com/playlist/${props.row.original.spotify_id}`}
+        href={props.row.original.spotify_url}
         target="_blank"
-        rel="noreferrer"
-        className="hover:text-green-500 text-lg"
+        rel="noopener noreferrer"
+        className="text-lg hover:text-green-500"
       >
         <i className="i-ri-external-link-fill" />
       </a>
@@ -110,15 +108,16 @@ const columns = [
   }),
 ];
 
-function usePlaylists(page: number) {
+function useTracks(page: number) {
   const token = useTokenStore((s) => s.token);
   const query = useQuery({
-    queryKey: ["browser-playlists", page],
+    queryKey: ["browser-tracks", page],
     queryFn: async () => {
-      const url = new URL("/api/browser/playlists", window.location.origin);
+      const url = new URL("/api/browser/tracks", window.location.origin);
       url.searchParams.append("page", page.toString());
-
-      const response = await fetch(url.toString(), {
+      url.searchParams.append("page_size", "10");
+      console.log(page);
+      const response = await fetch(`/api/browser/tracks`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -134,15 +133,15 @@ function usePlaylists(page: number) {
 
       const data = await response.json();
       console.log(data);
-      return data as { data: Playlist[]; pagination: Pagination };
+      return data as { data: Track[]; pagination: Pagination };
     },
   });
 
   return query;
 }
 
-export function PlaylistTable() {
-  const query = usePlaylists(1);
+export function TracksTable() {
+  const query = useTracks(1);
 
   const table = useReactTable({
     columns,
@@ -218,18 +217,18 @@ export function PlaylistTable() {
   );
 }
 
-export function PlaylistsPage() {
+export function TracksPage() {
   const { setTitle, setDescription } = useBrowserContext();
 
   React.useEffect(() => {
-    setTitle("Playlists");
-    setDescription("View synced playlists");
+    setTitle("Tracks");
+    setDescription("View synced tracks");
   }, [setTitle, setDescription]);
 
   return (
     <>
       <Outlet />
-      <PlaylistTable />
+      <TracksTable />
     </>
   );
 }
