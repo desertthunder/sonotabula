@@ -2,7 +2,11 @@
 
 ## Technical Debt
 
-- Tests for tasks package
+- [ ] Put flower in compose file
+- [ ] Consolidate serializers
+    - [ ] Better, more descriptive docstrings
+    - [ ] Test for mappings methods
+- [ ] Tests for tasks package
 - [x] Reused serializer code across packages. Create a single serializer package
 that covers each database model.
     1. `api.libs`
@@ -14,8 +18,13 @@ that covers each database model.
     - Library
     - Analysis
 - [x] Complete test coverage for services package
-- [ ] Put flower in compose file
 - [x] Hot reload for celery with [watchdog](https://watchfiles.helpmanual.io/cli/)
+
+## Architecture
+
+- [ ] Custom hook for description list
+- [ ] Custom hook for table
+- [ ] Wire up notification system with status from celery tasks
 
 ## Server Side
 
@@ -32,9 +41,15 @@ that covers each database model.
 ## Client Side (Web)
 
 - [x] Figure out how to deploy docs to netlify
-- [ ] Last played
+- [ ] Last played on Navbar
     - [ ] Query
     - [ ] Component
-- [ ] Playlists Page
-    - [ ] Datatable Component
-    - [ ] Track List Drawer
+- [X] Playlists Page
+    - [X] Datatable Component
+    - [X] Track List Drawer
+
+---
+
+- [ ] Show computations on track list drawer
+    - [ ] Min Max table
+- [ ] Album Track List

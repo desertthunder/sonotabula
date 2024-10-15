@@ -1,45 +1,22 @@
 """Music Persistence Models.
 
 Parking Lot
-- Musicbrainz integration
+- (TODO) Musicbrainz integration models
 """
 
 import typing
-import uuid
 
 from django.db import models
-from django_stubs_ext.db.models import TypedModelMeta
 
-from api.models.mixins import CanBeAnalyzedMixin, CanBeSyncedMixin
+from api.models.mixins import (
+    CanBeAnalyzedMixin,
+    CanBeSyncedMixin,
+    SpotifyModel,
+    TimestampedModel,
+)
 
 if typing.TYPE_CHECKING:
     from api.models.users import AppUser
-
-
-class TimestampedModel(models.Model):
-    """Base model for timestamped models."""
-
-    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        """Meta options."""
-
-        abstract = True
-
-
-class SpotifyModel(models.Model):
-    """Base model for Spotify API models."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    spotify_id = models.CharField(max_length=255, unique=True)
-    name = models.CharField(max_length=255, blank=False)
-
-    class Meta(TypedModelMeta):
-        """Meta options."""
-
-        abstract = True
 
 
 class Library(TimestampedModel):

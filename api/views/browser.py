@@ -5,20 +5,16 @@ from django.http import (
     HttpResponse,
     JsonResponse,
 )
-from loguru import logger
 from rest_framework.request import Request as DRFRequest
 
 from api.filters import AlbumFilterSet, PlaylistFilterSet, TrackFilterSet
-from api.models import Analysis, Computation
-from api.models.serializers import (
-    PaginatedAlbumSerializer,
-    PlaylistModelSerializer,
-    TrackModelSerializer,
-)
+from api.models.playlist import Playlist
+from api.serializers.views import browser as responses
 from api.views.base import BrowserView
 
 
-class BrowserPlaylistTracksView(BrowserView):
+# /browser/playlists/
+class BrowserPlaylistView(BrowserView):
     """Playlist tracks browser view.
 
     GET /api/browser/playlists/{playlist_id}/tracks
@@ -30,30 +26,20 @@ class BrowserPlaylistTracksView(BrowserView):
         self, request: DRFRequest, playlist_id: str, *args, **kwargs
     ) -> HttpResponse:
         """Get request."""
-        page = request.query_params.get("page", 1)
-        analysis = (
-            Analysis.objects.prefetch_related("playlist")
+        playlist = (
+            Playlist.objects.prefetch_related("analysis")
+            .filter(tracks__analysis__playlist_id=playlist_id)
             .prefetch_related("tracks")
-            .get(playlist_id=playlist_id)
+            .prefetch_related("tracks__features")
+            .get(pk=playlist_id)
         )
 
-        playlist = analysis.playlist
-        computation = Computation.objects.get(analysis=analysis)
-        tracks = analysis.tracks.prefetch_related("features").all()
-
-        data = TrackModelSerializer.from_paginator(
-            Paginator(object_list=tracks, per_page=5),
-            page=int(page),
-            playlist=playlist,
-            computation=computation,
+        return JsonResponse(
+            data=responses.ExpandedPlaylistSerializer.get(playlist).model_dump()
         )
 
-        logger.info(data)
 
-        return JsonResponse(data={**data})
-
-
-class BrowserPlaylistView(BrowserView):
+class BrowserPlaylistListView(BrowserView):
     """Get the user's persisted playlists.
 
     GET /api/browser/playlists
@@ -66,12 +52,40 @@ class BrowserPlaylistView(BrowserView):
 
         Endpoint: GET /api/browser/playlists
         """
+        page = request.query_params.get("page", 1)
+        page_size = request.query_params.get("page_size", 10)
         records = self.filterset(request)
-        data = PlaylistModelSerializer.list(records)
-        return JsonResponse(data={"data": [record.model_dump() for record in data]})
+        paginator = Paginator(object_list=records, per_page=page_size)
+
+        return JsonResponse(
+            data=responses.PaginatedPlaylistListSerializer.from_paginator(
+                paginator=paginator,
+                page=int(page),
+            ).model_dump()
+        )
 
 
-class BrowserAlbumsView(BrowserView):
+# /browser/tracks/
+class BrowserTrackView(BrowserView):
+    """Get a user's track."""
+
+    pass
+
+
+class BrowserTrackListView(BrowserView):
+    """Get the user's persisted tracks."""
+
+    pass
+
+
+# /browser/albums/
+class BrowserAlbumView(BrowserView):
+    """Get a user's album."""
+
+    pass
+
+
+class BrowserAlbumListView(BrowserView):
     """Get the user's persisted albums.
 
     GET /api/browser/albums
@@ -91,7 +105,7 @@ class BrowserAlbumsView(BrowserView):
         paginator = Paginator(object_list=records, per_page=page_size)
 
         return JsonResponse(
-            data=PaginatedAlbumSerializer.from_paginator(
+            data=responses.PaginatedAlbumListSerializer.from_paginator(
                 paginator=paginator,
                 page=int(page),
             ).model_dump()

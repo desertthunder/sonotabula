@@ -8,42 +8,24 @@ from django.db import models
 from django.utils import timezone
 from django_stubs_ext.db.models import TypedModelMeta
 from loguru import logger
-from pydantic import BaseModel
 
 from api.models.mixins import CanBeAnalyzedMixin
 from api.models.music import SpotifyModel, TimestampedModel
-
-
-class SyncPlaylist(BaseModel):
-    """Playlist data for syncing."""
-
-    name: str
-    spotify_id: str
-    owner_id: str
-    version: str | None = None
-    image_url: str | None = None
-    public: bool | None = None
-    shared: bool | None = None
-    description: str | None = None
-
-
-class SyncTrack(BaseModel):
-    """Track data for syncing."""
-
-    name: str
-    spotify_id: str
+from api.serializers import validation
 
 
 class PlaylistSyncManager(models.Manager["Playlist"]):
     """Manager for syncing user playlists."""
 
-    def pre_sync(self, playlists: typing.Iterable[dict]) -> list[SyncPlaylist]:
+    def pre_sync(
+        self, playlists: typing.Iterable[dict]
+    ) -> list["validation.SyncPlaylist"]:
         """Validate API data and prepare for syncing."""
         result = []
         for playlist in playlists:
             logger.debug(playlist.get("id"))
             result.append(
-                SyncPlaylist(
+                validation.SyncPlaylist(
                     name=playlist.get("name", ""),
                     spotify_id=playlist.get("id", ""),
                     owner_id=playlist.get("owner", {}).get("id"),
@@ -57,7 +39,9 @@ class PlaylistSyncManager(models.Manager["Playlist"]):
 
         return result
 
-    def do(self, playlists: list[SyncPlaylist], user_pk: int) -> list["Playlist"]:
+    def do(
+        self, playlists: list["validation.SyncPlaylist"], user_pk: int
+    ) -> list["Playlist"]:
         """Batch create playlists.
 
         Returns list of tuple of playlist pks and spotify ids.

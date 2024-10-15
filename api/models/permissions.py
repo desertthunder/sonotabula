@@ -1,7 +1,10 @@
 """Custom Permission classes.
 
-NOTE - when other services are added, the Token base class
+Parking Lot:
+- (NOTE): when other services are added, the Token base class
 and payload will have to be refactored.
+- (TODO): This should probably be in a different package.
+- (TODO): TokenPayload may be better served as a pydantic model.
 """
 
 import dataclasses

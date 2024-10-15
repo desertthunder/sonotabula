@@ -4,54 +4,18 @@ import typing
 import uuid
 
 from django.db import models
-from pydantic import BaseModel
 
 from api.models.mixins import CanBeAnalyzedMixin
 from api.models.music import Album, Artist, SpotifyModel, TimestampedModel
-
-
-class SyncData(BaseModel):
-    """Data for syncing."""
-
-    artists: list["SyncArtist"]
-    album: "SyncAlbum"
-    track: "SyncTrack"
-
-
-class SyncTrack(BaseModel):
-    """Track data for syncing."""
-
-    name: str
-    spotify_id: str  # id
-    duration: int  # duration_ms
-    album_id: str  # album.id
-
-
-class SyncAlbum(BaseModel):
-    """Album data for syncing."""
-
-    name: str
-    spotify_id: str  # id
-    release_year: int  # release_date
-    image_url: str  # images[0].url
-    artist_ids: list[str]  # artists[].id
-    album_type: str  # album_type
-
-
-class SyncArtist(BaseModel):
-    """Artist data for syncing.
-
-    Comes from track.artists & album.artists.
-    """
-
-    name: str
-    spotify_id: str  # id
+from api.serializers import validation
 
 
 class TrackSyncManager(models.Manager["Track"]):
     """Sync tracks, albums, and artists."""
 
-    def pre_sync(self, items: list[dict] | typing.Iterable[dict]) -> list[SyncData]:
+    def pre_sync(
+        self, items: list[dict] | typing.Iterable[dict]
+    ) -> list["validation.SyncTrackData"]:
         """Before sync hook."""
         cleaned = []
         for item in items:
@@ -65,7 +29,7 @@ class TrackSyncManager(models.Manager["Track"]):
                 }.values()
             )
 
-            track = SyncTrack(
+            track = validation.SyncTrack(
                 name=track_data.get("name"),
                 spotify_id=track_data.get("id"),
                 duration=track_data.get("duration_ms"),
@@ -73,7 +37,7 @@ class TrackSyncManager(models.Manager["Track"]):
             )
             album_release_year = album_data.get("release_date").split("-")[0]
 
-            album = SyncAlbum(
+            album = validation.SyncTrackAlbum(
                 name=album_data.get("name"),
                 spotify_id=album_data.get("id"),
                 release_year=int(album_release_year),
@@ -83,7 +47,7 @@ class TrackSyncManager(models.Manager["Track"]):
             )
 
             artists = [
-                SyncArtist(
+                validation.SyncTrackArtist(
                     spotify_id=artist["id"],
                     name=artist["name"],
                 )
@@ -91,7 +55,7 @@ class TrackSyncManager(models.Manager["Track"]):
             ]
 
             cleaned.append(
-                SyncData(
+                validation.SyncTrackData(
                     track=track,
                     album=album,
                     artists=artists,
@@ -100,7 +64,9 @@ class TrackSyncManager(models.Manager["Track"]):
 
         return cleaned
 
-    def do(self, items: list[SyncData]) -> list[tuple[uuid.UUID, str]]:
+    def do(
+        self, items: list["validation.SyncTrackData"]
+    ) -> list[tuple[uuid.UUID, str]]:
         """Sync tracks, albums, and artists.
 
         Dependency Tree:

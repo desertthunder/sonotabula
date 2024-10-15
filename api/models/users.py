@@ -4,17 +4,15 @@ Parking Lot:
 - The password field is likely unecessary.
 """
 
-import logging
 import uuid
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django_stubs_ext.db.models import TypedModelMeta
+from loguru import logger
 
 from api.models.mixins import TokenSetMixin
 from api.serializers.authentication import AccessToken, CurrentUser
-
-logger = logging.getLogger(__name__)
 
 
 class AppUserManager(UserManager["AppUser"]):

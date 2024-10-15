@@ -1,38 +1,21 @@
-"""Analysis models."""
+"""Analysis models.
+
+(TODO): Reassess need for tracks foreign key in Analysis model.
+(TODO): Add album as foreign key to Track model.
+"""
 
 import typing
 import uuid
 
 import pandas as pd
-import pydantic
-from django.core.exceptions import ValidationError
 from django.db import models
 from loguru import logger
-from pydantic import BaseModel
 
-from api.models.music import TimestampedModel
+from api.models.mixins import TimestampedModel
 from api.models.playlist import Playlist
 from api.models.track import Track
 from api.models.users import AppUser
-
-
-class SyncAnalysis(BaseModel):
-    """Track features for analysis."""
-
-    id: str
-    danceability: float
-    energy: float
-    key: int
-    loudness: float
-    mode: int
-    speechiness: float
-    acousticness: float
-    instrumentalness: float
-    liveness: float
-    valence: float
-    tempo: float
-    duration_ms: int
-    time_signature: int
+from api.serializers import validation
 
 
 class AnalysisManager(models.Manager["Analysis"]):
@@ -70,7 +53,7 @@ class AnalysisManager(models.Manager["Analysis"]):
         tracks = []
 
         for item in items:
-            data = SyncAnalysis(**item)
+            data = validation.SyncAnalysis(**item)
             feature_data = data.model_dump().copy()
             spotify_id = feature_data.pop("id")
 
@@ -147,7 +130,7 @@ class AnalysisManager(models.Manager["Analysis"]):
 
     def set_computation(self, analysis_pk: uuid.UUID, data: dict) -> uuid.UUID:
         """Set computation data."""
-        analysis = Analysis.objects.get(id=analysis_pk)
+        analysis = self.model.objects.get(id=analysis_pk)
 
         computation, _ = Computation.objects.get_or_create(
             analysis_id=analysis.pk, playlist_id=analysis.playlist.pk, data=data
@@ -209,69 +192,6 @@ class Analysis(TimestampedModel):
     sync: AnalysisManager = AnalysisManager()
 
 
-class Averages(BaseModel):
-    """Computed fields for a playlist."""
-
-    danceability: float
-    energy: float
-    loudness: float
-    speechiness: float
-    acousticness: float
-    instrumentalness: float
-    liveness: float
-    valence: float
-    tempo: float
-    duration_ms: int | float
-
-
-class Superlative(BaseModel):
-    """Computed fields for a playlist."""
-
-    min: float
-    min_track_id: str
-    max: float
-    max_track_id: str
-
-
-class MinMax(BaseModel):
-    """Computed fields for a playlist."""
-
-    danceability: Superlative
-    energy: Superlative
-    loudness: Superlative
-    speechiness: Superlative
-    acousticness: Superlative
-    instrumentalness: Superlative
-    liveness: Superlative
-    valence: Superlative
-    tempo: Superlative
-    duration_ms: Superlative
-
-
-class CountedFields(BaseModel):
-    """Counted fields for a playlist."""
-
-    key: dict[int, int]
-    mode: dict[int, int]
-    time_signature: dict[int, int]
-
-
-class ComputationValidator(BaseModel):
-    """Computation data validator."""
-
-    superlatives: MinMax
-    averages: Averages
-    count: CountedFields
-
-    @classmethod
-    def validate_data(cls: type["ComputationValidator"], data: dict) -> None:
-        """Validate computation data."""
-        try:
-            cls(**data)
-        except pydantic.ValidationError as e:
-            raise ValidationError(e.errors()) from e
-
-
 class Computation(TimestampedModel):
     """Computation model.
 
@@ -304,6 +224,8 @@ class Computation(TimestampedModel):
     playlist = models.ForeignKey(
         Playlist, on_delete=models.CASCADE, related_name="computation"
     )
-    data = models.JSONField(validators=[ComputationValidator.validate_data], null=False)
+    data = models.JSONField(
+        validators=[validation.ComputationValidator.validate_data], null=False
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
