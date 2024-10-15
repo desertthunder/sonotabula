@@ -53,3 +53,7 @@ that covers each database model.
 - [ ] Show computations on track list drawer
     - [ ] Min Max table
 - [ ] Album Track List
+
+- [ ] Importing Tool
+    - [ ] JSON
+    - [ ] CSV

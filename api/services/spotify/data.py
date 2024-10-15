@@ -159,7 +159,7 @@ class SpotifyDataService:
         self, track_ids: list[str], user: "AppUser"
     ) -> typing.Iterable[dict]:
         """Fetch audio features."""
-        batches = [track_ids[i : i + 50] for i in range(0, len(track_ids), 50)]
+        batches = [track_ids[i : i + 100] for i in range(0, len(track_ids), 100)]
 
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,

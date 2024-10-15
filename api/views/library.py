@@ -50,12 +50,8 @@ class LibraryArtistsView(SpotifyLibraryView):
         Endpoint: GET /api/library/artists
         """
         limit = request.query_params.get("limit", 10)
-
-        if int(limit) > 50:
-            limit = 50
-
         app_user = self.get_user(request)
-        iterator = self.library_service.library_artists(app_user, int(limit))
+        iterator = self.library_service.library_artists(app_user.pk, int(limit))
         response = list(iterator)
         data = library.Artist.list(response)
         return JsonResponse(data={"data": [artist.model_dump() for artist in data]})
@@ -70,12 +66,8 @@ class LibraryAlbumsView(SpotifyLibraryView):
         Endpoint: GET /api/library/albums
         """
         limit = request.query_params.get("limit", 10)
-
-        if int(limit) > 50:
-            limit = 50
-
         app_user = self.get_user(request)
-        iterator = self.library_service.library_albums(app_user, int(limit))
+        iterator = self.library_service.library_albums(app_user.pk, int(limit))
         response = list(iterator)
         data = library.Album.list(response)
         return JsonResponse(data={"data": [album.model_dump() for album in data]})
@@ -90,12 +82,8 @@ class LibraryTracksView(SpotifyLibraryView):
         Endpoint: GET /api/library/tracks
         """
         limit = request.query_params.get("limit", 10)
-
-        if int(limit) > 50:
-            limit = 50
-
         app_user = self.get_user(request)
-        iterator = self.library_service.library_tracks(app_user, int(limit))
+        iterator = self.library_service.library_tracks(app_user.pk, int(limit))
         response = list(iterator)
         data = library.Track.list(response)
         return JsonResponse(data={"data": [track.model_dump() for track in data]})

@@ -74,6 +74,42 @@ class SpotifyLibraryService:
 
             yield from self._library_albums(user=user, limit=limit, all=all)
 
+    def library_artists(
+        self, user_pk: int, limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
+        """Get the user's followed artists.
+
+        Refresh the access token if it has expired.
+        """
+        user = self.get_user(user_pk)
+
+        try:
+            yield from self._library_artists(user=user, limit=limit, all=all)
+        except SpotifyExpiredTokenError:
+            self.auth_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            yield from self._library_artists(user=user, limit=limit, all=all)
+
+    def library_tracks(
+        self, user_pk: int, limit: int = 50, all: bool = False
+    ) -> typing.Iterable[dict]:
+        """Get the user's saved tracks.
+
+        Refresh the access token if it has expired.
+        """
+        user = self.get_user(user_pk)
+
+        try:
+            yield from self._library_tracks(user=user, limit=limit, all=all)
+        except SpotifyExpiredTokenError:
+            self.auth_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            yield from self._library_tracks(user=user, limit=limit, all=all)
+
     def _library_playlists(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
@@ -94,7 +130,9 @@ class SpotifyLibraryService:
 
                 time.sleep(1)
 
-                response = client.get(url=next, params={"limit": limit})
+                response = client.get(
+                    url=next, params={"limit": limit if limit <= 50 else 50}
+                )
 
                 if response.is_error:
                     self.handle_error(response)
@@ -152,7 +190,7 @@ class SpotifyLibraryService:
 
                 yield from resp.get("items")
 
-    def library_artists(
+    def _library_artists(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's followed artists."""
@@ -168,7 +206,7 @@ class SpotifyLibraryService:
 
                 response = client.get(
                     url=next,
-                    params={"type": "artist", "limit": limit},
+                    params={"type": "artist", "limit": limit if limit <= 50 else 50},
                 )
 
                 if response.is_error:
@@ -190,7 +228,7 @@ class SpotifyLibraryService:
 
                 yield from resp.get("artists", {}).get("items")
 
-    def library_tracks(
+    def _library_tracks(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's saved tracks."""
@@ -200,26 +238,27 @@ class SpotifyLibraryService:
             base_url=SpotifyAPIEndpoints.BASE_URL,
             headers={"Authorization": f"Bearer {user.access_token}"},
         ) as client:
-            response = client.get(
-                url=next,
-                params={"limit": limit},
-            )
+            while next:
+                if not all and yielded >= limit:
+                    break
 
-            if response.is_error:
-                logger.error(f"Error: {response.text}")
+                response = client.get(
+                    url=next,
+                    params={"limit": limit if limit <= 50 else 50},
+                )
 
-                raise SpotifyAPIError(response.text)
+                if response.is_error:
+                    self.handle_error(response)
 
-            resp = response.json()
+                resp = response.json()
 
-            logger.debug(f"Response: {resp}")
+                logger.debug(f"Response: {resp}")
 
-            next = resp.get("next")
+                next = resp.get("next")
 
-            if next is not None:
-                next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+                if next is not None:
+                    next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
 
-            if not all:
                 yielded += len(resp.get("items"))
 
-            yield from resp.get("items")
+                yield from resp.get("items")
