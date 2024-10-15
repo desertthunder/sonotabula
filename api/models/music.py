@@ -4,8 +4,6 @@ Parking Lot
 - (TODO) Musicbrainz integration models
 """
 
-import typing
-
 from django.db import models
 
 from api.models.mixins import (
@@ -15,15 +13,12 @@ from api.models.mixins import (
     TimestampedModel,
 )
 
-if typing.TYPE_CHECKING:
-    from api.models.users import AppUser
-
 
 class Library(TimestampedModel):
     """Library metadata model."""
 
-    user: models.ForeignKey["AppUser", "Library"] = models.ForeignKey(
-        "AppUser", related_name="libraries", on_delete=models.CASCADE
+    user = models.OneToOneField(
+        "api.AppUser", on_delete=models.CASCADE, related_name="library"
     )
 
     artists = models.ManyToManyField("api.Artist", related_name="libraries")

@@ -24,6 +24,14 @@ class TrackFilterSet(FilterSet):
         """Filter by album name."""
         return qs.prefetch_related("albums").filter(album__name__icontains=value)
 
+    def filter_is_synced(self, qs: models.QuerySet, value: bool) -> models.QuerySet:
+        """Filter by synced status."""
+        return qs.filter(library__isnull=(not value))
+
+    def filter_is_analyzed(self, qs: models.QuerySet, value: bool) -> models.QuerySet:
+        """Filter by analyzed status."""
+        return qs.filter(features__isnull=(not value))
+
     def get_queryset(self, request: Request, *args, **kwargs) -> models.QuerySet:
         """Access initial queryset."""
         qs = self.Meta.default_queryset
@@ -43,4 +51,11 @@ class TrackFilterSet(FilterSet):
         """Track Filter options."""
 
         default_queryset = Track.objects.all()
-        filter_fields = ["name", "artist", "album", "duration", "isrc"]
+        filter_fields = [
+            "name",
+            "artist",
+            "album",
+            "duration",
+            "is_synced",
+            "is_analyzed",
+        ]
