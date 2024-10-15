@@ -168,11 +168,6 @@ export type BrowserPlaylistResponse = {
     tracks: PlaylistTrack[];
     computations: PlaylistComputations;
   };
-  paginator: {
-    total: number;
-    per_page: number;
-    current_page: number;
-  };
 };
 
 export type BrowserAlbumResponse = {

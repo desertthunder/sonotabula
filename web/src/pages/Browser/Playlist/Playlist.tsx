@@ -1,6 +1,6 @@
 import { usePlaylistTracks } from "@/libs/hooks";
 import React, { useCallback, useMemo } from "react";
-import { useMatch, useNavigate, useParams } from "react-router-dom";
+import { redirect, useMatch, useNavigate, useParams } from "react-router-dom";
 import { Drawer } from "vaul";
 
 function translateKey(key: string) {
@@ -90,7 +90,7 @@ export function Playlist() {
   }
 
   if (query.isError) {
-    return <div>Error: {query.error.message}</div>;
+    redirect("/dashboard/browser/playlists");
   }
 
   if (!query.isSuccess || !query.data) {
@@ -98,10 +98,6 @@ export function Playlist() {
   }
 
   const data = query.data.data;
-  const pagination = query.data.paginator;
-
-  console.log(data);
-  console.log(pagination);
 
   return (
     <Drawer.Root direction="right" open={isOpen} onOpenChange={onOpenChange}>
@@ -215,9 +211,7 @@ export function Playlist() {
                       ))
                     : null}
                   {/* TODO: Computations Component */}
-                  {data.computations ? <>Computed Data</> : null}
                   {/* TODO: Pager Component */}
-                  {pagination ? <div>Pagination</div> : null}
                 </>
               ) : null}
             </div>

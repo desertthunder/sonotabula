@@ -301,6 +301,14 @@ class ExpandedPlaylistSerializer(BaseModel):
         else:
             raise ValueError("Playlist does not have an analysis.")
 
+    @classmethod
+    def to_response(
+        cls: type["ExpandedPlaylistSerializer"],
+        model: Playlist,
+    ) -> dict[str, typing.Any]:
+        """Create a model serializer from a model."""
+        return {"data": cls.get(model).model_dump()}
+
 
 class PaginatedPlaylistListSerializer(BaseModel):
     """Paginated Playlist Serializer."""

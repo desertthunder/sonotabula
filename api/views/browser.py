@@ -1,4 +1,8 @@
-"""Browser views."""
+"""Browser views.
+
+Parking Lot:
+- (TODO): Reimplement paginator in /browser/playlists/:id/tracks
+"""
 
 from django.core.paginator import Paginator
 from django.http import (
@@ -28,14 +32,13 @@ class BrowserPlaylistView(BrowserView):
         """Get request."""
         playlist = (
             Playlist.objects.prefetch_related("analysis")
-            .filter(tracks__analysis__playlist_id=playlist_id)
             .prefetch_related("tracks")
             .prefetch_related("tracks__features")
             .get(pk=playlist_id)
         )
 
         return JsonResponse(
-            data=responses.ExpandedPlaylistSerializer.get(playlist).model_dump()
+            data=responses.ExpandedPlaylistSerializer.to_response(playlist)
         )
 
 
