@@ -15,7 +15,7 @@ import {
 } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { browserFetcher, fetcher } from "./fetch";
+import { browserFetcher, fetcher, paginatedBrowserFetcher } from "./fetch";
 import { BASE_URL } from "@/libs/services";
 import { useTokenStore } from "@/store";
 
@@ -107,7 +107,7 @@ export function useFetch<T extends ResourceKey>(
 }
 
 export function useBrowse<T extends ResourceKey>(
-  resource: ResourceKey
+  resource: T
 ): UseQueryResult<Resource<T>> {
   const token = useTokenStore((state) => state.token);
   const client = useQueryClient();
@@ -185,6 +185,36 @@ export function usePlaylistTracks(id: string) {
         }
 
         return (await response.json()) as BrowserPlaylistResponse;
+      },
+    },
+    client
+  );
+
+  return query;
+}
+
+export function usePaginatedBrowser<T extends ResourceKey>(
+  resource: T,
+  params: {
+    page: number;
+    page_size: number;
+  } = {
+    page: 1,
+    page_size: 10,
+  }
+): UseQueryResult<Resource<T>> {
+  const token = useTokenStore((state) => state.token);
+  const client = useQueryClient();
+
+  const query = useQuery<Resource<T>>(
+    {
+      queryKey: [`${resource}`],
+      queryFn: async () => {
+        if (!token) {
+          throw new Error("Token not found");
+        }
+
+        return await paginatedBrowserFetcher<T>(resource, token, params);
       },
     },
     client

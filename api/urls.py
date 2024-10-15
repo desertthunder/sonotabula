@@ -32,4 +32,9 @@ urlpatterns = [
         browser.BrowserPlaylistView.as_view(),
         name="list-browser-playlists",
     ),
+    path(
+        "browser/albums",
+        browser.BrowserAlbumsView.as_view(),
+        name="list-browser-albums",
+    ),
 ]

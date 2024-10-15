@@ -12,6 +12,7 @@ import { BrowserLayout, BrowserPage } from "./pages/Browser";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Playlist } from "./pages/Browser/Playlist";
+import { BrowseAlbumsPage } from "./pages/Browser/Albums";
 
 enum Routes {
   Home = "/",
@@ -74,6 +75,10 @@ export const BrowserRouter = createBrowserRouter([
                 element: <Playlist />,
               },
             ],
+          },
+          {
+            path: "/dashboard/browser/albums",
+            element: <BrowseAlbumsPage />,
           },
         ],
       },

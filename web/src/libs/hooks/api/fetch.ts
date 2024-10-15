@@ -23,7 +23,7 @@ export function getBrowserEndpoint(resourceKey: string) {
       return `${BASE_URL}/api/browser/playlists`;
     case ResourceKey.LibraryTracks:
       return `${BASE_URL}/api/browser/tracks`;
-    case ResourceKey.LibraryAlbums:
+    case ResourceKey.BrowserAlbums:
       return `${BASE_URL}/api/browser/albums`;
     case ResourceKey.LibraryArtists:
       return `${BASE_URL}/api/browser/artists`;
@@ -87,4 +87,34 @@ export async function browserFetcher<T extends ResourceKey>(
 
     return data["data"] as Resource<T>;
   });
+}
+
+export async function paginatedBrowserFetcher<T extends ResourceKey>(
+  resource: ResourceKey,
+  token: string,
+  params: { page: number; page_size: number } = {
+    page: 1,
+    page_size: 10,
+  }
+): Promise<Resource<T>> {
+  const uri = new URL(getBrowserEndpoint(resource));
+
+  uri.searchParams.append("page", params.page.toString());
+  uri.searchParams.append("page_size", params.page_size.toString());
+
+  const response = await fetch(uri.toString(), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return Promise.reject({
+      code: response.status,
+      message: response.statusText,
+    } as FetchError);
+  }
+
+  return (await response.json()) as Resource<T>;
 }

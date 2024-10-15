@@ -52,6 +52,8 @@ export enum ResourceKey {
   LibraryTracks = "library-tracks",
   LibraryAlbums = "library-albums",
   LibraryArtists = "library-artists",
+  BrowserPlaylists = "browser-playlists",
+  BrowserAlbums = "browser-albums",
 }
 
 export const RESOURCE_KEYS = [
@@ -70,6 +72,8 @@ export type Resource<T extends ResourceKey> =
     ? Album[]
     : T extends ResourceKey.LibraryArtists
     ? Artist[]
+    : T extends ResourceKey.BrowserAlbums
+    ? BrowserAlbumResponse
     : never;
 
 export enum CountKey {
@@ -168,5 +172,25 @@ export type BrowserPlaylistResponse = {
     total: number;
     per_page: number;
     current_page: number;
+  };
+};
+
+export type BrowserAlbumResponse = {
+  data: {
+    id: string;
+    name: string;
+    artists: {
+      id: string;
+      name: string;
+      spotify_id: string;
+    }[];
+    spotify_id: string;
+    release_year: number;
+    image_url?: string | null;
+  }[];
+  pagination: {
+    total: number;
+    per_page: number;
+    page: number;
   };
 };

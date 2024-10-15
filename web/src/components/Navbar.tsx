@@ -15,11 +15,12 @@ export function Navbar() {
         className={[
           "min-w-[20%]",
           "flex h-9 rounded-lg",
-          "border border-input bg-transparent px-3 py-1 text-sm shadow-sm",
+          "border border-green-400 bg-transparent px-3 py-1 text-sm shadow-sm",
           "transition-colors text-zinc-300",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed",
           "disabled:opacity-50",
         ].join(" ")}
+        disabled
       />
     </nav>
   );

@@ -21,6 +21,7 @@ export function Library() {
       </div>
       {context.isLoading ? <p>Loading...</p> : null}
       {context.isError ? <p>Error</p> : null}
+      {/* @ts-expect-error need to fix */}
       {context.data ? <LibraryTable scope={scope} data={context.data} /> : null}
     </>
   );

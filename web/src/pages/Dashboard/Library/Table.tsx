@@ -23,7 +23,6 @@ const tableHeaders: TableHeaders = {
     "Size",
     "Link",
   ],
-
   [ResourceKey.LibraryAlbums]: [
     "Data",
     "Name",
@@ -41,6 +40,8 @@ const tableHeaders: TableHeaders = {
     "Link",
   ],
   [ResourceKey.LibraryArtists]: ["Data", "Name", "Genres", "Link"],
+  [ResourceKey.BrowserAlbums]: [],
+  [ResourceKey.BrowserPlaylists]: [],
 };
 
 function translateHeader(header: string): string {
@@ -95,7 +96,7 @@ function Cell({
 }) {
   switch (accessor) {
     case "image_url":
-      return <img src={value} alt="album" className="w-8 h-8" />;
+      return <img src={value} alt="album" className="h-12" />;
     case "release_date":
       return <span>{value.split("-")[0]}</span>;
     case "description":
@@ -136,45 +137,56 @@ export function LibraryTable<T extends ResourceKey>({ scope, data }: Props<T>) {
   }, [scope]);
 
   return (
-    <div className="overflow-y-auto flex-1 max-h-[600px] rounded-lg">
-      <table className="text-sm w-full">
-        <thead className="rounded-md">
-          <tr className="border-b bg-white">
-            {headers.map((header) => (
-              <th
-                key={header}
-                className={[
-                  "h-10 px-2 text-left align-middle font-medium text-slate-800",
-                ].join(" ")}
-              >
-                {header !== "Data" ? header : " "}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="last:border-b-0">
-          {data?.map((item) => (
-            <tr
-              key={item.spotify_id}
-              className={[
-                "border-b transition-colors",
-                "bg-white",
-                "even:bg-slate-100",
-              ].join(" ")}
-            >
-              {accessors.map((accessor) => (
-                <td key={accessor} className={["p-2 align-middle"].join(" ")}>
-                  <Cell
-                    key={accessor}
-                    accessor={accessor}
-                    value={item[accessor] as string}
-                  />
-                </td>
+    <div className="rounded-lg bg-slate-50 p-8 drop-shadow-lg">
+      <div className="overflow-y-auto flex-1 max-h-[450px] ">
+        <table className="text-sm w-full p-4 relative">
+          <thead>
+            <tr className="bg-slate-50 bg-opacity-100 z-20 ">
+              {headers.map((header) => (
+                <th
+                  key={header}
+                  className={[
+                    "h-10 text-left align-middle font-medium text-slate-800",
+                    "sticky overflow-x-visible top-0 bg-slate-50 z-20",
+                  ].join(" ")}
+                >
+                  {header !== "Data" ? (
+                    <span className="pl-2">{header}</span>
+                  ) : (
+                    <span>&nbsp;</span>
+                  )}
+                  <hr className="mt-4" />
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="last:border-b-0">
+            {data?.map((item) => (
+              <tr
+                key={item.spotify_id}
+                className={[
+                  "z-10",
+                  "border-b transition-colors",
+                  "bg-white",
+                  "hover:bg-slate-200",
+                  "even:bg-slate-100",
+                  "hover:last:text-green-500",
+                ].join(" ")}
+              >
+                {accessors.map((accessor) => (
+                  <td key={accessor} className={["p-2 align-middle"].join(" ")}>
+                    <Cell
+                      key={accessor}
+                      accessor={accessor}
+                      value={item[accessor] as string}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

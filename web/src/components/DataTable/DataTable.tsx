@@ -25,15 +25,20 @@ export function DataTable<T>({ response }: Props<T>) {
   const data = response as Playlist[];
 
   return (
-    <div className="overflow-y-auto flex-1 max-h-[600px] rounded-lg">
-      <table className="text-sm w-full">
+    <div className="overflow-y-auto flex-1 max-h-[600px] rounded-lg p-8 border bg-slate-50">
+      {/* <section className="mb-12 sticky top-0 pt-4 bg-slate-50 z-50">
+        <section className="h-[200px] p-4 border relative"></section>
+      </section> */}
+
+      <table className="text-sm w-full z-20">
         <thead className="rounded-md">
-          <tr className="border-b bg-white">
+          <tr className="border-b">
             {headers.map((header) => (
               <th
                 key={header}
                 className={[
-                  "h-10 px-2 text-left align-middle font-medium text-slate-800",
+                  "h-10 px-2 text-left align-middle font-semibold p-4 pl-0 pt-0",
+                  header === "Actions" ? "w-1/12 text-center" : "",
                 ].join(" ")}
               >
                 {header === "Cover" ? (
@@ -51,11 +56,11 @@ export function DataTable<T>({ response }: Props<T>) {
               key={item.spotify_id}
               className={[
                 "border-b transition-colors",
-                "bg-white",
                 "even:bg-slate-100",
+                "hover:bg-slate-200",
               ].join(" ")}
             >
-              <td className={["p-2 align-middle"].join(" ")}>
+              <td className={["p-4 align-middle"].join(" ")}>
                 <img
                   src={item.image_url}
                   alt="Cover"
@@ -65,10 +70,20 @@ export function DataTable<T>({ response }: Props<T>) {
               </td>
               <td>{item.name}</td>
 
-              <td className={["p-2 align-middle"].join(" ")}>
-                <em>
-                  {item.description ? decodeUnicode(item.description) : "None"}
-                </em>
+              <td className={["p-2 align-middle", "text-xs"].join(" ")}>
+                {item.description ? (
+                  <div className="flex flex-col">
+                    {decodeUnicode(item.description)
+                      .split(" . ")
+                      .map((line, i) => (
+                        <em key={`${item.id}-${item.description}-${i}`}>
+                          {line}
+                        </em>
+                      ))}
+                  </div>
+                ) : (
+                  <em className="text-slate-400">No description</em>
+                )}
               </td>
               <td className={["p-2 align-middle", "text-center"].join(" ")}>
                 {item.is_synced ? (

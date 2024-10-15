@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 interface SidebarLinkProps {
   href: string;
   linkText: string;
+  icon?: string;
 }
 
 function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
@@ -39,15 +40,17 @@ function SidebarLink({ href, linkText }: SidebarLinkProps): JSX.Element {
 
 export function Sidebar() {
   return (
-    <section className="flex flex-col h-full bg-slate-200 border-r w-1/6 shadow-2xl">
+    <section className="flex flex-col h-full bg-slate-100 border-r border-slate-200 w-1/6 shadow-2xl">
       <section className="flex flex-col border-b border-b-black">
         <SidebarLink href="/dashboard" linkText="Dashboard" />
-        <SidebarLink href="/dashboard/browser" linkText="Browser" />
-        <SidebarLink href="/playlists" linkText="Playlists" />
+        {/* <SidebarLink href="/dashboard/browser" linkText="Library" /> */}
+        <SidebarLink href="/dashboard/browser/playlists" linkText="Playlists" />
+        <SidebarLink href="/dashboard/browser/albums" linkText="Albums" />
+        {/* <SidebarLink href="/dashboard/browser/artists" linkText="Artists" /> */}
+        <SidebarLink href="/explorer" linkText="Explorer" />
+        <SidebarLink href="/recently-played" linkText="Recently Played" />
         <SidebarLink href="/top-tracks" linkText="Top Tracks" />
         <SidebarLink href="/top-artists" linkText="Top Artists" />
-        <SidebarLink href="/recently-played" linkText="Recently Played" />
-        <SidebarLink href="/library" linkText="Library" />
       </section>
 
       <section className="flex flex-col flex-1">
