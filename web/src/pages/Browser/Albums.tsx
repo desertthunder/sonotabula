@@ -2,23 +2,15 @@
  * @todo use react table
  * */
 
-import { ResourceKey } from "@/libs/types";
-import { Outlet } from "react-router-dom";
 import { usePaginatedBrowser } from "@/libs/hooks/api/query";
-import { useBrowserContext } from "./context";
+import { ResourceKey } from "@/libs/types";
 import React from "react";
 
-export function BrowseAlbumsPage() {
-  const { setTitle, setDescription } = useBrowserContext();
+export function BrowseAlbumsPage(props: { children?: React.ReactNode }) {
   const query = usePaginatedBrowser<ResourceKey.BrowserAlbums>(
     ResourceKey.BrowserAlbums,
     { page: 1, page_size: 25 }
   );
-
-  React.useEffect(() => {
-    setTitle("Albums");
-    setDescription("View synced albums");
-  }, [setTitle, setDescription]);
 
   if (query.isLoading) {
     return <div>Loading...</div>;
@@ -32,8 +24,7 @@ export function BrowseAlbumsPage() {
 
   return (
     <>
-      <Outlet />
-
+      {props.children}
       <table className="h-[400px] w-full table table-auto">
         <thead className="text-sm font-bold">
           <tr className="border-b-2 text-left">

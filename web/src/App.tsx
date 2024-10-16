@@ -8,7 +8,7 @@ import "@fontsource-variable/inter";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Route } from "wouter";
 import { Signup } from "./pages";
 import { BrowserLayout } from "./pages/Browser";
 import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
@@ -49,55 +49,47 @@ persistQueryClient({
   },
 });
 
-export const BrowserRouter = createBrowserRouter([
-  {
-    path: Routes.Home,
-    element: <Signup />,
-  },
-  {
-    path: Routes.Login,
-    element: <Signup />,
-  },
-  {
-    path: Routes.Dashboard,
-    element: <DashboardLayout />,
-    children: [
-      {
-        path: "/dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "/dashboard/browser",
-        element: <BrowserLayout />,
-        children: [
-          {
-            path: "/dashboard/browser/playlists",
-            element: <BrowserPlaylists />,
-            children: [
-              {
-                path: "/dashboard/browser/playlists/:id",
-                element: <Playlist />,
-              },
-            ],
-          },
-          {
-            path: "/dashboard/browser/albums",
-            element: <BrowserAlbums />,
-          },
-          {
-            path: "/dashboard/browser/tracks",
-            element: <BrowserTracks />,
-          },
-        ],
-      },
-    ],
-  },
-]);
+export function AppRouter() {
+  return (
+    <>
+      <Route path={Routes.Home}>
+        <Signup />
+      </Route>
+      <Route path={Routes.Login}>
+        <Signup />
+      </Route>
+      <Route path={Routes.Dashboard} nest>
+        <DashboardLayout>
+          <Route path="/">
+            <Dashboard />
+          </Route>
+          <Route path="/browser" nest>
+            <BrowserLayout>
+              <Route path="/playlists" nest>
+                <BrowserPlaylists>
+                  <Route path="/:id">
+                    <Playlist />
+                  </Route>
+                </BrowserPlaylists>
+              </Route>
+              <Route path="/albums">
+                <BrowserAlbums />
+              </Route>
+              <Route path="/tracks">
+                <BrowserTracks />
+              </Route>
+            </BrowserLayout>
+          </Route>
+        </DashboardLayout>
+      </Route>
+    </>
+  );
+}
 
 export default function Root() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={BrowserRouter} />
+      <AppRouter />
     </QueryClientProvider>
   );
 }

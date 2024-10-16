@@ -1,7 +1,7 @@
 import { usePlaylistTracks } from "@/libs/hooks";
-import React, { useCallback, useMemo } from "react";
-import { redirect, useMatch, useNavigate, useParams } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { Drawer } from "vaul";
+import { useLocation, useParams } from "wouter";
 
 function translateKey(key: string) {
   const title = key.charAt(0).toUpperCase() + key.slice(1);
@@ -67,14 +67,19 @@ function translateDuration(duration_ms: number | string) {
  * @todo - traits - all of features
  */
 export function Playlist() {
-  const match = useMatch("/dashboard/browser/playlists/:id");
   const params = useParams();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const query = usePlaylistTracks(params.id as string);
 
   const isOpen = useMemo(() => {
-    return !!match;
-  }, [match]);
+    if (!params.id) {
+      return false;
+    }
+
+    const [_, id] = params.id.split("/");
+
+    return !!id;
+  }, [params.id]);
 
   const onOpenChange = useCallback(
     (open: boolean) => {
@@ -85,12 +90,18 @@ export function Playlist() {
     [navigate]
   );
 
+  useEffect(() => {
+    if (query.isError && !query.isLoading) {
+      navigate("/dashboard/browser/playlists");
+    }
+  }, [query.isError, query.isLoading, navigate]);
+
   if (query.isLoading) {
     return <div>Loading...</div>;
   }
 
   if (query.isError) {
-    redirect("/dashboard/browser/playlists");
+    return <div>Error: {query.error.message}. Redirecting...</div>;
   }
 
   if (!query.isSuccess || !query.data) {

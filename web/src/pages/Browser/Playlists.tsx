@@ -1,17 +1,12 @@
 import { decodeUnicode } from "@/libs/helpers";
-import { FetchError } from "@/libs/types";
-import { useTokenStore } from "@/store";
-import { useQuery } from "@tanstack/react-query";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Outlet } from "react-router-dom";
-import { useBrowserContext } from "./context";
 import React from "react";
-import type { Pagination } from "./context";
+import { usePlaylists } from "./hooks/playlists";
 
 type Playlist = {
   id: string;
@@ -110,39 +105,17 @@ const columns = [
   }),
 ];
 
-function usePlaylists(page: number) {
-  const token = useTokenStore((s) => s.token);
-  const query = useQuery({
-    queryKey: ["browser-playlists", page],
-    queryFn: async () => {
-      const url = new URL("/api/browser/playlists", window.location.origin);
-      url.searchParams.append("page", page.toString());
-
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        return Promise.reject({
-          code: response.status,
-          message: response.statusText,
-        } as FetchError);
-      }
-
-      const data = await response.json();
-      console.log(data);
-      return data as { data: Playlist[]; pagination: Pagination };
-    },
-  });
-
-  return query;
-}
-
 export function PlaylistTable() {
-  const query = usePlaylists(1);
+  const [page] = React.useState(1);
+  const [pageSize] = React.useState(10);
+  const [sortBy] = React.useState<string | undefined>();
+  const [filters] = React.useState<string | undefined>();
+  const query = usePlaylists({
+    page,
+    pageSize,
+    sortBy,
+    filters,
+  });
 
   const table = useReactTable({
     columns,
@@ -218,17 +191,10 @@ export function PlaylistTable() {
   );
 }
 
-export function PlaylistsPage() {
-  const { setTitle, setDescription } = useBrowserContext();
-
-  React.useEffect(() => {
-    setTitle("Playlists");
-    setDescription("View synced playlists");
-  }, [setTitle, setDescription]);
-
+export function PlaylistsPage(props: { children: React.ReactNode }) {
   return (
     <>
-      <Outlet />
+      {props.children}
       <PlaylistTable />
     </>
   );

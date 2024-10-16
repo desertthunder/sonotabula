@@ -1,8 +1,10 @@
-import { redirect } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useTokenValidator } from "@/libs/hooks";
+import { useLocation } from "wouter";
+import { useCallback, useEffect } from "react";
 
 export default function Signup() {
+  const [, navigate] = useLocation();
   const query = useTokenValidator();
 
   // Login
@@ -21,21 +23,25 @@ export default function Signup() {
     },
   });
 
-  function onClickSignup() {
+  useEffect(() => {
+    if (query.isSuccess) {
+      navigate("/dashboard");
+    } else if (query.isError) {
+      console.error(query.error);
+    }
+  }, [query.isSuccess, query.isError, query.error, navigate]);
+
+  useEffect(() => {
+    if (mutation.isSuccess) {
+      navigate("/dashboard");
+    } else if (mutation.isError) {
+      console.error(mutation.error);
+    }
+  }, [mutation.isSuccess, mutation.isError, mutation.error, navigate]);
+
+  const onClickSignup = useCallback(() => {
     mutation.mutate();
-  }
-
-  if (query.isSuccess) {
-    redirect("/dashboard");
-  } else if (query.isError) {
-    console.error(query.error);
-  }
-
-  if (mutation.isSuccess) {
-    window.location.href = mutation.data.redirect;
-  } else if (mutation.isError) {
-    console.error(mutation.error);
-  }
+  }, [mutation]);
 
   return (
     <main className="container min-h-80">

@@ -2,18 +2,16 @@ import { Navbar, Sidebar } from "@/components";
 import { useTokenValidator } from "@/libs/hooks";
 import { useTokenStore } from "@/store";
 import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
-export function DashboardLayout() {
+export function DashboardLayout(props: { children: React.ReactNode }) {
   const query = useTokenValidator();
   const token = useTokenStore((state) => state.token);
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     if (!token) {
-      navigate("/login");
-    } else {
-      navigate("/dashboard");
+      navigate("/login", { replace: true });
     }
   }, [token, navigate]);
 
@@ -30,7 +28,7 @@ export function DashboardLayout() {
       <Navbar />
       <section className="flex flex-1">
         <Sidebar />
-        <Outlet />
+        {props.children}
       </section>
     </div>
   );

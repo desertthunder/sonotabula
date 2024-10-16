@@ -14,14 +14,14 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useSearch } from "wouter";
 import { browserFetcher, fetcher, paginatedBrowserFetcher } from "./fetch";
 import { BASE_URL } from "@/libs/services";
 import { useTokenStore } from "@/store";
 
 export function useQueryParams(): Record<string, string> {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
+  const [search] = useSearch();
+  const params = new URLSearchParams(search);
 
   return Object.fromEntries(params.entries());
 }

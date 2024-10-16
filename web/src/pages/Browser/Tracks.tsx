@@ -1,3 +1,4 @@
+import { formatDuration } from "@/libs/helpers";
 import { FetchError } from "@/libs/types";
 import { useTokenStore } from "@/store";
 import { useQuery } from "@tanstack/react-query";
@@ -8,10 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
-import { Outlet } from "react-router-dom";
 import type { Pagination } from "./context";
-import { useBrowserContext } from "./context";
-import { formatDuration } from "@/libs/helpers";
 
 type Track = {
   id: string;
@@ -116,7 +114,7 @@ function useTracks(page: number) {
       const url = new URL("/api/browser/tracks", window.location.origin);
       url.searchParams.append("page", page.toString());
       url.searchParams.append("page_size", "10");
-      console.log(page);
+
       const response = await fetch(`/api/browser/tracks`, {
         method: "GET",
         headers: {
@@ -132,7 +130,7 @@ function useTracks(page: number) {
       }
 
       const data = await response.json();
-      console.log(data);
+
       return data as { data: Track[]; pagination: Pagination };
     },
   });
@@ -217,17 +215,10 @@ export function TracksTable() {
   );
 }
 
-export function TracksPage() {
-  const { setTitle, setDescription } = useBrowserContext();
-
-  React.useEffect(() => {
-    setTitle("Tracks");
-    setDescription("View synced tracks");
-  }, [setTitle, setDescription]);
-
+export function TracksPage(props: { children?: React.ReactNode }) {
   return (
     <>
-      <Outlet />
+      {props.children}
       <TracksTable />
     </>
   );
