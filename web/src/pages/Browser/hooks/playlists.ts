@@ -1,6 +1,6 @@
 import { FetchError } from "@/libs/types";
 import { useTokenStore } from "@/store";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, useQuery } from "@tanstack/react-query";
 import type { Pagination } from "./shared";
 
 type Playlist = {
@@ -32,7 +32,7 @@ export async function fetchPlaylists({
 }) {
   const url = new URL("/api/browser/playlists", window.location.origin);
   url.searchParams.append("page", page.toString());
-  url.searchParams.append("pageSize", pageSize.toString());
+  url.searchParams.append("page_size", pageSize.toString());
 
   if (sortBy) {
     url.searchParams.append("sortBy", sortBy);
@@ -61,23 +61,29 @@ export async function fetchPlaylists({
   return data as { data: Playlist[]; pagination: Pagination };
 }
 
-export function usePlaylists({
-  page = 1,
-  pageSize = 10,
-  sortBy,
-  filters,
-}: {
-  page: number;
-  pageSize: number;
-  sortBy?: string;
-  filters?: string;
-}) {
+export function usePlaylists(
+  {
+    page = 1,
+    pageSize = 10,
+    sortBy,
+    filters,
+  }: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    filters?: string;
+  },
+  client: QueryClient
+) {
   const token = useTokenStore((s) => s.token);
-  const query = useQuery({
-    queryKey: ["browser-playlists", page],
-    queryFn: async () =>
-      await fetchPlaylists({ page, pageSize, token, sortBy, filters }),
-  });
+  const query = useQuery(
+    {
+      queryKey: ["browser-playlists", page],
+      queryFn: async () =>
+        await fetchPlaylists({ page, pageSize, token, sortBy, filters }),
+    },
+    client
+  );
 
   return query;
 }
