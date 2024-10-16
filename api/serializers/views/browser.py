@@ -20,6 +20,7 @@ class Pagination(typing.TypedDict):
     total: int
     per_page: int
     page: int
+    num_pages: int
 
 
 # /browser/albums/
@@ -84,6 +85,7 @@ class PaginatedAlbumListSerializer(BaseModel):
                 "total": paginator.count,
                 "per_page": paginator.per_page,
                 "page": paginator.page(page).number,
+                "num_pages": paginator.num_pages,
             },
         )
 
@@ -333,6 +335,7 @@ class PaginatedPlaylistListSerializer(BaseModel):
                 "total": paginator.count,
                 "per_page": paginator.per_page,
                 "page": paginator.page(page).number,
+                "num_pages": paginator.num_pages,
             },
         )
 
@@ -406,5 +409,6 @@ class PaginatedTrackListSerializer(BaseModel):
                 "total": paginator.count,
                 "per_page": paginator.per_page,
                 "page": paginator.page(page).number,
+                "num_pages": paginator.num_pages,
             },
         )
