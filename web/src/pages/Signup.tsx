@@ -1,13 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
-import { useTokenValidator } from "@/libs/hooks";
-import { useLocation } from "wouter";
 import { useCallback, useEffect } from "react";
 
 export default function Signup() {
-  const [, navigate] = useLocation();
-  const query = useTokenValidator();
-
-  // Login
   const mutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/login", {
@@ -19,42 +13,68 @@ export default function Signup() {
         throw new Error("Login failed");
       }
 
-      return response.json();
+      // Pause for 2.5 seconds
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      return await response.json();
     },
   });
 
   useEffect(() => {
-    if (query.isSuccess) {
-      navigate("/dashboard");
-    } else if (query.isError) {
-      console.error(query.error);
-    }
-  }, [query.isSuccess, query.isError, query.error, navigate]);
+    if (mutation.isSuccess && mutation.data?.redirect) {
+      window.location.href = mutation.data.redirect;
 
-  useEffect(() => {
-    if (mutation.isSuccess) {
-      navigate("/dashboard");
+      return;
     } else if (mutation.isError) {
       console.error(mutation.error);
     }
-  }, [mutation.isSuccess, mutation.isError, mutation.error, navigate]);
+  }, [mutation.data, mutation.error, mutation.isSuccess, mutation.isError]);
 
-  const onClickSignup = useCallback(() => {
+  const onClickSignup = useCallback(async () => {
     mutation.mutate();
   }, [mutation]);
 
   return (
-    <main className="container min-h-80">
-      <h1 className="text-5xl font-semibold font-headings">
-        Spotify Dashboard
-      </h1>
-      <div className="m-4 font-prose">Signup card</div>
-      <button
-        onClick={onClickSignup}
-        className="bg-primary text-white font-semibold py-2 px-4 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-      >
-        Sign Up
-      </button>
+    <main className="container min-h-80 flex items-center justify-center">
+      <div className="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-primary text-white drop-shadow-xl rounded-lg shadow">
+        <header className="flex justify-between flex-col gap-4 text-5xl font-bold">
+          <h1 className="text-left">
+            <i className="i-ri-spotify-fill text-5xl align-middle mr-2"></i>
+            <span className="align-middle">Dashspot</span>
+          </h1>
+          <p className="text-sm text-gray-100 font-medium">
+            Dashspot is a library manager and analytics tool for your music
+            library.
+          </p>
+        </header>
+
+        <button
+          type="button"
+          onClick={onClickSignup}
+          className={[
+            "group",
+            "w-full px-5 py-3",
+            "text-base font-medium text-center text-primary",
+            "bg-gray-100 rounded-lg hover:bg-white",
+            "transition-colors duration-300",
+            "focus:ring-4 focus:ring-primary-300 sm:w-auto",
+            "flex items-center justify-center gap-x-2",
+            mutation.isPending ? "cursor-wait pointer-events-none" : "",
+          ].join(" ")}
+        >
+          <i
+            className={[
+              "text-primary text-xl",
+              "group-hover:rotate-45 group-hover:scale-110 ",
+              "transition-transform duration-300",
+              mutation.isPending
+                ? "animate-spin i-ri-loader-4-fill"
+                : "i-ri-music-2-fill",
+            ].join(" ")}
+          ></i>
+          <span>Login</span>
+        </button>
+      </div>
     </main>
   );
 }

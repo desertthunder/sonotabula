@@ -2,18 +2,21 @@ import { Navbar, Sidebar } from "@/components";
 import { useTokenValidator } from "@/libs/hooks";
 import { useTokenStore } from "@/store";
 import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 
 export function DashboardLayout(props: { children: React.ReactNode }) {
   const query = useTokenValidator();
-  const token = useTokenStore((state) => state.token);
+  const setToken = useTokenStore((state) => state.setToken);
   const [, navigate] = useLocation();
+  const searchParams = useSearch();
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
+    const params = new URLSearchParams(searchParams);
+    if (params.get("token")) {
+      setToken(params.get("token") as string);
+      navigate("/");
     }
-  }, [token, navigate]);
+  }, [setToken, navigate, searchParams]);
 
   if (query.isLoading) {
     return <div>Loading...</div>;

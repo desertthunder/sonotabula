@@ -13,7 +13,7 @@ import {
   useQueryClient,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { useSearch } from "wouter";
 import { browserFetcher, fetcher, paginatedBrowserFetcher } from "./fetch";
 import { BASE_URL } from "@/libs/services";
@@ -29,24 +29,14 @@ export function useQueryParams(): Record<string, string> {
 export function useTokenValidator() {
   const params = useQueryParams();
   const queryClient = useQueryClient();
-  const queryData = queryClient.getQueryData<{
-    message: string;
-    token: string;
-  }>(["token"]);
-
+  const token = useTokenStore((state) => state.token);
   const setToken = useTokenStore((state) => state.setToken);
 
-  const token = useMemo(() => {
+  useEffect(() => {
     if (params.token) {
-      return params.token;
-    } else {
-      return queryData?.token ?? null;
+      setToken(params.token);
     }
-  }, [params.token, queryData]);
-
-  if (token) {
-    setToken(token);
-  }
+  }, [params.token, setToken]);
 
   const query = useQuery(
     {
