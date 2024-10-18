@@ -14,8 +14,9 @@ import { BrowserLayout } from "./pages/Browser";
 import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
 import { Playlist } from "./pages/Browser/Playlist";
 import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
-import { Dashboard, DashboardLayout } from "./pages/Dashboard";
 import { TracksPage as BrowserTracks } from "./pages/Browser/Tracks";
+import { Dashboard } from "./pages/Dashboard";
+import { DashboardLayout } from "./pages/Dashboard/layout";
 import "./styles/base.css";
 
 enum Routes {

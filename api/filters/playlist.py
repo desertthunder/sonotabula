@@ -29,22 +29,38 @@ class PlaylistFilterSet(FilterSet):
         """
         return qs.filter(owner_id=value)
 
-    def filter_is_analyzed(self, qs: models.QuerySet) -> models.QuerySet:
+    def filter_is_analyzed(
+        self, qs: models.QuerySet, value: int | bool
+    ) -> models.QuerySet:
         """Sort by is_active."""
-        return qs.filter(is_analyzed=True)
+        return qs.filter(is_analyzed=bool(value))
 
-    def filter_is_synced(self, qs: models.QuerySet) -> models.QuerySet:
+    def filter_is_synced(
+        self, qs: models.QuerySet, value: int | bool
+    ) -> models.QuerySet:
         """Sort by is_synced."""
-        return qs.filter(is_synced=True)
+        return qs.filter(is_synced=bool(value))
 
-    def filter_private(self, qs: models.QuerySet) -> models.QuerySet:
+    def filter_private(self, qs: models.QuerySet, value: int | bool) -> models.QuerySet:
         """Filter by private status."""
-        return qs.filter(public=False).filter(shared=False)
+        return qs.filter(public=bool(value)).filter(shared=bool(value))
 
     def filter_num_tracks(self, qs: models.QuerySet, value: int) -> models.QuerySet:
         """Filter by number of tracks."""
         return qs.annotate(num_tracks=models.Count("tracks")).filter(
             num_tracks__gte=value
+        )
+
+    def filter_num_tracks_gt(self, qs: models.QuerySet, value: int) -> models.QuerySet:
+        """Filter by number of tracks greater than."""
+        return qs.annotate(num_tracks=models.Count("tracks")).filter(
+            num_tracks__gt=value
+        )
+
+    def filter_num_tracks_lt(self, qs: models.QuerySet, value: int) -> models.QuerySet:
+        """Filter by number of tracks less than."""
+        return qs.annotate(num_tracks=models.Count("tracks")).filter(
+            num_tracks__lt=value
         )
 
     def filter_track_name(self, qs: models.QuerySet, value: str) -> models.QuerySet:

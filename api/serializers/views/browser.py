@@ -236,6 +236,7 @@ class PlaylistModelSerializer(BaseModel):
     id: str
     name: str
     spotify_url: str
+    num_tracks: int | None = None
     is_synced: bool | None = False
     is_analyzed: bool | None = False
     description: str | None = None
@@ -250,12 +251,15 @@ class PlaylistModelSerializer(BaseModel):
         cls: type["PlaylistModelSerializer"], model: Playlist
     ) -> "PlaylistModelSerializer":
         """Create a model serializer from a model."""
+        num_tracks = Playlist.objects.get(id=model.id).tracks.count()
+
         return cls(
             id=str(model.id),
             name=model.name,
             spotify_url=model.spotify_url,
             is_synced=model.is_synced,
             is_analyzed=model.is_analyzed,
+            num_tracks=num_tracks,
             description=model.description,
             owner_id=model.owner_id,
             version=model.version,

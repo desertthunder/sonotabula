@@ -138,7 +138,7 @@ export function LibraryTable<T extends ResourceKey>({ scope, data }: Props<T>) {
 
   return (
     <div className="rounded-lg bg-slate-50 p-8 drop-shadow-lg">
-      <div className="overflow-y-auto flex-1 max-h-[450px] ">
+      <div className="overflow-y-auto flex-1 max-h-full">
         <table className="text-sm w-full p-4 relative">
           <thead>
             <tr className="bg-slate-50 bg-opacity-100 z-20 ">
