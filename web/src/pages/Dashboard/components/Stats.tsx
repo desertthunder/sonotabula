@@ -13,9 +13,10 @@ export function StatCard({ scope }: Props) {
   const context = useSavedCounts();
 
   return (
-    <div className="rounded-xl border bg-white text-black shadow-lg border-l-8 border-l-emerald-400">
-      <section className="flex flex-col gap-2 p-4">
-        <h1 className="text-lg font-medium text-slate-9004">
+    <div className="rounded-xl bg-zinc-100 text-black shadow-lg flex">
+      <div className="bg-gradient-to-br from-emerald-500 to-green-400 rounded-l-xl w-4" />
+      <section className="flex flex-col gap-2 p-4 ">
+        <h1 className="text-lg font-medium text-slate-900">
           {titleCase(scope)}
         </h1>
         {context.isLoading ? <span>Loading</span> : null}

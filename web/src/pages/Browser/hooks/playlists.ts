@@ -28,18 +28,20 @@ export async function fetchPlaylists({
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  filters?: string;
+  filters?: string[][];
 }) {
   const url = new URL("/api/browser/playlists", window.location.origin);
   url.searchParams.append("page", page.toString());
   url.searchParams.append("page_size", pageSize.toString());
 
   if (sortBy) {
-    url.searchParams.append("sortBy", sortBy);
+    url.searchParams.append("sort_by", sortBy);
   }
 
-  if (filters) {
-    url.searchParams.append("filters", filters);
+  if (filters && filters.length > 0) {
+    filters.forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
   }
 
   const response = await fetch(url.toString(), {
@@ -71,7 +73,7 @@ export function usePlaylists(
     page?: number;
     pageSize?: number;
     sortBy?: string;
-    filters?: string;
+    filters?: string[][];
   },
   client: QueryClient
 ) {
