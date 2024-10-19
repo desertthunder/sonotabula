@@ -13,5 +13,8 @@
   },
   "scripts": {
     "prepare": "husky"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13"
   }
 }

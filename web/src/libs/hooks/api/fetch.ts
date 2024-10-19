@@ -1,4 +1,4 @@
-import type { Resource, FetchError } from "@libs/types";
+import type { Resource, FetchError, ListeningHistoryItem } from "@libs/types";
 import { BASE_URL } from "@libs/services";
 import { ResourceKey } from "@libs/types";
 
@@ -117,4 +117,29 @@ export async function paginatedBrowserFetcher<T extends ResourceKey>(
   }
 
   return (await response.json()) as Resource<T>;
+}
+
+export async function fetchListeningHistory(token: string | null) {
+  if (!token) {
+    throw new Error("No token provided");
+  }
+  const res = await fetch("/api/playback/recent/", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const error: FetchError = {
+      code: res.status,
+      message: res.statusText,
+    };
+
+    return Promise.reject(error);
+  }
+
+  const data = await res.json();
+
+  return data["data"] as ListeningHistoryItem;
 }

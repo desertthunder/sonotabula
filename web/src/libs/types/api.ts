@@ -190,3 +190,24 @@ export type BrowserAlbumResponse = {
     page: number;
   };
 };
+
+export type ListeningHistoryItem = {
+  id: string;
+  played_at: string;
+  track: {
+    spotify_id: string;
+    name: string;
+    duration: number;
+  };
+  album: {
+    spotify_id: string;
+    name: string;
+    release_date: string;
+    image_url: string;
+  };
+  artists: {
+    spotify_id: string;
+    name: string;
+  }[];
+  image_url: string;
+};

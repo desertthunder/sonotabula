@@ -4,4 +4,5 @@ export {
   useSavedCounts,
   useTokenValidator,
   usePlaylistTracks,
+  useListeningHistory,
 } from "./api/query";

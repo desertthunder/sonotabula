@@ -7,6 +7,7 @@ import {
   Resource,
   ResourceKey,
   BrowserPlaylistResponse,
+  ListeningHistoryItem,
 } from "@/libs/types";
 import {
   useQuery,
@@ -15,7 +16,12 @@ import {
 } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSearch } from "wouter";
-import { browserFetcher, fetcher, paginatedBrowserFetcher } from "./fetch";
+import {
+  browserFetcher,
+  fetcher,
+  paginatedBrowserFetcher,
+  fetchListeningHistory,
+} from "./fetch";
 import { BASE_URL } from "@/libs/services";
 import { useTokenStore } from "@/store";
 
@@ -209,6 +215,20 @@ export function usePaginatedBrowser<T extends ResourceKey>(
     },
     client
   );
+
+  return query;
+}
+
+export function useListeningHistory() {
+  const token = useTokenStore((s) => s.token);
+
+  const query = useQuery<ListeningHistoryItem, FetchError>({
+    queryKey: ["listeningHistory"],
+    queryFn: async () => {
+      return await fetchListeningHistory(token);
+    },
+    retry: 2,
+  });
 
   return query;
 }

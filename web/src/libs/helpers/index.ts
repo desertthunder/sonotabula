@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export function decodeUnicode(input: string) {
   const tempDiv = document.createElement("div");
 
@@ -11,4 +13,26 @@ export function formatDuration(time_ms: number) {
   const seconds = ((time_ms % 60000) / 1000).toFixed(0);
 
   return `${minutes}:${parseInt(seconds) < 10 ? "0" : ""}${seconds}`;
+}
+
+/**
+ * Human Readable format for the last played date
+ *
+ * Ex. 2024-10-18 16:47:26 CDT -> (assuming the current timezone is the same)
+ * 2 days ago
+ */
+export function humanReadableDate(date: string) {
+  const parsed = dayjs(date, "YYYY-MM-DD HH:mm:ss z");
+
+  const now = dayjs();
+
+  const diff = now.diff(parsed, "day");
+
+  if (diff === 0) {
+    return `Earlier Today`;
+  } else if (diff === 1) {
+    return `Yesterday`;
+  }
+
+  return `${diff} days ago`;
 }

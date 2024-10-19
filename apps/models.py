@@ -1,9 +1,9 @@
 """Spotify data access models."""
 
 import datetime
-import json
 import uuid
 
+import pytz
 from django.db import models
 from django_stubs_ext.db.models import TypedModelMeta
 from pydantic import BaseModel
@@ -114,8 +114,6 @@ class ListeningHistorySerializer(BaseModel):
         cls: type["ListeningHistorySerializer"], item: dict
     ) -> "ListeningHistorySerializer":
         """Convert API data to serializer data."""
-        with open("api.json", "w") as f:
-            json.dump(item, f)
         data = item.get("track")
         if not data:
             raise ValueError("No track data found.")
@@ -150,7 +148,9 @@ class ListeningHistorySerializer(BaseModel):
 
         return cls(
             id=str(data.id),
-            played_at=data.played_at.isoformat(),
+            played_at=data.played_at.astimezone(
+                pytz.timezone("US/Central"),
+            ).strftime("%Y-%m-%d %H:%M:%S %Z"),
             track=track,
             album=album,
             artists=artists,
@@ -217,7 +217,7 @@ class ListeningHistoryManager(models.Manager["ListeningHistory"]):
             track=track,
             played_at=datetime.datetime.strptime(
                 serialized.played_at, "%Y-%m-%dT%H:%M:%S.%fZ"
-            ),
+            ).replace(tzinfo=pytz.UTC),
         )
 
         album = self.create_album(serialized.album)

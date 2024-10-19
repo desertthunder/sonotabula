@@ -9,6 +9,7 @@ export type {
   LibraryCountsResponse,
   Auth,
   BrowserPlaylistResponse,
+  ListeningHistoryItem,
 } from "./api";
 
 export { ResourceKey, RESOURCE_KEYS } from "./api";
