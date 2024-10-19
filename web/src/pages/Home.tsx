@@ -80,6 +80,25 @@ export default function Home() {
                 {link}
               </a>
             ))}
+            <Link
+              href="/login"
+              className={[
+                "bg-emerald-500 text-white px-4 py-2 font-medium text-base",
+                "rounded-full",
+                "hover:shadow-lg hover:shadow-primary",
+                "group hover:bg-emerald-600 transition-all duration-500",
+              ].join(" ")}
+            >
+              <i
+                className={[
+                  "i-ri-spotify-line group-hover:i-ri-spotify-fill",
+                  "mr-2 align-middle",
+                  "group-hover:font-bold group-hover:scale-150 group-hover:-rotate-12",
+                  "transition-all duration-500",
+                ].join(" ")}
+              ></i>
+              <span className="align-middle">Login</span>
+            </Link>
           </div>
         </div>
       </nav>
@@ -97,16 +116,8 @@ export default function Home() {
           className={[
             "bg-emerald-500 text-white px-5 py-3 rounded-full",
             "font-semibold hover:bg-emerald-600 transition-all duration-500 group text-xl",
-            "hover:shadow-lg hover:shadow-primary",
           ].join(" ")}
         >
-          <i
-            className={[
-              "i-ri-spotify-line",
-              "group-hover:i-ri-spotify-fill group-hover:font-bold group-hover:scale-150 mr-2 align-middle transition-all duration-500",
-              "group-hover:-rotate-12",
-            ].join(" ")}
-          ></i>
           <span className="align-middle">Get Started</span>
         </Link>
       </section>
