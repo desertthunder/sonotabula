@@ -29,6 +29,7 @@ faker = "^30.3.0"
 watchdog = "^5.0.3"
 pandas = "^2.2.3"
 pandas-stubs = "^2.2.3.241009"
+loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.7"

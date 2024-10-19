@@ -1,10 +1,9 @@
 name: 'music-spot'
-version: '3.8'
-
 services:
     db:
         container_name: music-db
         image: postgres:16
+        hostname: db
         environment:
             POSTGRES_USER: pguser
             POSTGRES_PASSWORD: password
@@ -18,8 +17,49 @@ services:
     redis:
         container_name: music-redis
         image: redis:alpine
+        hostname: redis
         ports:
             - "6379:6379"
+        networks:
+            - default
+    django:
+        container_name: music-django
+        hostname: django
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: python manage.py runserver
+        # command: gunicorn server.wsgi:application --bind 8000 --reload
+        ports:
+            - "8000:8000"
+        depends_on:
+            - db
+            - redis
+    celery:
+        container_name: music-celery
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: watchmedo auto-restart --directory=./api/tasks --pattern=*.py --recursive -- celery -A server worker -l INFO
+        volumes:
+            - .:/app
+        depends_on:
+            - db
+            - redis
+        networks:
+            - default
+    flower:
+        container_name: music-flower
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: celery -A server flower --port=5555
+        ports:
+            - "5555:5555"
+        depends_on:
+            - db
+            - redis
+            - celery
         networks:
             - default
 

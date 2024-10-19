@@ -1,0 +1,5 @@
+web/
+doc/
+.vscode/
+.husky/
+node_modules/
