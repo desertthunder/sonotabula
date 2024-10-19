@@ -110,6 +110,27 @@ class SpotifyLibraryService:
 
             yield from self._library_tracks(user=user, limit=limit, all=all)
 
+    def library_playlist(self, user_pk: int, playlist_id: str, *args, **kwargs) -> dict:
+        """Get the user's playlist with items.
+
+        Refresh the access token if it has expired.
+        """
+        user = self.get_user(user_pk)
+
+        try:
+            return self._library_playlist(user=user, playlist_id=playlist_id)
+        except SpotifyExpiredTokenError:
+            self.auth_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            return self._library_playlist(user=user, playlist_id=playlist_id)
+        except Exception as e:
+            logger.error(f"Request to get playlist {playlist_id} items failed.")
+            logger.error(f"Error: {e}")
+
+            raise SpotifyAPIError(str(e)) from e
+
     def _library_playlists(
         self, user: "AppUser", limit: int = 50, all: bool = False
     ) -> typing.Iterable[dict]:
@@ -262,3 +283,52 @@ class SpotifyLibraryService:
                 yielded += len(resp.get("items"))
 
                 yield from resp.get("items")
+
+    def _library_playlist(self, user: "AppUser", playlist_id: str) -> dict:
+        """Get the user's playlist.
+
+        1. Get the playlist's metadata.
+        2. Get the playlist's tracks (items).
+        """
+        with httpx.Client(
+            base_url=SpotifyAPIEndpoints.BASE_URL,
+            headers={"Authorization": f"Bearer {user.access_token}"},
+        ) as client:
+            response = client.get(
+                url=SpotifyAPIEndpoints.Playlist.format(playlist_id=playlist_id)
+            )
+
+            if response.is_error:
+                self.handle_error(response)
+
+            time.sleep(0.5)
+
+            data = {
+                "playlist": response.json(),
+                "tracks": list(
+                    self._library_playlist_tracks(client, playlist_id),
+                ),
+            }
+
+            return data
+
+    def _library_playlist_tracks(
+        self, client: httpx.Client, playlist_id: str
+    ) -> typing.Iterable[dict]:
+        """Get the playlist's tracks."""
+        next = f"{SpotifyAPIEndpoints.PlaylistTracks.format(playlist_id=playlist_id)}"
+
+        while next:
+            response = client.get(url=next, params={"limit": 50})
+
+            if response.is_error:
+                self.handle_error(response)
+
+            resp = response.json()
+
+            next = resp.get("next")
+
+            if next is not None:
+                time.sleep(0.75)
+
+            yield from resp.get("items")

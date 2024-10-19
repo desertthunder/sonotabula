@@ -93,6 +93,13 @@ class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
         - name
         - spotify_id
         - owner_id
+
+    Optional fields:
+        - version
+        - image_url
+        - public
+        - shared (i.e. collaborative)
+        - description
     """
 
     version = models.CharField(max_length=255, blank=True, null=True)  # snapshot_id
@@ -101,7 +108,9 @@ class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     shared = models.BooleanField(null=True, blank=True)  # collaborative
     description = models.TextField(blank=True, null=True)
     owner_id = models.CharField(max_length=255, null=False, blank=False)
+    owner_name = models.CharField(max_length=255, null=True, blank=True)
 
+    # (TODO): this should be a many-to-many relationship
     user = models.ForeignKey(
         "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )

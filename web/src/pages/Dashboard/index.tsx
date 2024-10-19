@@ -3,8 +3,8 @@ import { ResourceKey } from "@/libs/types";
 import { Counts } from "@/libs/types/api";
 import { useCallback, useState } from "react";
 import { StatCard } from "./components/stats";
-import { LibraryTable } from "./components/tables";
 import { Tabs } from "./components/tabs";
+import { RealTimeTable } from "./components/rt";
 
 export function Dashboard() {
   const [scope, setScope] = useState<ResourceKey>(ResourceKey.LibraryPlaylists);
@@ -17,7 +17,7 @@ export function Dashboard() {
   return (
     <main
       className={[
-        "bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%",
+        "bg-gradient-to-b from-emerald-600 to-70% via-emerald-500 via-70%",
         "flex-1 flex justify-between gap-8",
         "px-8 pt-4",
         "overflow-y-auto",
@@ -53,21 +53,24 @@ export function Dashboard() {
         <div className="flex-shrink">
           <Tabs scope={scope} onChange={onTabChange} />
         </div>
-        <div className="flex flex-1 gap-8">
-          <div className="flex-1 flex flex-col gap-4">
+        <div className="flex flex-1 gap-8 pb-4">
+          <div className={["flex-1 flex flex-col gap-4"].join(" ")}>
             {context.isLoading ? <p>Loading...</p> : null}
             {context.isError ? <p>Error</p> : null}
             {context.data ? (
-              //@ts-expect-error need to fix
-              <LibraryTable scope={scope} data={context.data} />
+              <RealTimeTable
+                scope={scope}
+                //@ts-expect-error need to fix
+                data={context.data}
+              />
             ) : null}
           </div>
-          <section className="flex flex-col gap-4 min-w-[25%]">
-            {Counts.map((key) => (
-              <StatCard key={key} scope={key} />
-            ))}
-          </section>
         </div>
+      </section>
+      <section className="flex flex-col max-h-fit gap-4 min-w-[25%]">
+        {Counts.map((key) => (
+          <StatCard key={key} scope={key} />
+        ))}
       </section>
     </main>
   );

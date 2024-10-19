@@ -5,6 +5,7 @@ export type Playlist = {
   link: string;
   image_url: string;
   num_tracks: number;
+  is_synced: boolean;
   description?: string;
 };
 

@@ -12,6 +12,7 @@ urlpatterns = [
     path(
         "playback/recent", playback.RecentlyPlayedView.as_view(), name="recently-played"
     ),
+    path("library/playlists/<str:playlist_id>", library.LibraryPlaylistsView.as_view()),
     path(
         "library/playlists",
         library.LibraryPlaylistsView.as_view(),
