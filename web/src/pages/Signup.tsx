@@ -1,7 +1,68 @@
-import { useMutation } from "@tanstack/react-query";
+import { useTokenStore } from "@/store";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
+import { useLocation } from "wouter";
+
+async function checkToken(token: string | null) {
+  if (!token) {
+    console.debug("No token found");
+
+    return null;
+  }
+
+  try {
+    const response = await fetch("/api/validate", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status >= 500) {
+      throw new Error(
+        `Server error: ${response.status} ${response.statusText}`
+      );
+    } else if (!response.ok) {
+      console.debug(
+        `Failed to validate token: ${response.status} ${response.statusText}`
+      );
+
+      return null;
+    }
+
+    const data = await response.json();
+
+    console.debug(data.message);
+
+    return data;
+  } catch (error) {
+    console.error(error);
+
+    return null;
+  }
+}
 
 export default function Signup() {
+  const token = useTokenStore((s) => s.token);
+  const [, setLocation] = useLocation();
+  const query = useQuery({
+    queryKey: ["checkToken"],
+    queryFn: () => checkToken(token),
+    staleTime: Infinity,
+  });
+
+  useEffect(() => {
+    if (query.isSuccess && query.data?.token) {
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 2500);
+    }
+
+    return () => {
+      query.refetch();
+    };
+  }, [query, setLocation]);
+
   const mutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/login", {
@@ -59,7 +120,9 @@ export default function Signup() {
             "transition-colors duration-300",
             "focus:ring-4 focus:ring-primary-300 sm:w-auto",
             "flex items-center justify-center gap-x-2",
-            mutation.isPending ? "cursor-wait pointer-events-none" : "",
+            mutation.isPending || query.isLoading
+              ? "cursor-wait pointer-events-none"
+              : "",
           ].join(" ")}
         >
           <i
@@ -67,12 +130,18 @@ export default function Signup() {
               "text-primary text-xl",
               "group-hover:rotate-45 group-hover:scale-110 ",
               "transition-transform duration-300",
-              mutation.isPending
+              mutation.isPending || query.isLoading
                 ? "animate-spin i-ri-loader-4-fill"
                 : "i-ri-music-2-fill",
             ].join(" ")}
           ></i>
-          <span>Login</span>
+          <span>
+            {query.isLoading
+              ? "Checking token..."
+              : mutation.isPending
+              ? "Logging in..."
+              : "Login"}
+          </span>
         </button>
       </div>
     </main>
