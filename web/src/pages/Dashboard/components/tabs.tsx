@@ -1,21 +1,14 @@
-import { ResourceKey, RESOURCE_KEYS } from "@/libs/types";
+import { LibraryKey, LibraryKeys, LibraryTitles } from "@/libs/types";
 
 interface Props {
-  scope: ResourceKey;
-  onChange: (key: ResourceKey) => void;
+  scope: LibraryKey;
+  onChange: (key: LibraryKey) => void;
 }
-
-const textMap = {
-  [ResourceKey.LibraryPlaylists]: "Playlists",
-  [ResourceKey.LibraryTracks]: "Tracks",
-  [ResourceKey.LibraryAlbums]: "Albums",
-  [ResourceKey.LibraryArtists]: "Artists",
-} as const;
 
 export function Tabs({ scope, onChange }: Props) {
   return (
     <div className="mb-4 gap-x-2 flex">
-      {RESOURCE_KEYS.map((resource) => {
+      {LibraryKeys.map((resource) => {
         return (
           <button
             key={resource}
@@ -41,19 +34,19 @@ export function Tabs({ scope, onChange }: Props) {
             disabled={scope === resource}
             value={resource}
           >
-            {resource === ResourceKey.LibraryPlaylists ? (
+            {resource === LibraryKey.LibraryPlaylists ? (
               <i className="i-ri-play-list-2-fill group-hover:rotate-45" />
             ) : null}
-            {resource === ResourceKey.LibraryTracks ? (
+            {resource === LibraryKey.LibraryTracks ? (
               <i className="i-ri-music-fill group-hover:rotate-45" />
             ) : null}
-            {resource === ResourceKey.LibraryAlbums ? (
+            {resource === LibraryKey.LibraryAlbums ? (
               <i className="i-ri-album-fill group-hover:rotate-45" />
             ) : null}
-            {resource === ResourceKey.LibraryArtists ? (
+            {resource === LibraryKey.LibraryArtists ? (
               <i className="i-ri-user-2-fill group-hover:rotate-45" />
             ) : null}
-            {textMap[resource]}
+            {LibraryTitles[resource]}
           </button>
         );
       })}

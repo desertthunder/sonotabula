@@ -1,16 +1,15 @@
-import { useFetch } from "@/libs/hooks";
-import { ResourceKey } from "@/libs/types";
-import { Counts } from "@/libs/types/api";
+import { LibraryKey, Counts } from "@/libs/types";
 import { useCallback, useState } from "react";
 import { StatCard } from "./components/stats";
 import { Tabs } from "./components/tabs";
 import { RealTimeTable } from "./components/tables";
+import { useLibraryFetch } from "@/libs/hooks/api/query";
 
 export function Dashboard() {
-  const [scope, setScope] = useState<ResourceKey>(ResourceKey.LibraryPlaylists);
-  const context = useFetch<typeof scope>(scope, 10);
+  const [scope, setScope] = useState<LibraryKey>(LibraryKey.LibraryPlaylists);
+  const context = useLibraryFetch<LibraryKey>(scope);
 
-  const onTabChange = useCallback((key: ResourceKey) => {
+  const onTabChange = useCallback((key: LibraryKey) => {
     setScope(key);
   }, []);
 
@@ -60,8 +59,8 @@ export function Dashboard() {
             {context.data ? (
               <RealTimeTable
                 scope={scope}
-                //@ts-expect-error need to fix
                 data={context.data}
+                handler={() => console.log("Clicked!")}
               />
             ) : null}
           </div>

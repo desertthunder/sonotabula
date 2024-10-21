@@ -1,5 +1,5 @@
 import { formatDuration } from "@/libs/helpers";
-import { FetchError } from "@/libs/types";
+import { FetchError, Pagination, BrowserTrack } from "@/libs/types";
 import { useTokenStore } from "@/store";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -9,22 +9,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
-import type { Pagination } from "./context";
 
-type Track = {
-  id: string;
-  name: string;
-  spotify_id: string;
-  duration: number;
-  album_id: string;
-  album_name: string;
-  album_art: string;
-  spotify_url: string;
-  is_synced: boolean;
-  is_analyzed: boolean;
-};
-
-const columnHelper = createColumnHelper<Track>();
+const columnHelper = createColumnHelper<BrowserTrack>();
 
 const columns = [
   columnHelper.display({
@@ -131,7 +117,7 @@ function useTracks(page: number) {
 
       const data = await response.json();
 
-      return data as { data: Track[]; pagination: Pagination };
+      return data as { data: BrowserTrack[]; pagination: Pagination };
     },
   });
 

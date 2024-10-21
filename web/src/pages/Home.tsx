@@ -1,10 +1,5 @@
 import { Link } from "wouter";
-
-type Feature = {
-  title: string;
-  description: string;
-  icon: string;
-};
+import type { Feature } from "@/libs/types";
 
 const features: Feature[] = [
   {

@@ -18,22 +18,9 @@ import {
   useFloating,
   useClick,
 } from "@floating-ui/react";
+import type { BrowserPlaylist } from "@/libs/types";
 
-type Playlist = {
-  id: string;
-  spotify_id: string;
-  name: string;
-  is_synced: boolean;
-  is_analyzed: boolean;
-  description?: string;
-  owner_id?: string;
-  version?: string;
-  image_url?: string;
-  public?: boolean;
-  shared?: boolean;
-};
-
-const columnHelper = createColumnHelper<Playlist>();
+const columnHelper = createColumnHelper<BrowserPlaylist>();
 
 const columns = [
   columnHelper.display({
@@ -202,7 +189,7 @@ const columns = [
 ];
 
 export function PlaylistTable(props: {
-  data: Playlist[];
+  data: BrowserPlaylist[];
   page: number;
   pageSize: number;
   setTotalPages: (totalPages: number) => void;

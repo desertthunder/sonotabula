@@ -2,28 +2,35 @@
  * @todo paginate queries
  */
 import {
-  FetchError,
-  LibraryCountsResponse,
-  Resource,
-  ResourceKey,
+  BrowserKey,
   BrowserPlaylistResponse,
+  BrowserResource,
+  FetchError,
+  getSavedEndpoint,
+  LibraryCountsResponse,
+  LibraryKey,
+  LibraryResource,
   ListeningHistoryItem,
+  Pagination,
 } from "@/libs/types";
+import { useTokenStore } from "@/store";
 import {
+  QueryClient,
   useQuery,
   useQueryClient,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useSearch } from "wouter";
 import {
   browserFetcher,
-  fetcher,
-  paginatedBrowserFetcher,
+  checkToken,
+  fetchBrowserPlaylists,
   fetchListeningHistory,
+  fetchLibraryPlaylistTracks,
+  libraryFetcher,
+  paginatedBrowserFetcher,
 } from "./fetch";
-import { BASE_URL } from "@/libs/services";
-import { useTokenStore } from "@/store";
 
 export function useQueryParams(): Record<string, string> {
   const [search] = useSearch();
@@ -78,14 +85,14 @@ export function useTokenValidator() {
   return query;
 }
 
-export function useFetch<T extends ResourceKey>(
-  resource: ResourceKey,
+export function useLibraryFetch<T extends LibraryKey>(
+  resource: LibraryKey,
   limit?: number | null
-): UseQueryResult<Resource<T>> {
+): UseQueryResult<LibraryResource<T>> {
   const token = useTokenStore((state) => state.token);
   const client = useQueryClient();
 
-  const query = useQuery<Resource<T>>(
+  const query = useQuery<LibraryResource<T>>(
     {
       queryKey: [resource],
       queryFn: async () => {
@@ -93,7 +100,7 @@ export function useFetch<T extends ResourceKey>(
           throw new Error("Token not found");
         }
 
-        return await fetcher<T>(resource, token, limit);
+        return await libraryFetcher<T>(resource, token, limit);
       },
     },
     client
@@ -102,13 +109,13 @@ export function useFetch<T extends ResourceKey>(
   return query;
 }
 
-export function useBrowse<T extends ResourceKey>(
+export function useBrowserFetch<T extends LibraryKey>(
   resource: T
-): UseQueryResult<Resource<T>> {
+): UseQueryResult<LibraryResource<T>> {
   const token = useTokenStore((state) => state.token);
   const client = useQueryClient();
 
-  const query = useQuery<Resource<T>>(
+  const query = useQuery<LibraryResource<T>>(
     {
       queryKey: [`${resource}-browser`],
       queryFn: async () => {
@@ -136,8 +143,9 @@ export function useSavedCounts() {
         if (!token) {
           throw new Error("Token not found");
         }
+        const endpoint = new URL(getSavedEndpoint(), window.location.origin);
 
-        const response = await fetch(`${BASE_URL}/api/data/saved`, {
+        const response = await fetch(endpoint.toString(), {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -189,7 +197,7 @@ export function usePlaylistTracks(id: string) {
   return query;
 }
 
-export function usePaginatedBrowser<T extends ResourceKey>(
+export function usePaginatedBrowser<T extends BrowserKey>(
   resource: T,
   params: {
     page: number;
@@ -198,20 +206,19 @@ export function usePaginatedBrowser<T extends ResourceKey>(
     page: 1,
     page_size: 10,
   }
-): UseQueryResult<Resource<T>> {
+): UseQueryResult<{
+  data: BrowserResource<T>;
+  pagination: Pagination;
+}> {
   const token = useTokenStore((state) => state.token);
   const client = useQueryClient();
-
-  const query = useQuery<Resource<T>>(
+  const query = useQuery<{
+    data: BrowserResource<T>;
+    pagination: Pagination;
+  }>(
     {
       queryKey: [`${resource}`],
-      queryFn: async () => {
-        if (!token) {
-          throw new Error("Token not found");
-        }
-
-        return await paginatedBrowserFetcher<T>(resource, token, params);
-      },
+      queryFn: () => paginatedBrowserFetcher<T>(resource, token, params),
     },
     client
   );
@@ -231,4 +238,64 @@ export function useListeningHistory() {
   });
 
   return query;
+}
+
+export function useCheckToken() {
+  const token = useTokenStore((s) => s.token);
+
+  const query = useQuery({
+    queryKey: ["checkToken"],
+    queryFn: () => checkToken(token),
+    staleTime: Infinity,
+  });
+
+  return query;
+}
+
+export function useBrowserPlaylists(
+  {
+    page = 1,
+    pageSize = 10,
+    sortBy,
+    filters,
+  }: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    filters?: string[][];
+  },
+  client: QueryClient
+) {
+  const token = useTokenStore((s) => s.token);
+  const query = useQuery(
+    {
+      queryKey: ["browser-playlists", page],
+      queryFn: async () =>
+        await fetchBrowserPlaylists({ page, pageSize, token, sortBy, filters }),
+    },
+    client
+  );
+
+  return query;
+}
+
+export async function useLibraryPlaylistTracks(playlist_id: string) {
+  const token = useTokenStore((s) => s.token);
+
+  const query = useQuery({
+    queryKey: ["library_playlist_tracks", playlist_id],
+    queryFn: () => fetchLibraryPlaylistTracks(playlist_id, token),
+  });
+
+  const handler = useCallback(
+    (playlist_id: string) => {
+      return fetchLibraryPlaylistTracks(playlist_id, token);
+    },
+    [token]
+  );
+
+  return {
+    query,
+    handler,
+  };
 }

@@ -1,41 +1,15 @@
 import { useState } from "react";
+import {
+  NumericFilterType,
+  BooleanFilterType,
+  numericalFilters,
+  booleanFilters,
+  stringFilters,
+  FilterSet,
+  FilterMap,
+  SearchMap,
+} from "@/libs/types";
 
-enum NumericFilterType {
-  TracksGreaterThan = "num_tracks_gt",
-  TracksLessThan = "num_tracks_lt",
-}
-
-enum BooleanFilterType {
-  Private = "private",
-  Analyzed = "is_analyzed",
-  MyPlaylists = "my_playlists",
-}
-
-// i.e. searchable fields
-enum StringFilterType {
-  Name = "name",
-  Description = "description",
-}
-
-type FilterMap = Map<NumericFilterType, number>;
-type FilterSet = Set<BooleanFilterType>;
-type SearchMap = Map<StringFilterType, string>;
-
-const numericalFilters: [NumericFilterType, string][] = [
-  [NumericFilterType.TracksGreaterThan, "Tracks Greater Than"],
-  [NumericFilterType.TracksLessThan, "Tracks Less Than"],
-];
-
-const booleanFilters: [BooleanFilterType, string][] = [
-  [BooleanFilterType.Private, "Private"],
-  [BooleanFilterType.Analyzed, "Analyzed"],
-  [BooleanFilterType.MyPlaylists, "My Playlists"],
-];
-
-const stringFilters: [StringFilterType, string][] = [
-  [StringFilterType.Name, "Name"],
-  [StringFilterType.Description, "Description"],
-];
 export function FilterForm(props: {
   updateFilters: (filters: string[][]) => void;
 }) {

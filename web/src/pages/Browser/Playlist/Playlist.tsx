@@ -1,3 +1,4 @@
+import { translateDuration } from "@/libs/helpers";
 import { usePlaylistTracks } from "@/libs/hooks";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { Drawer } from "vaul";
@@ -51,14 +52,6 @@ function parseValue(key: string, value: string | number): string {
     default:
       return value as string;
   }
-}
-
-function translateDuration(duration_ms: number | string) {
-  const ms = parseInt(duration_ms as string);
-  const minutes = Math.floor(ms / 60000);
-  const seconds = ((ms % 60000) / 1000).toFixed(0);
-
-  return `${minutes}:${+seconds < 10 ? "0" : ""}${seconds}`;
 }
 
 /**

@@ -1,4 +1,6 @@
-export type Playlist = {
+import { BrowserKey, CountKey, LibraryKey } from "@libs/types";
+
+export type LibraryPlaylist = {
   spotify_id: string;
   name: string;
   owner_id: string;
@@ -9,7 +11,7 @@ export type Playlist = {
   description?: string;
 };
 
-export type Album = {
+export type LibraryAlbum = {
   spotify_id: string;
   name: string;
   artist_name: string;
@@ -19,7 +21,7 @@ export type Album = {
   image_url: string;
 };
 
-export type Track = {
+export type LibraryTrack = {
   spotify_id: string;
   name: string;
   artist_name: string;
@@ -30,7 +32,7 @@ export type Track = {
   link: string;
 };
 
-export type Artist = {
+export type LibraryArtist = {
   genres: string[];
   spotify_id: string;
   name: string;
@@ -48,50 +50,38 @@ export type Auth = {
   token: string;
 };
 
-export enum ResourceKey {
-  LibraryPlaylists = "library-playlists",
-  LibraryTracks = "library-tracks",
-  LibraryAlbums = "library-albums",
-  LibraryArtists = "library-artists",
-  BrowserPlaylists = "browser-playlists",
-  BrowserAlbums = "browser-albums",
-}
-
-export const RESOURCE_KEYS = [
-  ResourceKey.LibraryPlaylists,
-  ResourceKey.LibraryTracks,
-  ResourceKey.LibraryAlbums,
-  ResourceKey.LibraryArtists,
-] as const;
-
-export type Resource<T extends ResourceKey> =
-  T extends ResourceKey.LibraryPlaylists
-    ? Playlist[]
-    : T extends ResourceKey.LibraryTracks
-    ? Track[]
-    : T extends ResourceKey.LibraryAlbums
-    ? Album[]
-    : T extends ResourceKey.LibraryArtists
-    ? Artist[]
-    : T extends ResourceKey.BrowserAlbums
-    ? BrowserAlbumResponse
+export type LibraryResource<T extends LibraryKey> =
+  T extends LibraryKey.LibraryPlaylists
+    ? LibraryPlaylist[]
+    : T extends LibraryKey.LibraryTracks
+    ? LibraryTrack[]
+    : T extends LibraryKey.LibraryAlbums
+    ? LibraryAlbum[]
+    : T extends LibraryKey.LibraryArtists
+    ? LibraryArtist[]
     : never;
 
-export enum CountKey {
-  Artists = "artists",
-  Albums = "albums",
-  Tracks = "tracks",
-  Playlists = "playlists",
-  Shows = "shows",
-}
+export type LibraryResourceType<T extends LibraryKey> =
+  T extends LibraryKey.LibraryPlaylists
+    ? LibraryPlaylist
+    : T extends LibraryKey.LibraryTracks
+    ? LibraryTrack
+    : T extends LibraryKey.LibraryAlbums
+    ? LibraryAlbum
+    : T extends LibraryKey.LibraryArtists
+    ? LibraryArtist
+    : never;
 
-export const Counts: CountKey[] = [
-  CountKey.Artists,
-  CountKey.Albums,
-  CountKey.Tracks,
-  CountKey.Playlists,
-  CountKey.Shows,
-] as const;
+export type BrowserResource<T extends BrowserKey> =
+  T extends BrowserKey.BrowserPlaylists
+    ? BrowserPlaylist[]
+    : T extends BrowserKey.BrowserTracks
+    ? BrowserTrack[]
+    : T extends BrowserKey.BrowserAlbums
+    ? BrowserAlbum[]
+    : T extends BrowserKey.BrowserArtists
+    ? LibraryArtist[]
+    : never;
 
 export type LibraryCounts = { [key in CountKey]: number };
 export type LibraryCountsResponse = { data: LibraryCounts };
@@ -115,10 +105,11 @@ export type PlaylistTrackFeatures = {
   time_signature: number;
 };
 
-type ComputedKey = keyof Omit<
+export type ComputedKey = keyof Omit<
   PlaylistTrackFeatures,
   "duration_ms" | "time_signature" | "key" | "mode"
 >;
+
 export type PlaylistComputations = {
   superlatives: Record<
     ComputedKey,
@@ -137,7 +128,7 @@ export type PlaylistComputations = {
   };
 };
 
-export type PlaylistTrack = {
+export type BrowserPlaylistTrack = {
   id: string;
   album_id: string;
   name: string;
@@ -149,46 +140,59 @@ export type PlaylistTrack = {
   album_art: string | null;
 };
 
-export type BrowserPlaylist = {
-  id: string;
-  name: string;
-  spotify_url: string;
-  is_synced: boolean;
-  is_analyzed: boolean;
-  description: string | null;
-  owner_id: string | null;
-  version: string | null;
-  image_url: string | null;
-  public: boolean | null;
-  shared: boolean | null;
-};
-
 export type BrowserPlaylistResponse = {
   data: {
     playlist: BrowserPlaylist;
-    tracks: PlaylistTrack[];
+    tracks: BrowserPlaylistTrack[];
     computations: PlaylistComputations;
   };
 };
 
-export type BrowserAlbumResponse = {
-  data: {
+export type Pagination = {
+  total: number;
+  per_page: number;
+  page: number;
+  num_pages: number;
+};
+
+export type BrowserAlbum = {
+  id: string;
+  name: string;
+  artists: {
     id: string;
     name: string;
-    artists: {
-      id: string;
-      name: string;
-      spotify_id: string;
-    }[];
     spotify_id: string;
-    release_year: number;
-    image_url?: string | null;
   }[];
-  pagination: {
-    total: number;
-    per_page: number;
-    page: number;
-  };
+  spotify_id: string;
+  release_year: number;
+  image_url?: string | null;
+};
+
+export type BrowserTrack = {
+  id: string;
+  name: string;
+  spotify_id: string;
+  duration: number;
+  album_id: string;
+  album_name: string;
+  album_art: string;
+  spotify_url: string;
+  is_synced: boolean;
+  is_analyzed: boolean;
+};
+
+export type BrowserPlaylist = {
+  id: string;
+  spotify_id: string;
+  name: string;
+  is_synced: boolean;
+  is_analyzed: boolean;
+  description?: string;
+  owner_id?: string;
+  version?: string;
+  image_url?: string;
+  public?: boolean;
+  shared?: boolean;
 };
 
 export type ListeningHistoryItem = {

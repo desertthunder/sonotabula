@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { usePlaylists } from "./hooks/playlists";
+import { useBrowserPlaylists } from "@/libs/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { PlaylistTable } from "./components/tables/playlists";
 import { PaginationForm, Pager } from "./components/forms/pagination";
 import { FilterForm } from "./components/forms/filters";
 
 export function PlaylistsPage(props: { children: React.ReactNode }) {
+  // TODO: Move to a store.
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState<number>();
   const [pageSize, setPageSize] = useState(10);
@@ -13,7 +14,7 @@ export function PlaylistsPage(props: { children: React.ReactNode }) {
   const [filters] = useState<string[][] | undefined>();
 
   const client = useQueryClient();
-  const query = usePlaylists({ page, pageSize, filters }, client);
+  const query = useBrowserPlaylists({ page, pageSize, filters }, client);
 
   useEffect(() => {
     if (query.data?.pagination) {

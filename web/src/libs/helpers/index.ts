@@ -15,6 +15,14 @@ export function formatDuration(time_ms: number) {
   return `${minutes}:${parseInt(seconds) < 10 ? "0" : ""}${seconds}`;
 }
 
+export function translateDuration(duration_ms: number | string) {
+  const ms = parseInt(duration_ms as string);
+  const minutes = Math.floor(ms / 60000);
+  const seconds = ((ms % 60000) / 1000).toFixed(0);
+
+  return `${minutes}:${+seconds < 10 ? "0" : ""}${seconds}`;
+}
+
 /**
  * Human Readable format for the last played date
  *
@@ -35,4 +43,8 @@ export function humanReadableDate(date: string) {
   }
 
   return `${diff} days ago`;
+}
+
+export function titleCase(str: string) {
+  return str[0].toUpperCase() + str.slice(1);
 }

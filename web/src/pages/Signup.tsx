@@ -1,55 +1,11 @@
-import { useTokenStore } from "@/store";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useCheckToken, useLoginMutation } from "@/libs/hooks";
 import { useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 
-async function checkToken(token: string | null) {
-  if (!token) {
-    console.debug("No token found");
-
-    return null;
-  }
-
-  try {
-    const response = await fetch("/api/validate", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status >= 500) {
-      throw new Error(
-        `Server error: ${response.status} ${response.statusText}`
-      );
-    } else if (!response.ok) {
-      console.debug(
-        `Failed to validate token: ${response.status} ${response.statusText}`
-      );
-
-      return null;
-    }
-
-    const data = await response.json();
-
-    console.debug(data.message);
-
-    return data;
-  } catch (error) {
-    console.error(error);
-
-    return null;
-  }
-}
-
 export default function Signup() {
-  const token = useTokenStore((s) => s.token);
   const [, setLocation] = useLocation();
-  const query = useQuery({
-    queryKey: ["checkToken"],
-    queryFn: () => checkToken(token),
-    staleTime: Infinity,
-  });
+  const query = useCheckToken();
+  const mutation = useLoginMutation();
 
   useEffect(() => {
     if (query.isSuccess && query.data?.token) {
@@ -62,24 +18,6 @@ export default function Signup() {
       query.refetch();
     };
   }, [query, setLocation]);
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {},
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
-
-      // Pause for 2.5 seconds
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-
-      return await response.json();
-    },
-  });
 
   useEffect(() => {
     if (mutation.isSuccess && mutation.data?.redirect) {

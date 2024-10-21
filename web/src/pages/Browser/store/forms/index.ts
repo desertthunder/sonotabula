@@ -1,57 +1,37 @@
 import { create } from "zustand";
+import {
+  NumericFilterType,
+  BooleanFilterType,
+  StringFilterType,
+  PaginationType,
+} from "@libs/types";
 
 // Filter Form State
 //
 // See api/filters/playlist.py for the server-side filterset
-//
-// Numeric Comparison Filters
-export enum NumericFilter {
-  TracksGreaterThan = "num_tracks_gt",
-  TracksLessThan = "num_tracks_lt",
-}
-
-export enum BooleanFilter {
-  Private = "private",
-  Analyzed = "is_analyzed",
-  MyPlaylists = "my_playlists",
-  Shared = "shared",
-}
-
-// i.e. searchable fields
-export enum StringFilter {
-  Name = "name",
-  Description = "description",
-  TrackName = "track_name", // This is a special case for track search
-}
-
-export enum PaginationType {
-  Page = "page",
-  PageSize = "page_size",
-}
-
 export type PlaylistFilterState = {
-  [NumericFilter.TracksGreaterThan]: number | null;
-  [NumericFilter.TracksLessThan]: number | null;
-  [BooleanFilter.Private]: boolean;
-  [BooleanFilter.Analyzed]: boolean;
-  [BooleanFilter.MyPlaylists]: boolean;
-  [StringFilter.Name]: string;
-  [StringFilter.Description]: string;
-  [StringFilter.TrackName]: string;
+  [NumericFilterType.TracksGreaterThan]: number | null;
+  [NumericFilterType.TracksLessThan]: number | null;
+  [BooleanFilterType.Private]: boolean;
+  [BooleanFilterType.Analyzed]: boolean;
+  [BooleanFilterType.MyPlaylists]: boolean;
+  [StringFilterType.Name]: string;
+  [StringFilterType.Description]: string;
+  [StringFilterType.TrackName]: string;
   [PaginationType.Page]: number;
   [PaginationType.PageSize]: number;
 };
 
 export const usePlaylistFilterStore = create<PlaylistFilterState>()((_set) => ({
-  [NumericFilter.TracksGreaterThan]: null,
-  [NumericFilter.TracksLessThan]: null,
-  [BooleanFilter.Private]: false,
-  [BooleanFilter.Shared]: false,
-  [BooleanFilter.Analyzed]: false,
-  [BooleanFilter.MyPlaylists]: false,
-  [StringFilter.Name]: "",
-  [StringFilter.Description]: "",
-  [StringFilter.TrackName]: "",
+  [NumericFilterType.TracksGreaterThan]: null,
+  [NumericFilterType.TracksLessThan]: null,
+  [BooleanFilterType.Private]: false,
+  [BooleanFilterType.Shared]: false,
+  [BooleanFilterType.Analyzed]: false,
+  [BooleanFilterType.MyPlaylists]: false,
+  [StringFilterType.Name]: "",
+  [StringFilterType.Description]: "",
+  [StringFilterType.TrackName]: "",
   [PaginationType.Page]: 1,
   [PaginationType.PageSize]: 10,
 }));

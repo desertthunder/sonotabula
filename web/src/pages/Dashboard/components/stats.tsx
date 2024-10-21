@@ -1,12 +1,9 @@
+import { titleCase } from "@/libs/helpers";
 import { useSavedCounts } from "@/libs/hooks";
-import { CountKey } from "@/libs/types/api";
+import { CountKey } from "@/libs/types";
 
 interface Props {
   scope: CountKey;
-}
-
-function titleCase(str: string) {
-  return str[0].toUpperCase() + str.slice(1);
 }
 
 export function StatCard({ scope }: Props) {

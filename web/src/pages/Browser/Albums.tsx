@@ -3,12 +3,12 @@
  * */
 
 import { usePaginatedBrowser } from "@/libs/hooks/api/query";
-import { ResourceKey } from "@/libs/types";
+import { BrowserKey } from "@/libs/types";
 import React from "react";
 
 export function BrowseAlbumsPage(props: { children?: React.ReactNode }) {
-  const query = usePaginatedBrowser<ResourceKey.BrowserAlbums>(
-    ResourceKey.BrowserAlbums,
+  const query = usePaginatedBrowser<BrowserKey.BrowserAlbums>(
+    BrowserKey.BrowserAlbums,
     { page: 1, page_size: 25 }
   );
 

@@ -1,8 +1,13 @@
 import { decodeUnicode } from "@/libs/helpers";
-import type { Album, Artist, Playlist, Track } from "@/libs/types";
-import { ResourceKey } from "@/libs/types";
+import type {
+  LibraryAlbum,
+  LibraryArtist,
+  LibraryPlaylist,
+  LibraryResourceType,
+  LibraryTrack,
+} from "@/libs/types";
+import { LibraryKey } from "@/libs/types";
 import { useMemo } from "react";
-import { usePlaylistTracksHandler } from "@/pages/Dashboard/hooks/playlist_tracks";
 
 import {
   createColumnHelper,
@@ -12,10 +17,10 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-const artistColumnHelper = createColumnHelper<Artist>();
-const playlistColumnHelper = createColumnHelper<Playlist>();
-const albumColumnHelper = createColumnHelper<Album>();
-const trackColumnHelper = createColumnHelper<Track>();
+const artistColumnHelper = createColumnHelper<LibraryArtist>();
+const playlistColumnHelper = createColumnHelper<LibraryPlaylist>();
+const albumColumnHelper = createColumnHelper<LibraryAlbum>();
+const trackColumnHelper = createColumnHelper<LibraryTrack>();
 
 const playlistColumns = [
   playlistColumnHelper.display({
@@ -199,49 +204,41 @@ const artistColumns = [
   }),
 ];
 
-type AccessedType<T extends ResourceKey> = T extends ResourceKey.LibraryAlbums
-  ? Album
-  : T extends ResourceKey.LibraryArtists
-  ? Artist
-  : T extends ResourceKey.LibraryPlaylists
-  ? Playlist
-  : T extends ResourceKey.LibraryTracks
-  ? Track
-  : never;
-
-interface Props<T extends ResourceKey> {
+interface Props<T extends LibraryKey> {
   scope: T;
-  data: AccessedType<T>[];
+  data: LibraryResourceType<T>[];
+  handler: (id: string) => void;
 }
 
-const getSearchPlaceholder = (scope: ResourceKey) => {
+const getSearchPlaceholder = (scope: LibraryKey) => {
   switch (scope) {
-    case ResourceKey.LibraryAlbums:
+    case LibraryKey.LibraryAlbums:
       return "Search albums";
-    case ResourceKey.LibraryArtists:
+    case LibraryKey.LibraryArtists:
       return "Search artists";
-    case ResourceKey.LibraryPlaylists:
+    case LibraryKey.LibraryPlaylists:
       return "Search playlists";
-    case ResourceKey.LibraryTracks:
+    case LibraryKey.LibraryTracks:
       return "Search tracks";
     default:
       return "Search";
   }
 };
 
-export function RealTimeTable<T extends ResourceKey>({
+export function RealTimeTable<T extends LibraryKey>({
   scope,
   data,
+  handler,
 }: Props<T>) {
   const columns = useMemo(() => {
     switch (scope) {
-      case ResourceKey.LibraryAlbums:
+      case LibraryKey.LibraryAlbums:
         return albumColumns;
-      case ResourceKey.LibraryArtists:
+      case LibraryKey.LibraryArtists:
         return artistColumns;
-      case ResourceKey.LibraryPlaylists:
+      case LibraryKey.LibraryPlaylists:
         return playlistColumns;
-      case ResourceKey.LibraryTracks:
+      case LibraryKey.LibraryTracks:
         return trackColumns;
       default:
         throw new Error("Invalid scope");
@@ -249,12 +246,10 @@ export function RealTimeTable<T extends ResourceKey>({
   }, [scope]);
 
   const table = useReactTable({
-    columns: columns as DisplayColumnDef<AccessedType<T>>[],
+    columns: columns as DisplayColumnDef<LibraryResourceType<T>>[],
     data: data || [],
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const handler = usePlaylistTracksHandler();
 
   const placeholder = getSearchPlaceholder(scope);
 

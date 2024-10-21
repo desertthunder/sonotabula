@@ -1,15 +1,15 @@
 /**
- * @todo move routes enum to a libs/types
  * @todo add proper static pages
  * @todo tracks page
  * @todo artists page
  */
 import "@fontsource-variable/inter";
+import { Routes } from "@libs/types";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
-import { Signup } from "./pages";
+import { Home, Signup } from "./pages";
 import { BrowserLayout } from "./pages/Browser";
 import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
 import { Playlist } from "./pages/Browser/Playlist";
@@ -17,15 +17,7 @@ import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
 import { TracksPage as BrowserTracks } from "./pages/Browser/Tracks";
 import { Dashboard } from "./pages/Dashboard";
 import { DashboardLayout } from "./pages/Dashboard/layout";
-import Home from "./pages/Home";
 import "./styles/base.css";
-
-enum Routes {
-  Home = "/",
-  Signup = "/signup",
-  Login = "/login",
-  Dashboard = "/dashboard",
-}
 
 const queryClient = new QueryClient({
   defaultOptions: {
