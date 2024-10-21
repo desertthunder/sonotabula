@@ -4,7 +4,7 @@ import { Counts } from "@/libs/types/api";
 import { useCallback, useState } from "react";
 import { StatCard } from "./components/stats";
 import { Tabs } from "./components/tabs";
-import { RealTimeTable } from "./components/rt";
+import { RealTimeTable } from "./components/tables";
 
 export function Dashboard() {
   const [scope, setScope] = useState<ResourceKey>(ResourceKey.LibraryPlaylists);

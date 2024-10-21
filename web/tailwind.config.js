@@ -101,7 +101,7 @@ export default {
   },
   plugins: [
     iconsPlugin({
-      collections: getIconCollections(["ri", "openmoji", "devicon", "skill-icons", "devicon-plain"]),
+      collections: getIconCollections(["ri", "openmoji", "devicon", "skill-icons", "devicon-plain", "fe"]),
     }),
   ],
 };
