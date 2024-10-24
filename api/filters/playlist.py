@@ -101,5 +101,13 @@ class PlaylistFilterSet(FilterSet):
         """Meta options."""
 
         default_queryset = Playlist.objects.all()
-        filter_fields = ["name", "public", "collaborative", "my_playlist", "private"]
+        filter_fields = [
+            "name",
+            "public",
+            "collaborative",
+            "my_playlist",
+            "private",
+            "num_tracks_gt",
+            "num_tracks_lt",
+        ]
         sort_fields = ["name", "public", "collaborative", "is_synced", "is_analyzed"]
