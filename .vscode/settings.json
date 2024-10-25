@@ -22,6 +22,5 @@
     },
     "markdownlint.config": {
         "MD025": false
-    },
-    "explorer.excludeGitIgnore": true
+    }
 }
