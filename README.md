@@ -23,6 +23,24 @@ use bitwarden to manage my secrets.
 cp .env.sample .env
 ```
 
+### Running the application
+
+1. `docker-compose up` for the postgres database & redis server
+2. `./manage.py runserver` to start the Django server (don't forget to apply
+   migrations before you start the server)
+3. `celery -A server worker -l INFO`
+4. `celery -A server flower`
+
+Alternatively, you can use the `Makefile` to run the application (see `make help`).
+Running the workers through the `Makefile` has hot-reloading with watchdog (`watchmedo`).
+
+```bash
+docker compose up
+make server
+make worker
+make flower
+```
+
 ## Back-end
 
 This is a Django application that uses REST framework for serializing and

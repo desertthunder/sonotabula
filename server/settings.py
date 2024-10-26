@@ -41,8 +41,9 @@ CORS_ALLOWED_HEADERS = [
     "x-requested-with",
 ]
 
-# Application definition
 INSTALLED_APPS = [
+    "daphne",  # asgi runserver
+    "channels",  # For runworker
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -87,7 +88,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "server.wsgi.application"
-
+ASGI_APPLICATION = "server.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

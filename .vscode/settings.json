@@ -4,7 +4,8 @@
         "editor.codeActionsOnSave": {
             "source.fixAll.ruff": "always",
             "source.organizeImports": "always"
-        }
+        },
+        "editor.formatOnSave": true
     },
     "[typescriptreact]": {
         "editor.formatOnSave": true,
@@ -22,5 +23,6 @@
     },
     "markdownlint.config": {
         "MD025": false
-    }
+    },
+    "python.defaultInterpreterPath": "./.venv/bin/python3",
 }

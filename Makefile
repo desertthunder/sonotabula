@@ -1,4 +1,4 @@
-.PHONY: devc help write server test shell worker redis-dev flower
+.PHONY: devc help write server test shell worker flower
 
 help:
 	@echo "Usage: make [target]"
@@ -6,7 +6,6 @@ help:
 	@echo "Targets:"
 	@echo "  server	- Start the application server"
 	@echo "  shell	- Start the Django shell"
-	@echo "  redis-dev	- Start the Redis server"
 	@echo "  worker	- Start the Celery worker"
 	@echo "  flower	- Start the Celery Flower dashboard"
 	@echo "  write	- Start the documentation server"
@@ -16,11 +15,11 @@ help:
 
 devc:
 	@echo "Starting client dev server..."
-	@cd client && bun dev
+	@cd client && pnpm dev
 
 write:
 	@echo "Starting docusaurus server..."
-	@cd doc && bun start
+	@cd docs && pnpm start
 
 server:
 	@echo "Starting application server..."
@@ -37,10 +36,6 @@ shell:
 worker:
 	@echo "Starting Celery worker..."
 	@watchmedo auto-restart --directory=./api/tasks --pattern=*.py --recursive -- celery -A server worker -l INFO
-
-redis-dev:
-	@echo "Starting Redis server..."
-	@docker run -d -p 6379:6379 --name redis-music redis:alpine
 
 flower:
 	@echo "Starting Celery Flower dashboard..."
