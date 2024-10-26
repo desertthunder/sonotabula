@@ -23,43 +23,6 @@ logging.basicConfig(
 )
 
 
-class LibraryPlaylistsView(SpotifyLibraryView):
-    """Get the user's playlists."""
-
-    def get(
-        self,
-        request: DRFRequest,
-        playlist_id: str | None = None,
-        *args,
-        **kwargs,
-    ) -> HttpResponse:
-        """Get the user's playlists.
-
-        Endpoint: GET /api/library/playlists
-
-        Operations:
-            - Syncs the data to the database.
-        """
-        app_user = self.get_user(request)
-
-        if playlist_id:
-            expanded_data = self.library_service.library_playlist(
-                user_pk=app_user.pk, playlist_id=playlist_id
-            )
-
-            return JsonResponse(
-                data={
-                    "data": library.ExpandedPlaylist.get(expanded_data).model_dump(),
-                }
-            )
-
-        limit = request.query_params.get("limit", 10)
-        iterator = self.library_service.library_playlists(app_user.pk, int(limit))
-        response = list(iterator)
-        data = library.Playlist.list(response)
-        return JsonResponse(data={"data": [playlist.model_dump() for playlist in data]})
-
-
 class LibraryArtistsView(SpotifyLibraryView):
     """Get the user's artists."""
 

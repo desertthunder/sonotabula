@@ -74,6 +74,24 @@ class Playlist(Serializer):
 
         return cls(**data)
 
+    def to_db(self) -> PlaylistModel:
+        """Convert a Playlist object to a PlaylistModel object."""
+        pl, _ = PlaylistModel.objects.update_or_create(
+            spotify_id=self.spotify_id,
+            owner_id=self.owner_id,
+            defaults={
+                "name": self.name,
+                "image_url": self.image_url,
+                "version": self.version,
+                "public": self.public,
+                "shared": self.shared,
+                "description": self.description,
+                "is_synced": self.is_synced,
+            },
+        )
+
+        return pl
+
 
 class PlaylistTrack(BaseModel):
     """Playlist track serializer."""
