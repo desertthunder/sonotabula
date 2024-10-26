@@ -1,5 +1,7 @@
 # Spotify Dashboard
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/a2dbf0df-0390-4635-98aa-ab2dfe272e98/deploy-status)](https://app.netlify.com/sites/dashspot-dev/deploys)
+
 DashSpot is a dynamic visualizing dashboard designed to explore and analyze
 Spotify libraries meant to be like an itunes style library browser.
 
