@@ -1,6 +1,5 @@
 """Authentication views."""
 
-import logging
 from http import HTTPMethod
 
 import httpx
@@ -12,6 +11,7 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import redirect
+from loguru import logger
 from rest_framework import views
 from rest_framework.request import Request as DRFRequest
 
@@ -24,14 +24,6 @@ from api.services.spotify import SpotifyAuthService
 from server import settings
 
 default_auth_service = SpotifyAuthService()  # NOTE used for dependency injection
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
-logger = logging.getLogger(__name__)
 
 
 class SpotifyAuthView(views.APIView):

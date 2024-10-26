@@ -5,17 +5,16 @@ Parking Lot:
 """
 
 import json
-import logging
 import typing
 
 import httpx
+from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
 from api.models import AppUser
 from api.services.spotify.auth import SpotifyAuthService
 
-logger = logging.getLogger("spotify_playback_service")
 auth_service = SpotifyAuthService()
 
 

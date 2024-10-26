@@ -9,18 +9,16 @@ Parking Lot:
     - The endpoint should dispatch a task.
 """
 
-import logging
 import time
 import typing
 
 import httpx
+from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
 from api.models.users import AppUser
 from api.services.spotify.auth import SpotifyAuthService
-
-logger = logging.getLogger(__name__)
 
 
 class SpotifyDataService:

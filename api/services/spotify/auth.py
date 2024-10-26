@@ -4,11 +4,11 @@ Parking lot:
 - TODO: Get User Profile
 """
 
-import logging
 import os
 from http import HTTPMethod
 
 import httpx
+from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints, SpotifyAPIScopes
 from api.libs.exceptions import MissingAPICredentialsError, SpotifyAPIError
@@ -20,8 +20,6 @@ from api.libs.requests import (
 )
 from api.models import AppUser
 from api.serializers.authentication import AccessToken, CurrentUser
-
-logger = logging.getLogger("spotify_auth_service")
 
 
 class SpotifyAuthService:
