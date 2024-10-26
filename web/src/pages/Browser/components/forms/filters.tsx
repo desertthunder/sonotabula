@@ -8,7 +8,7 @@ import {
   FilterSet,
   FilterMap,
   SearchMap,
-} from "@/libs/types";
+} from "@libs/types";
 
 export function FilterForm(props: {
   updateFilters: (filters: string[][]) => void;

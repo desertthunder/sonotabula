@@ -1,5 +1,5 @@
 import { Navbar, Sidebar } from "@/components";
-import { useTokenValidator } from "@/libs/hooks";
+import { useTokenValidator } from "@libs/hooks";
 import { useTokenStore } from "@/store";
 import { useEffect } from "react";
 import { useLocation, useSearch } from "wouter";

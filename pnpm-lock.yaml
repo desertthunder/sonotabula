@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      dayjs:
-        specifier: ^1.11.13
-        version: 1.11.13
       typescript:
         specifier: ~5.5.2
         version: 5.5.4
@@ -186,9 +183,6 @@ packages:
   dargs@8.1.0:
     resolution: {integrity: sha512-wAV9QHOsNbwnWdNW2FYvE1P56wtgSbM+3SZcdGiWQILwVjACCXDCI3Ai8QlCjMDB8YK5zySiXZYBiwGmNY3lnw==}
     engines: {node: '>=12'}
-
-  dayjs@1.11.13:
-    resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
 
   dot-prop@5.3.0:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
@@ -625,8 +619,6 @@ snapshots:
       typescript: 5.5.4
 
   dargs@8.1.0: {}
-
-  dayjs@1.11.13: {}
 
   dot-prop@5.3.0:
     dependencies:

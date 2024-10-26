@@ -1,4 +1,4 @@
-import { useCheckToken, useLoginMutation } from "@/libs/hooks";
+import { useCheckToken, useLoginMutation } from "@libs/hooks";
 import { useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 

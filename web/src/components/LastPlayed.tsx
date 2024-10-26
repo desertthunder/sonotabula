@@ -1,5 +1,5 @@
-import { humanReadableDate } from "@/libs/helpers";
-import type { ListeningHistoryItem } from "@/libs/types";
+import { humanReadableDate } from "@libs/helpers";
+import type { ListeningHistoryItem } from "@libs/types";
 import { useEffect, useMemo, useState } from "react";
 
 interface Props {

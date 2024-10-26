@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { LastPlayed } from "./LastPlayed";
 import { useCallback } from "react";
-import { useListeningHistory } from "@/libs/hooks";
+import { useListeningHistory } from "@libs/hooks";
 
 export function Navbar() {
   const query = useListeningHistory();

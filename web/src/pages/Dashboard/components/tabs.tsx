@@ -1,4 +1,4 @@
-import { LibraryKey, LibraryKeys, LibraryTitles } from "@/libs/types";
+import { LibraryKey, LibraryKeys, LibraryTitles } from "@libs/types";
 
 interface Props {
   scope: LibraryKey;

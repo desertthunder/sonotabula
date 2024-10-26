@@ -1,3 +1,14 @@
+export {
+  BooleanFilterType,
+  BrowserKey,
+  CountKey,
+  LibraryKey,
+  NumericFilterType,
+  PaginationType,
+  Routes,
+  StringFilterType,
+} from "./enums";
+
 export type {
   Auth,
   BrowserPlaylist,
@@ -30,16 +41,5 @@ export {
   numericalFilters,
   stringFilters,
 } from "./constants";
-
-export {
-  BooleanFilterType,
-  BrowserKey,
-  CountKey,
-  LibraryKey,
-  NumericFilterType,
-  PaginationType,
-  Routes,
-  StringFilterType,
-} from "./enums";
 
 export { getBrowserEndpoint, getLibraryEndpoint, getSavedEndpoint } from "./fn";

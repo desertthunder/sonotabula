@@ -6,13 +6,13 @@
 export const BASE_URL = "http://localhost:8000";
 
 import {
-  CountKey,
   LibraryKey,
+  CountKey,
   NumericFilterType,
   BooleanFilterType,
   StringFilterType,
   BrowserKey,
-} from "@libs/types";
+} from "@libs/types/enums";
 
 export const Counts: CountKey[] = [
   CountKey.Artists,

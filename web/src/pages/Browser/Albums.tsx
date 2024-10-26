@@ -2,8 +2,8 @@
  * @todo use react table
  * */
 
-import { usePaginatedBrowser } from "@/libs/hooks/api/query";
-import { BrowserKey } from "@/libs/types";
+import { usePaginatedBrowser } from "@libs/hooks/api/query";
+import { BrowserKey } from "@libs/types";
 import React from "react";
 
 export function BrowseAlbumsPage(props: { children?: React.ReactNode }) {

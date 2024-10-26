@@ -1,5 +1,5 @@
-import { formatDuration } from "@/libs/helpers";
-import { FetchError, Pagination, BrowserTrack } from "@/libs/types";
+import { formatDuration } from "@libs/helpers";
+import { FetchError, Pagination, BrowserTrack } from "@libs/types";
 import { useTokenStore } from "@/store";
 import { useQuery } from "@tanstack/react-query";
 import {

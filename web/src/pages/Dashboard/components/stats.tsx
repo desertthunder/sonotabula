@@ -1,6 +1,6 @@
-import { titleCase } from "@/libs/helpers";
-import { useSavedCounts } from "@/libs/hooks";
-import { CountKey } from "@/libs/types";
+import { titleCase } from "@libs/helpers";
+import { useSavedCounts } from "@libs/hooks";
+import { CountKey } from "@libs/types";
 
 interface Props {
   scope: CountKey;

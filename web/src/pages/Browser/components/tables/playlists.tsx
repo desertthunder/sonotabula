@@ -1,4 +1,4 @@
-import { decodeUnicode } from "@/libs/helpers";
+import { decodeUnicode } from "@libs/helpers";
 import {
   createColumnHelper,
   flexRender,
@@ -18,7 +18,7 @@ import {
   useFloating,
   useClick,
 } from "@floating-ui/react";
-import type { BrowserPlaylist } from "@/libs/types";
+import type { BrowserPlaylist } from "@libs/types";
 
 const columnHelper = createColumnHelper<BrowserPlaylist>();
 

@@ -39,6 +39,12 @@ importers:
       '@docusaurus/types':
         specifier: 3.5.2
         version: 3.5.2(acorn@8.13.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/node':
+        specifier: ^22.8.1
+        version: 22.8.1
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.12
       typescript:
         specifier: ~5.5.2
         version: 5.5.4
@@ -6351,7 +6357,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 22.8.1
 
   '@types/send@0.17.4':
     dependencies:

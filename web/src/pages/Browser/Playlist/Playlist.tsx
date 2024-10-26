@@ -1,5 +1,5 @@
-import { translateDuration } from "@/libs/helpers";
-import { usePlaylistTracks } from "@/libs/hooks";
+import { translateDuration } from "@libs/helpers";
+import { usePlaylistTracks } from "@libs/hooks";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { Drawer } from "vaul";
 import { useLocation, useParams } from "wouter";

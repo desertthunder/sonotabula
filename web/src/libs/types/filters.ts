@@ -2,7 +2,7 @@ import {
   BooleanFilterType,
   NumericFilterType,
   StringFilterType,
-} from "@libs/types";
+} from "@libs/types/enums";
 
 export type FilterSet = Set<BooleanFilterType>;
 export type FilterMap = Map<NumericFilterType, number>;

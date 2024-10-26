@@ -1,9 +1,9 @@
-import { LibraryKey, Counts } from "@/libs/types";
+import { LibraryKey, Counts } from "@libs/types";
 import { useCallback, useState } from "react";
 import { StatCard } from "./components/stats";
 import { Tabs } from "./components/tabs";
 import { RealTimeTable } from "./components/tables";
-import { useLibraryFetch } from "@/libs/hooks/api/query";
+import { useLibraryFetch } from "@libs/hooks/api/query";
 
 export function Dashboard() {
   const [scope, setScope] = useState<LibraryKey>(LibraryKey.LibraryPlaylists);

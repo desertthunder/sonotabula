@@ -12,7 +12,7 @@ import {
   LibraryResource,
   ListeningHistoryItem,
   Pagination,
-} from "@/libs/types";
+} from "@libs/types";
 import { useTokenStore } from "@/store";
 import {
   QueryClient,

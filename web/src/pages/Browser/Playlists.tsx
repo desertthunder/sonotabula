@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useBrowserPlaylists } from "@/libs/hooks";
+import { useBrowserPlaylists } from "@libs/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { PlaylistTable } from "./components/tables/playlists";
 import { PaginationForm, Pager } from "./components/forms/pagination";

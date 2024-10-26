@@ -1,12 +1,12 @@
-import { decodeUnicode } from "@/libs/helpers";
+import { decodeUnicode } from "@libs/helpers";
 import type {
   LibraryAlbum,
   LibraryArtist,
   LibraryPlaylist,
   LibraryResourceType,
   LibraryTrack,
-} from "@/libs/types";
-import { LibraryKey } from "@/libs/types";
+} from "@libs/types";
+import { LibraryKey } from "@libs/types";
 import { useMemo } from "react";
 
 import {

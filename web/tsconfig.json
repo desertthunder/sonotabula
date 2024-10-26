@@ -21,9 +21,8 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "$store/*": ["./src/store/*"],
-      "@libs/*": ["./src/libs/*"],
+      "@/*": ["src/*"],
+      "@libs/*": ["src/libs/*"]
     }
   },
   "include": ["src"],

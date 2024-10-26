@@ -1,4 +1,4 @@
-import { LibraryKey } from "@libs/types";
+import { LibraryKey } from "@libs/types/enums";
 
 export function getLibraryEndpoint(resourceKey: string) {
   switch (resourceKey) {

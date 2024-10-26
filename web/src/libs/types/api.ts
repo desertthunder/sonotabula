@@ -1,4 +1,4 @@
-import { BrowserKey, CountKey, LibraryKey } from "@libs/types";
+import { BrowserKey, CountKey, LibraryKey } from "@libs/types/enums";
 
 export type LibraryPlaylist = {
   spotify_id: string;
