@@ -8,10 +8,12 @@
     "husky": "^9.1.6"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "~5.5.2"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs": "pnpm -F \"./docs/**\" run dev",
+    "web": "pnpm -F \"./web/**\" run dev"
   },
   "dependencies": {
     "dayjs": "^1.11.13"
