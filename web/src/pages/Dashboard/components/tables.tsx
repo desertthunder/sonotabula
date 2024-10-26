@@ -8,6 +8,7 @@ import type {
 } from "@libs/types";
 import { LibraryKey } from "@libs/types";
 import { useMemo } from "react";
+import { LibraryParams, LibraryResponse } from "@/libs/hooks/api/v1";
 
 import {
   createColumnHelper,
@@ -16,6 +17,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { UseQueryResult } from "@tanstack/react-query";
 
 const artistColumnHelper = createColumnHelper<LibraryArtist>();
 const playlistColumnHelper = createColumnHelper<LibraryPlaylist>();
@@ -206,8 +208,13 @@ const artistColumns = [
 
 interface Props<T extends LibraryKey> {
   scope: T;
-  data: LibraryResourceType<T>[];
+  context: UseQueryResult<LibraryResponse<T>>;
   handler: (id: string) => void;
+  pageData: LibraryParams;
+  pager: {
+    next: () => void;
+    prev: () => void;
+  };
 }
 
 const getSearchPlaceholder = (scope: LibraryKey) => {
@@ -227,8 +234,10 @@ const getSearchPlaceholder = (scope: LibraryKey) => {
 
 export function RealTimeTable<T extends LibraryKey>({
   scope,
-  data,
+  context,
   handler,
+  pageData,
+  pager,
 }: Props<T>) {
   const columns = useMemo(() => {
     switch (scope) {
@@ -247,7 +256,7 @@ export function RealTimeTable<T extends LibraryKey>({
 
   const table = useReactTable({
     columns: columns as DisplayColumnDef<LibraryResourceType<T>>[],
-    data: data || [],
+    data: context.data?.data || [],
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -261,6 +270,7 @@ export function RealTimeTable<T extends LibraryKey>({
             type="search"
             className="p-2 rounded-md rounded-r-none border-[0.5px] border-slate-400 flex-1 text-white"
             placeholder={placeholder}
+            disabled
           />
           <button
             className={[
@@ -268,6 +278,7 @@ export function RealTimeTable<T extends LibraryKey>({
               "bg-green-400 border-[0.5px] border-slate-400",
               "text-zinc-100",
             ].join(" ")}
+            disabled
           >
             <i className="i-ri-search-line"></i>
             <span>Search</span>
@@ -305,52 +316,74 @@ export function RealTimeTable<T extends LibraryKey>({
             ))}
           </thead>
           <tbody className="last:border-b-0">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={[
-                  "z-10",
-                  "border-b transition-colors",
-                  "bg-white",
-                  "hover:bg-slate-200",
-                  "even:bg-slate-100",
-                  "hover:last:text-green-500",
-                ].join(" ")}
-                onClick={async () => {
-                  await handler(row.original.spotify_id);
-                  console.log(row.original.spotify_id);
-                }}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className={[
-                      "p-2 align-middle",
-                      "text-xs",
-                      cell.column.columnDef.meta?.className || "",
-                    ].join(" ")}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {context.isLoading ? (
+              <tr>
+                <th>Loading...</th>
               </tr>
-            ))}
+            ) : null}
+            {context.isError ? (
+              <tr>
+                <th>Error</th>
+              </tr>
+            ) : null}
+            {context.data
+              ? table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className={[
+                      "z-10",
+                      "border-b transition-colors",
+                      "bg-white",
+                      "hover:bg-slate-200",
+                      "even:bg-slate-100",
+                      "hover:last:text-green-500",
+                    ].join(" ")}
+                    onClick={async () => {
+                      await handler(row.original.spotify_id);
+                      console.log(row.original.spotify_id);
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className={[
+                          "p-2 align-middle",
+                          "text-xs",
+                          cell.column.columnDef.meta?.className || "",
+                        ].join(" ")}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              : null}
           </tbody>
         </table>
       </div>
       <div className="flex justify-between items-center pt-4 border-t-[0.5px] border-t-slate-300">
-        <span>Showing 1 to 10 of 100 entries</span>
+        <span>
+          Showing {(pageData.page - 1) * pageData.page_size + 1} to{" "}
+          {pageData.page * pageData.page_size} of {pageData.total} entries
+        </span>
         <div className="flex gap-2 text-xs">
           <button
             className={[
               "p-1 rounded-md bg-green-400 text-white",
               "hover:bg-green-500 transition-colors duration-400",
             ].join(" ")}
+            onClick={pager.prev}
           >
             <i className="i-ri-arrow-left-line align-middle"></i>
             <span className="ml-1">Prev</span>
           </button>
-          <button className="p-1 rounded-md bg-green-400 text-white hover:bg-green-500">
+          <button
+            className="p-1 rounded-md bg-green-400 text-white hover:bg-green-500"
+            onClick={pager.next}
+          >
             <span className="mr-1">Next</span>
             <i className="i-ri-arrow-right-line align-middle"></i>
           </button>

@@ -28,7 +28,6 @@ import {
   fetchBrowserPlaylists,
   fetchListeningHistory,
   fetchLibraryPlaylistTracks,
-  libraryFetcher,
   paginatedBrowserFetcher,
 } from "./fetch";
 
@@ -80,30 +79,6 @@ export function useTokenValidator() {
       refetchInterval: 5 * 60 * 1000, // 5 minutes
     },
     queryClient
-  );
-
-  return query;
-}
-
-export function useLibraryFetch<T extends LibraryKey>(
-  resource: LibraryKey,
-  limit?: number | null
-): UseQueryResult<LibraryResource<T>> {
-  const token = useTokenStore((state) => state.token);
-  const client = useQueryClient();
-
-  const query = useQuery<LibraryResource<T>>(
-    {
-      queryKey: [resource],
-      queryFn: async () => {
-        if (!token) {
-          throw new Error("Token not found");
-        }
-
-        return await libraryFetcher<T>(resource, token, limit);
-      },
-    },
-    client
   );
 
   return query;

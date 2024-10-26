@@ -7,6 +7,7 @@ import "@fontsource-variable/inter";
 import { Routes } from "@libs/types";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
 import { Home, Signup } from "./pages";
@@ -89,6 +90,7 @@ export default function Root() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppRouter />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
