@@ -5,7 +5,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "Music Dashboard Docs",
   tagline: "A spotify integrated music library dashboard.",
-  favicon: "/img/favicon.ico",
+  favicon: "/img/favicon.svg",
 
   // Set the production url of your site here
   url: "https://dashspot-dev.netlify.app",
@@ -36,6 +36,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           routeBasePath: "/",
+          path: "md",
         },
         blog: false,
         theme: {
@@ -56,7 +57,7 @@ const config: Config = {
       title: "Music Dashboard",
       logo: {
         alt: "App Icon",
-        src: "img/logo.png",
+        src: "img/logo.svg",
       },
       items: [
         {
