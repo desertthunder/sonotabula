@@ -53,8 +53,10 @@ INSTALLED_APPS = [
     "django_extensions",
     "rest_framework",
     "corsheaders",
+    "core",
     "api",
     "apps",
+    "browser",
     "django_celery_results",
 ]
 
