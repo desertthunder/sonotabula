@@ -14,18 +14,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # NOTE: Used to encode and decode JWT tokens
 SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "django-insecure-oukd3fukrry=ce&7kc*itz=(%y*hphm7fq)1s^228fn4p2%%8q"
+    "SECRET_KEY",
+    "django-insecure-oukd3fukrry=ce&7kc*itz=(%y*hphm7fq)1s^228fn4p2%%8q",
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", 0))
 
 ALLOWED_HOSTS: list[str] = ["127.0.0.1", "localhost"]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    # Spotify redirect URI
-    "https://accounts.spotify.com",
+    "http://localhost:5173",  # React
+    "https://accounts.spotify.com",  # Spotify Redirect URI
 ]
 
 CORS_ALLOWED_HEADERS = [
@@ -42,8 +41,8 @@ CORS_ALLOWED_HEADERS = [
 ]
 
 INSTALLED_APPS = [
-    "daphne",  # asgi runserver
-    "channels",  # For runworker
+    "daphne",
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -93,14 +92,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "server.wsgi.application"
 ASGI_APPLICATION = "server.asgi.application"
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
-    # 'cache': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'cache.sqlite3',
-    # }
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("PGDATABASE", "music_api_db"),
@@ -114,11 +106,9 @@ DATABASES = {
     }
 }
 
+# Authentication
+
 AUTH_USER_MODEL = "api.AppUser"
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -136,27 +126,18 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+# Static Files
 STATIC_URL = "static/"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
+# Default pk
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Spotify API
 SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID", None)
 SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET", None)
 SPOTIFY_BASE_URL = "https://api.spotify.com/v1/"
@@ -165,14 +146,8 @@ REST_FRAMEWORK = {
     "DEFAULT_METADATA_CLASS": "rest_framework.metadata.SimpleMetadata",
 }
 
-# Celery Configuration Options
 CELERY_TIMEZONE = "America/Chicago"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_BACKEND = "django-db"
-CELERY_CACHE_BACKEND = "django-cache"
-# see docker-compose.yml > redis > hostname & ports
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
-CELERY_RESULT_BACKEND = os.environ.get(
-    "CELERY_RESULT_BACKEND", "redis://localhost:6379"
-)

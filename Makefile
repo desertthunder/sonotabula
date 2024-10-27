@@ -35,7 +35,7 @@ shell:
 
 worker:
 	@echo "Starting Celery worker..."
-	@watchmedo auto-restart --directory=./api/tasks --pattern=*.py --recursive -- celery -A server worker -l INFO
+	@watchmedo auto-restart --patterns='**/tasks/*.py' --recursive -- celery -A server worker -l INFO
 
 flower:
 	@echo "Starting Celery Flower dashboard..."
