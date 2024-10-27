@@ -96,7 +96,7 @@ function SidebarLink({
 export function Sidebar() {
   return (
     <aside className="flex flex-col w-1/6 min-h-full">
-      <section className="flex flex-col flex-1 overflow-y-scroll bg-zinc-100 border-r-[0.5px] border-zinc-100 shadow-2xl">
+      <section className="no-scrollbar flex flex-col flex-1 overflow-y-scroll bg-zinc-100 border-r-[0.5px] border-zinc-100 shadow-2xl">
         <section className="flex flex-col border-b-[0.5px] border-b-black">
           <SidebarLink href="/" linkText="Dashboard" />
           <SidebarLink href="/browser/playlists" linkText="Playlists" />

@@ -15,9 +15,9 @@ export function Navbar() {
       <section>
         <Link
           to="/"
-          className="text-lg text-black flex items-center hover:text-green-500"
+          className="text-xl font-headings font-medium text-black flex items-center hover:text-green-500 group"
         >
-          <i className="i-ri-spotify-line text-xl  mr-1" />
+          <i className="i-ri-spotify-line group-hover:i-ri-spotify-fill text-xl  mr-1" />
           <span>Dashspot</span>
         </Link>
       </section>
@@ -28,7 +28,7 @@ export function Navbar() {
         </Link>
         {/* <i className="i-ri-notification-2-fill text-gray-400" /> */}
       </section>
-      <section className="flex-shrink">
+      <section className="flex-shrink px-2">
         {query.isPending ? (
           <i className="i-ri-loader-line animate-spin" />
         ) : null}

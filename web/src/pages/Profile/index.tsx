@@ -84,8 +84,8 @@ export function Profile() {
         <div>Error: {query.error.message}</div>
       ) : query.data && profile ? (
         <article className="flex flex-col gap-4 bg-white rounded-md shadow-lg border p-8">
-          <header className="flex items-center gap-4 font-headings group">
-            <div className="relative z-0">
+          <header className="flex items-center gap-4 font-headings">
+            <div className="relative z-0 group">
               <img
                 src={profile.image_url}
                 alt="Profile"
