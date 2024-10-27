@@ -34,22 +34,12 @@ class UserSerializer(BaseModel):
         cls: type["UserSerializer"], data: dict, user: AppUser
     ) -> "UserSerializer":
         """Create a UserSerializer from an API response."""
-        obj = cls.model_construct()
-        mapping = (
-            ("spotify_id", "id"),
-            ("image_url", "images.0.url"),
-            ("display_name", "display_name"),
-        )
-        for attr, key in mapping:
-            path = key.split(".")
-            for k in path:
-                data = data.get(k, {})
-
-            setattr(obj, attr, data)
-
         return cls(
-            **obj.model_dump(),
             id=str(user.public_id),
+            spotify_id=data.get("id", user.spotify_id),
+            email=user.email,
+            display_name=data.get("display_name", user.spotify_display_name),
+            image_url=data.get("images", [{}])[0].get("url", user.image_url),
             saved_tracks=user.saved_tracks,
             saved_albums=user.saved_albums,
             saved_playlists=user.saved_playlists,
@@ -62,6 +52,7 @@ class UserSerializer(BaseModel):
         """Create a UserSerializer from a database model."""
         return cls(
             id=str(user.public_id),
+            spotify_id=user.spotify_id,
             email=user.email,
             display_name=user.spotify_display_name,
             image_url=user.image_url,
@@ -105,20 +96,17 @@ class ProfileViewSet(viewsets.ViewSet):
     _auth: SpotifyAuthService = SpotifyAuthService()
     _data: SpotifyDataService = SpotifyDataService()
 
-    def get_user(self, request: Request, pid: str | None = None) -> AppUser:
+    def get_user(self, request: Request) -> AppUser:
         """Get the current user."""
-        if pid is None:
-            return AppUser.objects.get(id=request.user.id)
-        else:
-            return AppUser.objects.get(public_id=pid, id=request.user.id)
+        return AppUser.objects.get(id=request.user.id)
 
     def list(self, _: Request) -> Response:
         """Get the current user profile."""
         raise NotImplementedError
 
-    def retrieve(self, request: Request, pid: str) -> Response:
+    def retrieve(self, request: Request) -> Response:
         """Get a user profile."""
-        user = self.get_user(request, pid)
+        user = self.get_user(request)
         force = bool(request.query_params.get("force", False))
 
         if user.should_update or force:

@@ -46,7 +46,7 @@ export function Dashboard() {
     if (mutation.isSuccess) {
       query.refetch();
     }
-  }, [mutation.isSuccess]);
+  }, [mutation.isSuccess, query]);
 
   useEffect(() => {
     if (!query.data) {

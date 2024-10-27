@@ -4,13 +4,14 @@
  * @todo artists page
  */
 import "@fontsource-variable/inter";
+import "@fontsource-variable/dm-sans";
 import { Routes } from "@libs/types";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
-import { Home, Signup } from "./pages";
+import { Home, Signup, Profile } from "./pages";
 import { BrowserLayout } from "./pages/Browser";
 import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
 import { Playlist } from "./pages/Browser/Playlist";
@@ -61,6 +62,9 @@ export function AppRouter() {
           <DashboardLayout>
             <Route path="/">
               <Dashboard />
+            </Route>
+            <Route path="/profile">
+              <Profile />
             </Route>
             <Route path="/browser" nest>
               <BrowserLayout>
