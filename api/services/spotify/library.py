@@ -12,6 +12,8 @@ from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
 from api.models import AppUser
 from api.services.spotify.auth import SpotifyAuthService
 
+logger.add("logs/spotify_data.log", rotation="1 MB", retention="1 day", level="DEBUG")
+
 
 class SpotifyLibraryService:
     """API actions for fetching data from the Spotify API."""

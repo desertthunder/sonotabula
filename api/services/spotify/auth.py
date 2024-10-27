@@ -21,6 +21,8 @@ from api.libs.requests import (
 from api.models import AppUser
 from api.serializers.authentication import AccessToken, CurrentUser
 
+logger.add("logs/spotify_auth.log", rotation="1 MB", retention="1 day", level="DEBUG")
+
 
 class SpotifyAuthService:
     """API actions for authorizing the Spotify API."""
