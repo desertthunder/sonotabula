@@ -4,14 +4,15 @@ Parking Lot:
 - The password field is likely unecessary.
 """
 
-import uuid
+import datetime
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.utils import timezone
 from django_stubs_ext.db.models import TypedModelMeta
 from loguru import logger
 
-from api.models.mixins import TokenSetMixin
+from api.models.mixins import TimestampedModel, TokenSetMixin
 from api.serializers.authentication import AccessToken, CurrentUser
 
 
@@ -48,11 +49,17 @@ class AppUserManager(UserManager["AppUser"]):
         return user
 
 
-class AppUser(TokenSetMixin, AbstractUser):
+class AppUser(TokenSetMixin, TimestampedModel, AbstractUser):
     """Application User Model (Custom)."""
 
-    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
     email = models.EmailField(blank=False, unique=True)
+
+    image_url = models.URLField(blank=True, null=True, max_length=512)
+    saved_tracks = models.IntegerField(default=0)
+    saved_albums = models.IntegerField(default=0)
+    saved_playlists = models.IntegerField(default=0)
+    saved_artists = models.IntegerField(default=0)
+    saved_shows = models.IntegerField(default=0)
 
     username: None = None  # type: ignore
     first_name: None = None  # type: ignore
@@ -65,6 +72,22 @@ class AppUser(TokenSetMixin, AbstractUser):
     REQUIRED_FIELDS = []
 
     objects: AppUserManager = AppUserManager()  # type: ignore
+
+    @property
+    def should_update(self) -> bool:
+        """Check if the user should refresh their counts."""
+        no_counts = (
+            self.saved_tracks == 0
+            or self.saved_albums == 0
+            or self.saved_playlists == 0
+            or self.saved_artists == 0
+            or self.saved_playlists == 0
+            or self.saved_shows == 0
+        )
+
+        stale = timezone.now() - self.updated_at > datetime.timedelta(hours=6)
+
+        return no_counts or stale
 
     def update_token_set(self, token_set: AccessToken) -> "AppUser":
         """Update the user's token set."""

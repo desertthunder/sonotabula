@@ -113,6 +113,36 @@ class SpotifyAuthService:
             }
         )
 
+    def get_full_profile(self, user_id: int) -> dict:
+        """Fetch's current user's full profile."""
+        try:
+            user = AppUser.objects.get(id=user_id)
+            client = httpx.Client(
+                base_url=SpotifyAPIEndpoints.BASE_URL,
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            response = client.get(url=SpotifyAPIEndpoints.CurrentUser)
+
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            if (
+                exc.response.status_code == 401
+                and "The access token expired" in exc.response.text
+            ):
+                user = self.refresh_access_token(user.refresh_token)
+                client.headers["Authorization"] = f"Bearer {user.access_token}"
+
+                response = client.get(url=SpotifyAPIEndpoints.CurrentUser)
+                response.raise_for_status()
+            else:
+                client.close()
+                raise exc
+        finally:
+            client.close()
+
+        return response.json()
+
     def build_redirect_uri(self) -> str:
         """Build the Spotify authorization URL."""
         if not self.client_id:
