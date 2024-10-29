@@ -13,7 +13,14 @@ export function PlaylistNameCell(props: CellContext<LibraryPlaylist, string>) {
     toggleDrawer(drawerKey);
   }, [toggleDrawer, drawerKey]);
 
-  return <button onClick={toggleFn}>{props.getValue()}</button>;
+  return (
+    <button
+      onClick={toggleFn}
+      className="text-left text-xs text-slate-800 hover:text-emerald-500"
+    >
+      {props.getValue()}
+    </button>
+  );
 }
 
 interface LoaderCellProps {

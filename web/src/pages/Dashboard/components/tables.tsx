@@ -287,7 +287,7 @@ export function RealTimeTable<T extends LibraryKey>({
           </button>
         </div>
       </div>
-      <div className={["overflow-y-auto", "max-h-[500px]"].join(" ")}>
+      <div className={["overflow-y-auto", "max-h-[450px]"].join(" ")}>
         <table className="h-[400px] text-sm w-full p-4 relative">
           <thead className="text-sm font-bold">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -302,8 +302,8 @@ export function RealTimeTable<T extends LibraryKey>({
                   <th
                     key={header.id}
                     className={[
-                      "h-10 text-left align-middle font-medium text-slate-800",
-                      "sticky overflow-x-visible top-0 bg-slate-50 z-20",
+                      "h-10 text-left align-middle font-medium text-gray-500 text-xs",
+                      "sticky overflow-x-visible top-0 bg-slate-50 z-20 uppercase",
                     ].join(" ")}
                   >
                     {header.isPlaceholder

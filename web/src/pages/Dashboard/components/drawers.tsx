@@ -50,7 +50,7 @@ export function LibraryPlaylistDrawer({
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      const [, id] = queryKey;
+      const id = _.last(queryKey);
       const uri = new URL(
         `api/v1/library/playlists/${id}`,
         window.location.origin
@@ -74,6 +74,12 @@ export function LibraryPlaylistDrawer({
     enabled: false,
   });
 
+  useEffect(() => {
+    if (meta.isOpen) {
+      query.refetch();
+    }
+  }, [meta.isOpen, query]);
+
   return (
     <div
       data-drawer-id={drawerId}
@@ -88,16 +94,107 @@ export function LibraryPlaylistDrawer({
     >
       <div
         ref={ref}
-        className={`fixed right-0 top-0 bottom-0 w-96 bg-white p-4 shadow-lg transition-transform transform ${
+        className={`fixed right-0 top-0 bottom-0 w-96 bg-white shadow-lg transition-transform transform ${
           meta.isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <button className="text-gray-600 hover:text-gray-800" onClick={toggle}>
-          Close
-        </button>
-        <div className="mt-4">
-          {query.isLoading ? "Loading" : null}
+        <header className="p-4 flex justify-between items-center border-b">
+          <h1 className="text-lg font-semibold">Playlist Details</h1>
+          <button
+            className="text-gray-400 hover:text-zinc-50 hover:bg-red-400 border rounded-md px-2 py-1 text-sm"
+            onClick={toggle}
+          >
+            Close
+          </button>
+        </header>
+        <div>
+          {query.isLoading ? (
+            <div className="h-full flex flex-col gap-2 items-center justify-center">
+              <span>Loading</span>
+              <i className="i-ri-loader-line animate-spin text-2xl"></i>
+            </div>
+          ) : null}
           {query.isError ? "Error" : null}
+          {query.isSuccess ? (
+            <main className="text-sm font-titles tracking-tight leading-tight font-medium">
+              <section className="grid grid-cols-5 gap-2 border-b">
+                <img
+                  src={query.data.image_url}
+                  alt="Playlist Cover"
+                  className="col-span-2 p-2"
+                />
+                <div className="col-span-3 p-2">
+                  <dl className="grid grid-cols-3 gap-1">
+                    <dt className="font-semibold col-span-1">ID</dt>
+                    <dd className="col-span-2 overflow-clip overflow-ellipsis">
+                      {query.data.spotify_id}
+                    </dd>
+
+                    <dt className="font-semibold col-span-1">Name</dt>
+                    <dd className="col-span-2 overflow-clip overflow-ellipsis">
+                      {query.data.name}
+                    </dd>
+
+                    <dt className="font-semibold col-span-1">URI</dt>
+                    <dd className="col-span-2">
+                      <a
+                        href={`https://open.spotify.com/playlist/${query.data.spotify_id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Link
+                      </a>
+                    </dd>
+
+                    {/* Shared */}
+                    <dt className="font-semibold col-span-1">Shared</dt>
+                    <dd className="col-span-2">
+                      {query.data.shared ? "Yes" : "No"}
+                    </dd>
+
+                    {/* Public (collaborative prop) */}
+                    <dt className="font-semibold col-span-1">Public</dt>
+                    <dd className="col-span-2">
+                      {query.data.collaborative ? "Yes" : "No"}
+                    </dd>
+                  </dl>
+                </div>
+              </section>
+              <section>
+                <header className="p-4 border-b flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">Tracks</h2>
+                  <h3>
+                    <strong>Total:</strong> {query.data.tracks.length}
+                  </h3>
+                </header>
+                <div className="overflow-x-auto flex flex-col divide-y">
+                  {query.data.tracks.map((track: any) => (
+                    <dl key={track.id} className="grid grid-cols-3 gap-1 p-4">
+                      <dt className="font-semibold col-span-1">Artist</dt>
+                      <dd className="col-span-2 overflow-clip overflow-ellipsis">
+                        {track.artists.map(([_id, name]: Array<string>) => (
+                          <span key={_id}>{name}</span>
+                        ))}
+                      </dd>
+
+                      <dt className="font-semibold col-span-1">Name</dt>
+                      <dd className="col-span-2 overflow-clip overflow-ellipsis">
+                        {track.name}
+                      </dd>
+
+                      <dt className="font-semibold col-span-1">URI</dt>
+                      <dd className="col-span-2">
+                        <a href={track.uri} target="_blank" rel="noreferrer">
+                          Link
+                        </a>
+                      </dd>
+                    </dl>
+                  ))}
+                </div>
+              </section>
+              <footer></footer>
+            </main>
+          ) : null}
           {children}
         </div>
       </div>

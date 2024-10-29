@@ -6,9 +6,9 @@ export function TableRow({ children }: { children: React.ReactNode }) {
         "border-b transition-colors",
         "bg-white",
         "hover:bg-slate-200",
-        "even:bg-slate-100",
         "hover:last:text-green-500",
         "group",
+        "font-medium",
       ].join(" ")}
     >
       {children}

@@ -148,7 +148,7 @@ export function Pager(props: PagerProps) {
         label="Prev"
         disabled={props.page === 1}
         onClick={prevHandler}
-        className="border-x rounded-l  border-black border-y"
+        className="border-x rounded-l  border-slate-400 border-y"
       />
       {labels.map((label, i) => {
         if (label === "...") {
@@ -156,7 +156,7 @@ export function Pager(props: PagerProps) {
             <button
               disabled
               key={i}
-              className="items-center py-2 px-6 font-bold text-sm border-y border-r border-black"
+              className="items-center py-2 px-6 font-bold text-sm border-y border-r border-slate-400"
             >
               ...
             </button>
@@ -169,7 +169,7 @@ export function Pager(props: PagerProps) {
             label={label.toString()}
             disabled={props.page === label}
             onClick={() => numberedHandler(label)}
-            className="items-center py-2 border-y border-r border-black"
+            className="items-center py-2 border-y border-r border-slate-400"
           />
         );
       })}
@@ -177,7 +177,7 @@ export function Pager(props: PagerProps) {
         label="Next"
         disabled={props.page === props.totalPages}
         onClick={nextHandler}
-        className="border-r border-y border-black rounded-r"
+        className="border-r border-y border-slate-400 rounded-r"
       />
     </div>
   );

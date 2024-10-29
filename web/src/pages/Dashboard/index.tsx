@@ -68,54 +68,61 @@ export function Dashboard() {
   }, [query.data, scope]);
 
   return (
-    <main
+    <div
       className={[
         "bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%",
         "flex-1 flex flex-col justify-between gap-8",
-        "px-8 pt-4",
+        "pt-8",
         "overflow-y-auto",
+        "divide-y-[0.5px]",
       ].join(" ")}
     >
-      {query.data ? (
-        <Drawers
-          r={{
-            [LibraryKey.LibraryPlaylists]: query.data.data.map(
-              (p) =>
-                `${LibraryKey.LibraryPlaylists}-${p.spotify_id}` as DrawerKey
-            ),
-          }}
-        />
-      ) : null}
-      <section className="flex flex-col gap-4 flex-1 text-sm mx-32">
-        <div className="flex">
-          <header className="flex-1">
-            <h1 className="text-3xl font-bold text-zinc-100 tracking-tight font-headings">
-              Dashboard
-            </h1>
-            <p className="text-zinc-100">
-              View your stats and library at a glance.
-            </p>
-          </header>
-        </div>
-        <section className="flex w-full gap-4">
-          {Counts.map((key) => (
-            <StatCard key={key} scope={key} />
-          ))}
-        </section>
-        <div className="flex-shrink">
-          <Tabs scope={scope} onChange={onTabChange} context={mutation} />
-        </div>
-        <div className="flex flex-1 gap-8 pb-4">
-          <div className={["flex-1 flex flex-col gap-4"].join(" ")}>
-            <RealTimeTable
-              scope={scope}
-              context={query}
-              pageData={pageData}
-              pager={{ next, prev }}
-            />
+      <div className="flex mx-32 px-8">
+        <header className="flex-1">
+          <h1 className="text-3xl font-bold text-zinc-100 tracking-tight font-headings">
+            Dashboard
+          </h1>
+          <p className="text-zinc-100">
+            View your stats and library at a glance.
+          </p>
+        </header>
+      </div>
+      <main
+        className={["flex-1 flex flex-col justify-between gap-8", "p-8"].join(
+          " "
+        )}
+      >
+        {query.data ? (
+          <Drawers
+            r={{
+              [LibraryKey.LibraryPlaylists]: query.data.data.map(
+                (p) =>
+                  `${LibraryKey.LibraryPlaylists}-${p.spotify_id}` as DrawerKey
+              ),
+            }}
+          />
+        ) : null}
+        <section className="flex flex-col gap-4 flex-1 text-sm mx-32">
+          <section className="flex w-full gap-4">
+            {Counts.map((key) => (
+              <StatCard key={key} scope={key} />
+            ))}
+          </section>
+          <div className="flex-shrink">
+            <Tabs scope={scope} onChange={onTabChange} context={mutation} />
           </div>
-        </div>
-      </section>
-    </main>
+          <div className="flex flex-1 gap-8 pb-4">
+            <div className={["flex-1 flex flex-col gap-4"].join(" ")}>
+              <RealTimeTable
+                scope={scope}
+                context={query}
+                pageData={pageData}
+                pager={{ next, prev }}
+              />
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
