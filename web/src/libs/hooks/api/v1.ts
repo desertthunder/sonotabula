@@ -75,6 +75,28 @@ export async function fetchLibraryTracks(
   return (await response.json()) as LibraryResponse<LibraryKey.LibraryTracks>;
 }
 
+export async function fetchLibraryAlbums(
+  token: string | null,
+  params: LibraryParams
+) {
+  const uri = new URL("/api/v1/library/albums", window.location.origin);
+  uri.searchParams.append("page", params.page.toString());
+  uri.searchParams.append("page_size", params.page_size.toString());
+
+  const response = await fetch(uri.toString(), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch library albums.");
+  }
+
+  return (await response.json()) as LibraryResponse<LibraryKey.LibraryAlbums>;
+}
+
 export async function syncLibraryPlaylists(
   token: string | null,
   params: LibraryParams
@@ -140,6 +162,8 @@ export function useLibraryData<T extends LibraryKey>(
           return await fetchLibraryPlaylists(token, params);
         case LibraryKey.LibraryTracks:
           return await fetchLibraryTracks(token, params);
+        case LibraryKey.LibraryAlbums:
+          return await fetchLibraryAlbums(token, params);
         default:
           throw new Error("Invalid scope");
       }

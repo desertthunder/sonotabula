@@ -29,12 +29,7 @@ export function Tabs({ scope, onChange, context }: Props) {
 
     if (scope === resource) return true;
 
-    if (
-      ![LibraryKey.LibraryPlaylists, LibraryKey.LibraryTracks].includes(
-        resource
-      )
-    )
-      return true;
+    if (scope === LibraryKey.LibraryArtists) return true;
 
     return false;
   };

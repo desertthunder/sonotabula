@@ -6,37 +6,11 @@ import logging
 import os
 import sys
 
-from loguru import logger
 from dotenv import load_dotenv
 
 
-def init_logger():
-    colors = {
-        "TRACE": "green",
-        "DEBUG": "blue",
-        "INFO": "cyan",
-        "SUCCESS": "green",
-        "WARNING": "yellow",
-        "ERROR": "red",
-        "CRITICAL": "magenta",
-    }
-
-    def formatter(record) -> str:
-        log_level = record["level"].name
-        color = colors.get(log_level, "reset")
-        return "{time} | <{color}>[{level:<8}]</{color}> | {name}:{function}:{line} | {message}".format(
-            color=color, **record
-        )
-
-    logging.getLogger("daphne").setLevel(logging.INFO)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
-
-    logger.remove()
-    logger.add(
-        sys.stderr,
-        level="INFO",
-        format=formatter,
-    )
+logging.getLogger("daphne").setLevel(logging.INFO)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 def main():
@@ -44,7 +18,6 @@ def main():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
     load_dotenv()
-    init_logger()
 
     try:
         from django.core.management import execute_from_command_line

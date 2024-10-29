@@ -108,7 +108,7 @@ class SpotifyLibraryService:
         return int(total)
 
     def library_albums(
-        self, user_pk: int, limit: int = 50, all: bool = False
+        self, user_pk: int, limit: int = 50, offset: int = 0, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's albums.
 
@@ -117,7 +117,9 @@ class SpotifyLibraryService:
         user = self.get_user(user_pk)
 
         try:
-            yield from self._library_albums(user=user, limit=limit, all=all)
+            yield from self._library_albums(
+                user=user, limit=limit, offset=offset, all=all
+            )
         except SpotifyExpiredTokenError:
             self.auth_service.refresh_access_token(user.refresh_token)
 
@@ -169,6 +171,25 @@ class SpotifyLibraryService:
 
         response = httpx.get(
             url=f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.SavedTracks}",
+            headers={"Authorization": f"Bearer {user.access_token}"},
+            params={"limit": 1},
+        )
+
+        if response.is_error:
+            self.handle_error(response)
+
+        total = response.json().get("total", "0")
+
+        time.sleep(0.5)
+
+        return int(total)
+
+    def library_albums_total(self, user_pk: int) -> int:
+        """Get the total number of saved albums."""
+        user = self.get_user(user_pk)
+
+        response = httpx.get(
+            url=f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.SavedAlbums}",
             headers={"Authorization": f"Bearer {user.access_token}"},
             params={"limit": 1},
         )
@@ -248,11 +269,14 @@ class SpotifyLibraryService:
                 yield from resp.get("items")
 
     def _library_albums(
-        self, user: "AppUser", limit: int = 50, all: bool = False
+        self, user: "AppUser", limit: int = 50, offset: int = 0, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's albums."""
         yielded = 0
-        next = f"{SpotifyAPIEndpoints.SavedAlbums}"
+        next: str | None = f"{SpotifyAPIEndpoints.SavedAlbums}"
+
+        if all:
+            limit = 50  # Default page size is 20
 
         with httpx.Client(
             base_url=SpotifyAPIEndpoints.BASE_URL,
@@ -265,22 +289,22 @@ class SpotifyLibraryService:
 
                 time.sleep(1)
 
-                response = client.get(
-                    url=next,
-                    params={"limit": limit},
-                )
+                params = {"limit": limit if limit <= 50 else 50}
 
+                if offset > 0:
+                    params["offset"] = offset
+
+                response = client.get(url=next, params=params)
                 if response.is_error:
                     self.handle_error(response)
 
                 resp = response.json()
 
-                logger.debug(f"Response: {resp}")
-
                 next = resp.get("next")
-
                 if next is not None:
                     next = next.replace(f"{SpotifyAPIEndpoints.BASE_URL}/", "")
+
+                yielded += len(resp.get("items"))
 
                 logger.debug(f"Fetched {yielded} {resp.get("total")}")
 

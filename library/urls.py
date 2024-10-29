@@ -2,9 +2,10 @@
 
 from django.urls import path
 
-from library.views import PlaylistViewSet, TrackViewSet
+from library.views import AlbumViewSet, PlaylistViewSet, TrackViewSet
 
 urlpatterns = [
+    path("albums", AlbumViewSet.as_view({"get": "list"}), name="library-albums"),
     path(
         "playlists/<str:spotify_id>",
         PlaylistViewSet.as_view({"get": "retrieve"}),

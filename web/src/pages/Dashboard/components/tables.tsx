@@ -102,31 +102,44 @@ const playlistColumns = [
 ];
 
 const albumColumns = [
-  albumColumnHelper.display({
+  albumColumnHelper.accessor("image_url", {
     header: () => null,
     id: "image_url",
     cell: (props) => (
-      <img src={props.row.original.image_url} alt="album" className="h-12" />
+      <img src={props.getValue()} alt="album" className="h-12" />
     ),
   }),
-  albumColumnHelper.display({
+  albumColumnHelper.accessor("name", {
     header: "Name",
     id: "name",
   }),
 
-  albumColumnHelper.display({
+  albumColumnHelper.accessor("artist_name", {
     header: "Artist",
     id: "artist_name",
   }),
-  albumColumnHelper.display({
+  albumColumnHelper.accessor("total_tracks", {
     header: "#",
     id: "total_tracks",
   }),
-  albumColumnHelper.display({
+  albumColumnHelper.accessor("release_date", {
     header: "Year",
     id: "release_date",
+    cell: (props) => <span>{props.getValue().split("-")[0]}</span>,
+  }),
+  albumColumnHelper.accessor("spotify_id", {
+    header: "Link",
+    id: "spotify_id",
     cell: (props) => (
-      <span>{props.row.original.release_date.split("-")[0]}</span>
+      <a
+        href={`https://open.spotify.com/album/${props.getValue()}`}
+        target="_blank"
+        rel="noreferrer"
+        className="hover:text-green-500 flex items-center gap-2"
+      >
+        <span>Open</span>
+        <i className="i-ri-external-link-line"></i>
+      </a>
     ),
   }),
 ];

@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from api.libs.constants import SpotifyAPIEndpoints
 from api.models import Library, Playlist
 from api.models.permissions import SpotifyAuth
+from api.serializers.library import Album as AlbumSerializer
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.serializers.library import Track as TrackSerializer
@@ -54,7 +55,7 @@ class ViewSetMixin:
         return library
 
 
-class PlaylistViewSet(viewsets.ViewSet):
+class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
     """Playlist ViewSet."""
 
     authentication_classes = [SpotifyAuth]
@@ -67,25 +68,6 @@ class PlaylistViewSet(viewsets.ViewSet):
     def get_model_instance(self, pk: str) -> Playlist:
         """Get a playlist instance by ID."""
         return Playlist.objects.get(id=pk)
-
-    def get_user_library(self, user_id: int) -> Library:
-        """Get a user's library."""
-        library, created = Library.objects.get_or_create(user_id=user_id)
-
-        if created:
-            logger.debug(f"Created library for user {user_id}")
-
-        return library
-
-    def get_page_params(self, request: Request) -> tuple[int, int, int]:
-        """Get page size and page number from request query params."""
-        page_size = request.query_params.get("page_size", 20)
-        page = request.query_params.get("page", 1)
-        offset = request.query_params.get("offset") or (int(page) - 1) * int(page_size)
-
-        logger.debug(f"Client query params: {page_size=}, {page=}, {offset=}")
-
-        return int(page_size), int(page), int(offset)
 
     def list(self, request: Request, *args, **kwargs) -> Response:
         """List the current page of playlists.
@@ -233,12 +215,26 @@ class ArtistViewSet(viewsets.ViewSet):
         raise NotImplementedError
 
 
-class AlbumViewSet(viewsets.ViewSet):
+class AlbumViewSet(ViewSetMixin, viewsets.ViewSet):
     """Album ViewSet."""
+
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [permissions.IsAuthenticated]
+
+    _base_path = SpotifyAPIEndpoints.SavedTracks
+    _auth: SpotifyAuthService = AUTH
+    _library: SpotifyLibraryService = LIBRARY
+    _data: SpotifyDataService = DATA
 
     def list(self, request: Request) -> Response:
         """List all albums."""
-        raise NotImplementedError
+        user_id = request.user.id
+        page_size, page, offset = self.get_page_params(request)
+        total = self._library.library_albums_total(user_id)
+        albums = self._library.library_albums(user_id, limit=page_size, offset=offset)
+        data = [AlbumSerializer.get(album).model_dump() for album in albums]
+        response = {"data": data, "page_size": page_size, "page": page, "total": total}
+        return Response(data=response, status=HTTPStatus.OK)
 
     def create(self, request: Request) -> Response:
         """Create a new album."""

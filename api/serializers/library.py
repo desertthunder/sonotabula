@@ -197,6 +197,7 @@ class ExpandedPlaylist(BaseModel):
         return playlist
 
 
+# TODO: Move to library app
 class Album(Serializer):
     """Album API response data."""
 
@@ -219,7 +220,7 @@ class Album(Serializer):
             "artist_name": "album.artists.0.name",
             "artist_id": "album.artists.0.id",
             "release_date": "album.release_date",
-            "total_tracks": "album.total_tracks",
+            "total_tracks": "album.tracks.total",
             "image_url": "album.images.0.url",
         }
 
