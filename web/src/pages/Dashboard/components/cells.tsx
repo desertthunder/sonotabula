@@ -15,3 +15,37 @@ export function PlaylistNameCell(props: CellContext<LibraryPlaylist, string>) {
 
   return <button onClick={toggleFn}>{props.getValue()}</button>;
 }
+
+interface LoaderCellProps {
+  loader: boolean;
+}
+
+export function LoaderCell(props: LoaderCellProps) {
+  if (props.loader) {
+    return (
+      <td className="p-2 align-middle text-xs text-slate-400">
+        <span>Loading...</span>
+        <i className="i-ri-loader-5-fill animate-spin"></i>
+      </td>
+    );
+  } else {
+    return <td className="p-2 align-middle text-xs text-slate-400" />;
+  }
+}
+
+interface ErrorCellProps {
+  error: boolean;
+}
+
+export function ErrorCell(props: ErrorCellProps) {
+  if (props.error) {
+    return (
+      <td className="p-2 align-middle text-xs text-slate-400">
+        <span className="text-red-500">Error</span>
+        <i className="i-ri-error-warning-fill"></i>
+      </td>
+    );
+  } else {
+    return <td className="p-2 align-middle text-xs text-slate-400" />;
+  }
+}

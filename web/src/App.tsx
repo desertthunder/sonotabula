@@ -3,9 +3,6 @@
  * @todo tracks page
  * @todo artists page
  */
-import "@fontsource-variable/inter";
-import "@fontsource-variable/karla";
-import "@fontsource-variable/dm-sans";
 import { Routes } from "@libs/types";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,7 +17,6 @@ import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
 import { TracksPage as BrowserTracks } from "./pages/Browser/Tracks";
 import { Dashboard } from "./pages/Dashboard";
 import { DashboardLayout } from "./pages/Dashboard/layout";
-import "./styles/base.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,6 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/karla";
+import "@fontsource-variable/dm-sans";
+import "./styles/base.css";
 
 export function main() {
   const root = document.getElementById("root");

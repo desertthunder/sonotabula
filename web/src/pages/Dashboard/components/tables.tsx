@@ -18,8 +18,9 @@ import {
 } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { TableRow } from "./row";
-import { PlaylistNameCell } from "./cells";
+import { ErrorCell, LoaderCell, PlaylistNameCell } from "./cells";
 import _ from "lodash";
+import { Pager } from "@/pages/Browser/components/forms/pagination";
 
 const artistColumnHelper = createColumnHelper<LibraryArtist>();
 const playlistColumnHelper = createColumnHelper<LibraryPlaylist>();
@@ -318,26 +319,24 @@ export function RealTimeTable<T extends LibraryKey>({
           </thead>
           <tbody className="last:border-b-0">
             {context.isLoading ? (
-              <tr>
-                {columns.map((_c, index) => {
-                  if (index === _.toInteger(columns.length / 2)) {
-                    return (
-                      <td
-                        key={index}
-                        className="p-2 align-middle text-xs text-slate-400"
-                      >
-                        <span>Loading...</span>
-                        <i className="i-ri-loader-5-fill animate-spin"></i>
-                      </td>
-                    );
-                  }
-                })}
-              </tr>
+              <TableRow>
+                {columns.map((_c, index) => (
+                  <LoaderCell
+                    key={index}
+                    loader={index === _.toInteger(columns.length / 2)}
+                  />
+                ))}
+              </TableRow>
             ) : null}
             {context.isError ? (
-              <tr>
-                <th>Error</th>
-              </tr>
+              <TableRow>
+                {columns.map((_c, index) => (
+                  <ErrorCell
+                    key={index}
+                    error={index === _.toInteger(columns.length / 2)}
+                  />
+                ))}
+              </TableRow>
             ) : null}
             {context.data
               ? table.getRowModel().rows.map((row) => (
@@ -363,45 +362,11 @@ export function RealTimeTable<T extends LibraryKey>({
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between items-center pt-4 border-t-[0.5px] border-t-slate-300">
-        <span>
-          Showing {(pageData.page - 1) * pageData.page_size + 1} to{" "}
-          {pageData.page * pageData.page_size} of {pageData.total} entries
-        </span>
-
-        <section className="flex gap-2">
-          Page {pageData.page} of{" "}
-          {Math.ceil(pageData.total / pageData.page_size)}
-        </section>
-
-        <div className="flex gap-2 text-xs">
-          <button
-            className={[
-              "p-1 rounded-md bg-green-400 text-white",
-              pageData.page === 1 || context.isLoading
-                ? "bg-green-300"
-                : "hover:bg-green-500 transition-colors duration-400",
-            ].join(" ")}
-            onClick={pager.prev}
-            disabled={pageData.page === 1 || context.isLoading}
-          >
-            <i className="i-ri-arrow-left-line align-middle"></i>
-            <span className="ml-1">Prev</span>
-          </button>
-
-          <button
-            className={[
-              "p-1 rounded-md bg-green-400 text-white",
-              context.isLoading ? "bg-green-300" : "hover:bg-green-500",
-            ].join(" ")}
-            onClick={pager.next}
-            disabled={context.isLoading}
-          >
-            <span className="mr-1">Next</span>
-            <i className="i-ri-arrow-right-line align-middle"></i>
-          </button>
-        </div>
-      </div>
+      <Pager
+        page={pageData.page}
+        setPage={pager.next}
+        totalPages={Math.ceil(pageData.total / pageData.page_size) + 1}
+      />
     </div>
   );
 }
