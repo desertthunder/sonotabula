@@ -16,7 +16,6 @@ urlpatterns = [
     path(
         "library/artists", library.LibraryArtistsView.as_view(), name="library-artists"
     ),
-    path("library/tracks", library.LibraryTracksView.as_view(), name="library-tracks"),
     path(
         "browser/playlist/<str:playlist_id>/tracks",
         browser.BrowserPlaylistView.as_view(),

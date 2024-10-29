@@ -5,7 +5,6 @@ from django.db.models import Q
 from loguru import logger
 
 from api.models import AppUser, Library, Playlist, Track
-from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.services.spotify import (
     SpotifyAuthService,
@@ -73,15 +72,6 @@ def dispatch_sync_playlist_tracks(user_id: int) -> None:
 @shared_task
 def sync_playlist_tracks_from_request(user_id: int, api_playlist: dict) -> None:
     """Sync playlist tracks from a request."""
-    # Serialize the playlist data
-    data = ExpandedPlaylistSerializer(**api_playlist)
-    logger.info(
-        f"Syncing Tracks for Spotify Playlist ID {data.spotify_id} for {user_id}"
-    )
-
-    for tr in data.tracks:
-        logger.info(f"Track: {tr.spotify_id}")
-
     logger.warning("TODO (Not implemented)")
 
     return

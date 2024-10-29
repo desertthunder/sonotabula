@@ -12,12 +12,36 @@ from api.models import Library, Playlist
 from api.models.permissions import SpotifyAuth
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.serializers.library import Playlist as PlaylistSerializer
+from api.serializers.library import Track as TrackSerializer
 from api.services.spotify import SpotifyAuthService, SpotifyLibraryService
 from library.tasks import sync_playlists_from_request
 from library.tasks.playlists import sync_playlist_tracks_from_request
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
+
+
+class ViewSetMixin:
+    """ViewSet Mixin."""
+
+    def get_page_params(self, request: Request) -> tuple[int, int, int]:
+        """Get page size and page number from request query params."""
+        page_size = request.query_params.get("page_size", 20)
+        page = request.query_params.get("page", 1)
+        offset = request.query_params.get("offset") or (int(page) - 1) * int(page_size)
+
+        logger.debug(f"Client query params: {page_size=}, {page=}, {offset=}")
+
+        return int(page_size), int(page), int(offset)
+
+    def get_user_library(self, user_id: int) -> Library:
+        """Get a user's library."""
+        library, created = Library.objects.get_or_create(user_id=user_id)
+
+        if created:
+            logger.debug(f"Created library for user {user_id}")
+
+        return library
 
 
 class PlaylistViewSet(viewsets.ViewSet):
@@ -105,15 +129,29 @@ class PlaylistViewSet(viewsets.ViewSet):
         raise NotImplementedError
 
 
-class TrackViewSet(viewsets.ViewSet):
+class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
     """Track ViewSet."""
 
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [permissions.IsAuthenticated]
+
+    _base_path = SpotifyAPIEndpoints.SavedTracks
+    _auth: SpotifyAuthService = AUTH
+    _library: SpotifyLibraryService = LIBRARY
+
     def list(self, request: Request) -> Response:
-        """List all tracks."""
-        raise NotImplementedError
+        """List the current page of tracks."""
+        user_id = request.user.id
+        page_size, page, offset = self.get_page_params(request)
+        total = self._library.library_tracks_total(user_id)
+        resp = self._library.library_tracks(user_id, limit=page_size, offset=offset)
+        data = [TrackSerializer.get(track).model_dump() for track in resp]
+        response = {"data": data, "page_size": page_size, "page": page, "total": total}
+
+        return Response(data=response, status=HTTPStatus.OK)
 
     def create(self, request: Request) -> Response:
-        """Create a new track."""
+        """Sync the current page of tracks."""
         raise NotImplementedError
 
     def retrieve(self, request: Request, pk: str) -> Response:
