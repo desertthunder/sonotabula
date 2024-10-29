@@ -25,7 +25,7 @@ export function Tabs({ scope, onChange, context }: Props) {
   }, [context.isPending]);
 
   return (
-    <div className="mb-4 gap-x-2 flex items-start justify-between">
+    <div className="mt-4 mb-2 gap-x-2 flex items-start justify-between">
       <div className="flex gap-x-2">
         {LibraryKeys.map((resource) => {
           return (

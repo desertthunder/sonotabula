@@ -7,6 +7,7 @@ import os
 import sys
 
 from loguru import logger
+from dotenv import load_dotenv
 
 
 def init_logger():
@@ -42,6 +43,7 @@ def main():
     """Run administrative tasks."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
+    load_dotenv()
     init_logger()
 
     try:

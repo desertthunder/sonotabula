@@ -4,6 +4,8 @@ import typing
 import uuid
 
 from django.db import models
+from django.utils import timezone
+from loguru import logger
 
 from api.models.mixins import CanBeAnalyzedMixin
 from api.models.music import Album, Artist, SpotifyModel, TimestampedModel
@@ -20,6 +22,15 @@ class TrackSyncManager(models.Manager["Track"]):
         cleaned = []
         for item in items:
             track_data = item.get("track", {})
+
+            if track_data.get("type") in ("show", "episode"):
+                logger.warning(
+                    f"Skipping {track_data.get("id")} due to type"
+                    f"{track_data.get('type')}"
+                )
+
+                continue
+
             album_data = track_data.get("album", {})
             artist_data = list(
                 {
@@ -35,12 +46,19 @@ class TrackSyncManager(models.Manager["Track"]):
                 duration=track_data.get("duration_ms"),
                 album_id=album_data.get("id"),
             )
-            album_release_year = album_data.get("release_date").split("-")[0]
+
+            album_release_year = (
+                album_data.get("release_date").split("-")[0]
+                if album_data.get("release_date")
+                else None
+            )
 
             album = validation.SyncTrackAlbum(
                 name=album_data.get("name"),
                 spotify_id=album_data.get("id"),
-                release_year=int(album_release_year),
+                release_year=int(album_release_year)
+                if album_release_year
+                else timezone.now().year,
                 image_url=album_data.get("images", [{}])[0].get("url"),
                 album_type=album_data.get("album_type"),
                 artist_ids=[artist["id"] for artist in album_data.get("artists", [])],
@@ -48,8 +66,8 @@ class TrackSyncManager(models.Manager["Track"]):
 
             artists = [
                 validation.SyncTrackArtist(
-                    spotify_id=artist["id"],
-                    name=artist["name"],
+                    spotify_id=artist.get("id"),
+                    name=artist.get("name", "Unknown Artist"),
                 )
                 for artist in artist_data
             ]

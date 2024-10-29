@@ -6,7 +6,7 @@ from library.views import PlaylistViewSet
 
 urlpatterns = [
     path(
-        "playlists/<str:playlist_id>",
+        "playlists/<str:spotify_id>",
         PlaylistViewSet.as_view({"get": "retrieve"}),
         name="library-playlist",
     ),

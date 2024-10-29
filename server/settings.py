@@ -21,7 +21,7 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = bool(os.environ.get("DEBUG", 0))
 
-ALLOWED_HOSTS: list[str] = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS: list[str] = ["127.0.0.1", "localhost", "local.dashspot.dev"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React
@@ -108,7 +108,6 @@ DATABASES = {
 }
 
 # Authentication
-
 AUTH_USER_MODEL = "api.AppUser"
 AUTH_PASSWORD_VALIDATORS = [
     {

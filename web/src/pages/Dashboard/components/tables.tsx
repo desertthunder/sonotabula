@@ -1,3 +1,4 @@
+import { LibraryParams, LibraryResponse } from "@/libs/hooks/api/v1";
 import { decodeUnicode } from "@libs/helpers";
 import type {
   LibraryAlbum,
@@ -7,9 +8,7 @@ import type {
   LibraryTrack,
 } from "@libs/types";
 import { LibraryKey } from "@libs/types";
-import { useMemo } from "react";
-import { LibraryParams, LibraryResponse } from "@/libs/hooks/api/v1";
-
+import { UseQueryResult } from "@tanstack/react-query";
 import {
   createColumnHelper,
   DisplayColumnDef,
@@ -17,7 +16,10 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { UseQueryResult } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { TableRow } from "./row";
+import { PlaylistNameCell } from "./cells";
+import _ from "lodash";
 
 const artistColumnHelper = createColumnHelper<LibraryArtist>();
 const playlistColumnHelper = createColumnHelper<LibraryPlaylist>();
@@ -35,6 +37,7 @@ const playlistColumns = [
   playlistColumnHelper.accessor("name", {
     header: "Name",
     id: "name",
+    cell: PlaylistNameCell,
   }),
   playlistColumnHelper.display({
     header: "Description",
@@ -209,7 +212,6 @@ const artistColumns = [
 interface Props<T extends LibraryKey> {
   scope: T;
   context: UseQueryResult<LibraryResponse<T>>;
-  handler: (id: string) => void;
   pageData: LibraryParams;
   pager: {
     next: () => void;
@@ -235,7 +237,6 @@ const getSearchPlaceholder = (scope: LibraryKey) => {
 export function RealTimeTable<T extends LibraryKey>({
   scope,
   context,
-  handler,
   pageData,
   pager,
 }: Props<T>) {
@@ -263,7 +264,7 @@ export function RealTimeTable<T extends LibraryKey>({
   const placeholder = getSearchPlaceholder(scope);
 
   return (
-    <div className="rounded-lg bg-slate-50 p-10 drop-shadow-lg">
+    <div className="rounded-lg bg-slate-50 p-6 drop-shadow-lg">
       <div className={["flex-1 flex flex-col gap-4 pb-4"].join(" ")}>
         <div aria-roledescription="search form controls" className="flex">
           <input
@@ -285,7 +286,7 @@ export function RealTimeTable<T extends LibraryKey>({
           </button>
         </div>
       </div>
-      <div className={["overflow-y-auto", "max-h-[300px]"].join(" ")}>
+      <div className={["overflow-y-auto", "max-h-[500px]"].join(" ")}>
         <table className="h-[400px] text-sm w-full p-4 relative">
           <thead className="text-sm font-bold">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -318,7 +319,19 @@ export function RealTimeTable<T extends LibraryKey>({
           <tbody className="last:border-b-0">
             {context.isLoading ? (
               <tr>
-                <th>Loading...</th>
+                {columns.map((_c, index) => {
+                  if (index === _.toInteger(columns.length / 2)) {
+                    return (
+                      <td
+                        key={index}
+                        className="p-2 align-middle text-xs text-slate-400"
+                      >
+                        <span>Loading...</span>
+                        <i className="i-ri-loader-5-fill animate-spin"></i>
+                      </td>
+                    );
+                  }
+                })}
               </tr>
             ) : null}
             {context.isError ? (
@@ -328,21 +341,7 @@ export function RealTimeTable<T extends LibraryKey>({
             ) : null}
             {context.data
               ? table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={[
-                      "z-10",
-                      "border-b transition-colors",
-                      "bg-white",
-                      "hover:bg-slate-200",
-                      "even:bg-slate-100",
-                      "hover:last:text-green-500",
-                    ].join(" ")}
-                    onClick={async () => {
-                      await handler(row.original.spotify_id);
-                      console.log(row.original.spotify_id);
-                    }}
-                  >
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
@@ -358,7 +357,7 @@ export function RealTimeTable<T extends LibraryKey>({
                         )}
                       </td>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))
               : null}
           </tbody>
@@ -369,20 +368,34 @@ export function RealTimeTable<T extends LibraryKey>({
           Showing {(pageData.page - 1) * pageData.page_size + 1} to{" "}
           {pageData.page * pageData.page_size} of {pageData.total} entries
         </span>
+
+        <section className="flex gap-2">
+          Page {pageData.page} of{" "}
+          {Math.ceil(pageData.total / pageData.page_size)}
+        </section>
+
         <div className="flex gap-2 text-xs">
           <button
             className={[
               "p-1 rounded-md bg-green-400 text-white",
-              "hover:bg-green-500 transition-colors duration-400",
+              pageData.page === 1 || context.isLoading
+                ? "bg-green-300"
+                : "hover:bg-green-500 transition-colors duration-400",
             ].join(" ")}
             onClick={pager.prev}
+            disabled={pageData.page === 1 || context.isLoading}
           >
             <i className="i-ri-arrow-left-line align-middle"></i>
             <span className="ml-1">Prev</span>
           </button>
+
           <button
-            className="p-1 rounded-md bg-green-400 text-white hover:bg-green-500"
+            className={[
+              "p-1 rounded-md bg-green-400 text-white",
+              context.isLoading ? "bg-green-300" : "hover:bg-green-500",
+            ].join(" ")}
             onClick={pager.next}
+            disabled={context.isLoading}
           >
             <span className="mr-1">Next</span>
             <i className="i-ri-arrow-right-line align-middle"></i>

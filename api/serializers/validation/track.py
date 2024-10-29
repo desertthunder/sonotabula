@@ -25,10 +25,10 @@ class SyncTrackAlbum(BaseModel):
 
     name: str
     spotify_id: str  # id
-    release_year: int  # release_date
     image_url: str  # images[0].url
     artist_ids: list[str]  # artists[].id
     album_type: str  # album_type
+    release_year: int | None = None  # release_date
 
 
 class SyncTrackArtist(BaseModel):

@@ -14,9 +14,10 @@ from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializ
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.services.spotify import SpotifyAuthService, SpotifyLibraryService
 from library.tasks import sync_playlists_from_request
+from library.tasks.playlists import sync_playlist_tracks_from_request
 
 AUTH = SpotifyAuthService()
-LIBRARY = SpotifyLibraryService()
+LIBRARY = SpotifyLibraryService(auth_service=AUTH)
 
 
 class PlaylistViewSet(viewsets.ViewSet):
@@ -77,11 +78,17 @@ class PlaylistViewSet(viewsets.ViewSet):
 
         return Response(data={"message": "Syncing playlists..."}, status=HTTPStatus.OK)
 
-    def retrieve(self, request: Request, pk: str) -> Response:
-        """Retrieve a playlist by ID."""
+    def retrieve(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
+        """Retrieve a playlist by Spotify ID."""
+        if spotify_id is None:
+            logger.error(f"Spot: {spotify_id}")
+            return Response(data={}, status=HTTPStatus.NOT_FOUND)
+
         user_id = request.user.id
-        playlist = self._library.library_playlist(user_id, pk)
+        playlist = self._library.library_playlist(user_id, spotify_id)
         data = ExpandedPlaylistSerializer.get(playlist).model_dump()
+
+        sync_playlist_tracks_from_request.s(user_id, data).apply_async()
 
         return Response(data=data, status=HTTPStatus.OK)
 

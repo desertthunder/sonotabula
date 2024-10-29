@@ -10,6 +10,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh', '@tanstack/eslint-plugin-query'],
   rules: {
+    'no-console': 'warn',
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
@@ -24,7 +25,8 @@ module.exports = {
         "destructuredArrayIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
         "ignoreRestSiblings": true
-      }
-    ]
+      },
+    ],
+    "@typescript-eslint/no-explicit-any": "off"
   },
 }

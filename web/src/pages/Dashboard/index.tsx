@@ -1,8 +1,13 @@
+/**
+ * @description index of /dashboard url namespace
+ */
 import { LibraryKey, Counts } from "@libs/types";
 import { useCallback, useEffect, useState } from "react";
 import { StatCard } from "./components/stats";
 import { Tabs } from "./components/tabs";
+import { Drawers } from "./components/drawers";
 import { RealTimeTable } from "./components/tables";
+import type { DrawerKey } from "@/store/drawers";
 import {
   LibraryParams,
   useLibraryPlaylists,
@@ -44,7 +49,9 @@ export function Dashboard() {
 
   useEffect(() => {
     if (mutation.isSuccess) {
-      query.refetch();
+      const timeout = setTimeout(() => query.refetch(), 25 * 1000);
+
+      return () => clearTimeout(timeout);
     }
   }, [mutation.isSuccess, query]);
 
@@ -58,27 +65,43 @@ export function Dashboard() {
       page: query.data.page,
       page_size: query.data.page_size,
     });
-  }, [query.data]);
+  }, [query.data, scope]);
 
   return (
     <main
       className={[
-        "bg-gradient-to-b from-emerald-600 to-70% via-emerald-500 via-70%",
-        "flex-1 flex justify-between gap-8",
+        "bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%",
+        "flex-1 flex flex-col justify-between gap-8",
         "px-8 pt-4",
         "overflow-y-auto",
       ].join(" ")}
     >
-      <section className="flex flex-col gap-4 flex-1 text-sm">
+      {query.data ? (
+        <Drawers
+          r={{
+            [LibraryKey.LibraryPlaylists]: query.data.data.map(
+              (p) =>
+                `${LibraryKey.LibraryPlaylists}-${p.spotify_id}` as DrawerKey
+            ),
+          }}
+        />
+      ) : null}
+      <section className="flex flex-col gap-4 flex-1 text-sm mx-32">
         <div className="flex">
           <header className="flex-1">
-            <h1 className="text-2xl font-semibold text-zinc-100">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-zinc-100 tracking-tight font-headings">
+              Dashboard
+            </h1>
             <p className="text-zinc-100">
               View your stats and library at a glance.
             </p>
           </header>
         </div>
-
+        <section className="flex w-full gap-4">
+          {Counts.map((key) => (
+            <StatCard key={key} scope={key} />
+          ))}
+        </section>
         <div className="flex-shrink">
           <Tabs scope={scope} onChange={onTabChange} context={mutation} />
         </div>
@@ -87,17 +110,11 @@ export function Dashboard() {
             <RealTimeTable
               scope={scope}
               context={query}
-              handler={() => console.debug("Row clicked")}
               pageData={pageData}
               pager={{ next, prev }}
             />
           </div>
         </div>
-      </section>
-      <section className="flex flex-col max-h-fit gap-4 min-w-[25%]">
-        {Counts.map((key) => (
-          <StatCard key={key} scope={key} />
-        ))}
       </section>
     </main>
   );

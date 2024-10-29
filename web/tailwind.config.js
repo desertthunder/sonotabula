@@ -73,7 +73,7 @@ export default {
     extend: {
       fontFamily: {
         sans: '"Inter Variable", sans-serif',
-        prose: '"Noto Sans JP Variable", sans-serif',
+        titles: '"Karla Variable", sans-serif',
         headings: '"DM Sans Variable", sans-serif',
       },
       colors: {

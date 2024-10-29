@@ -4,6 +4,7 @@
  * @todo artists page
  */
 import "@fontsource-variable/inter";
+import "@fontsource-variable/karla";
 import "@fontsource-variable/dm-sans";
 import { Routes } from "@libs/types";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";

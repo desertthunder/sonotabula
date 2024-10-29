@@ -14,15 +14,12 @@ export default defineConfig({
     fs: {
       cachedChecks: false,
     },
+    host: "0.0.0.0",
+    port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://127.0.0.1:8000", // Point directly to Django backend
         changeOrigin: true,
-        secure: false,
-      },
-      "/ws": {
-        target: "ws://localhost:8000",
-        ws: true,
       },
     },
   },

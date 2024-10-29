@@ -1,7 +1,7 @@
 /**
  * @module api/v1
  *
- * @description Incremental re-implementations of queries.
+ * @description Incremental re-implementations of queries & mutations.
  */
 import type { LibraryResourceType } from "@/libs/types";
 import { LibraryKey } from "@/libs/types";
@@ -63,6 +63,7 @@ export function useLibraryPlaylists(scope: LibraryKey, params: LibraryParams) {
   const query = useQuery({
     queryKey: [scope, searchParams.toString()],
     queryFn: async () => await fetchLibraryPlaylists(token, params),
+    refetchInterval: false,
   });
 
   return query;
