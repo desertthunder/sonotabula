@@ -13,16 +13,22 @@ from api.models.permissions import SpotifyAuth
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.serializers.library import Track as TrackSerializer
-from api.serializers.views.browser import PlaylistTrackFeaturesSerializer
-from api.services.spotify import SpotifyAuthService, SpotifyLibraryService
+from api.serializers.library import TrackFeaturesSerializer
+from api.services.spotify import (
+    SpotifyAuthService,
+    SpotifyDataService,
+    SpotifyLibraryService,
+)
 from library.tasks import (
     sync_playlist_tracks_from_request,
     sync_playlists_from_request,
     sync_tracks_from_request,
 )
+from library.tasks.track import sync_track_features_from_request
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
+DATA = SpotifyDataService()
 
 
 class ViewSetMixin:
@@ -92,7 +98,6 @@ class PlaylistViewSet(viewsets.ViewSet):
         resp = self._library.library_playlists(user_id, limit=page_size, offset=offset)
         data = [PlaylistSerializer.get(playlist).model_dump() for playlist in resp]
         response = {"data": data, "page_size": page_size, "page": page, "total": total}
-
         return Response(data=response, status=HTTPStatus.OK)
 
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -101,12 +106,11 @@ class PlaylistViewSet(viewsets.ViewSet):
         page_size, page, offset = self.get_page_params(request)
         resp = self._library.library_playlists(user_id, limit=page_size, offset=offset)
         data = [PlaylistSerializer.get(playlist).model_dump() for playlist in resp]
+        response = {"message": "Syncing playlists..."}
 
         sync_playlists_from_request.s(user_id, data).apply_async()
 
-        return Response(
-            data={"message": "Syncing playlists..."}, status=HTTPStatus.ACCEPTED
-        )
+        return Response(data=response, status=HTTPStatus.ACCEPTED)
 
     def retrieve(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
         """Retrieve a playlist by Spotify ID."""
@@ -144,6 +148,7 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
     _base_path = SpotifyAPIEndpoints.SavedTracks
     _auth: SpotifyAuthService = AUTH
     _library: SpotifyLibraryService = LIBRARY
+    _data: SpotifyDataService = DATA
 
     def list(self, request: Request) -> Response:
         """List the current page of tracks."""
@@ -153,21 +158,19 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
         resp = self._library.library_tracks(user_id, limit=page_size, offset=offset)
         data = [TrackSerializer.get(track).model_dump() for track in resp]
         response = {"data": data, "page_size": page_size, "page": page, "total": total}
-
         return Response(data=response, status=HTTPStatus.OK)
 
     def create(self, request: Request) -> Response:
         """Sync the current page of tracks."""
         user_id = request.user.id
-        page_size, page, offset = self.get_page_params(request)
+        page_size, _, offset = self.get_page_params(request)
         resp = self._library.library_tracks(user_id, limit=page_size, offset=offset)
         data = [TrackSerializer.get(track).model_dump() for track in resp]
+        response = {"message": "Syncing tracks..."}
 
         sync_tracks_from_request.s(user_id, data).apply_async()
 
-        return Response(
-            data={"message": "Syncing tracks..."}, status=HTTPStatus.ACCEPTED
-        )
+        return Response(data=response, status=HTTPStatus.ACCEPTED)
 
     def retrieve(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
         """Retrieve a track by ID."""
@@ -182,19 +185,12 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
     def data(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
         """Retrieve a track by ID."""
         user_id = request.user.id
-        library = self.get_user_library(user_id)
+        features = self._data.fetch_audio_features_for_track(spotify_id, user_id)
+        data = TrackFeaturesSerializer.get(features).model_dump()
 
-        if track := (
-            library.tracks.prefetch_related("features")
-            .filter(spotify_id=spotify_id)
-            .first()
-        ):
-            return Response(
-                data=PlaylistTrackFeaturesSerializer.get(track.features).model_dump(),
-                status=HTTPStatus.OK,
-            )
-        else:
-            return Response(data={}, status=HTTPStatus.OK)
+        sync_track_features_from_request.s(user_id, spotify_id, data).apply_async()
+
+        return Response(data=data, status=HTTPStatus.OK)
 
     def update(self, request: Request, pk: str) -> Response:
         """Update a track by ID."""

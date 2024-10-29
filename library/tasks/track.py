@@ -7,6 +7,7 @@ from loguru import logger
 from api.models import Album, AppUser, Artist, Library, Track
 from api.models.analysis import TrackFeatures
 from api.serializers.library import Track as TrackSerializer
+from api.serializers.library import TrackFeaturesSerializer
 from api.serializers.validation.analysis import SyncAnalysis
 from api.services.spotify import (
     SpotifyAuthService,
@@ -15,7 +16,7 @@ from api.services.spotify import (
 )
 
 AUTH = SpotifyAuthService()
-DATA = SpotifyDataService()
+DATA = SpotifyDataService(auth=AUTH)
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
 
 
@@ -96,3 +97,29 @@ def sync_tracks_from_request(user_id: int, api_tracks: list[dict]) -> None:
                 f"Recorded features {track_features.id} for track {track.id} |"
                 f" {track.spotify_id}"
             )
+
+
+@shared_task
+def sync_track_features_from_request(
+    user_id: int, spotify_id: str, api_feature_data: dict
+) -> None:
+    """Sync audio features from a request."""
+    cleaned = TrackFeaturesSerializer(**api_feature_data)
+    features = cleaned.model_dump()
+
+    del features["id"]
+
+    library, _ = Library.objects.get_or_create(user_id=user_id)
+    track = library.tracks.get(spotify_id=spotify_id)
+    track_features, _ = TrackFeatures.objects.update_or_create(
+        track=track,
+        defaults=features,
+    )
+
+    track.is_analyzed = True
+    track.save()
+
+    logger.info(
+        f"Recorded features {track_features.id} for track {track.id} |"
+        f" {track.spotify_id}"
+    )

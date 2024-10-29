@@ -7,6 +7,7 @@ from api.models import Track as TrackModel
 from api.serializers.base import Serializer
 
 
+# TODO: Move to library app
 class Playlist(Serializer):
     """Playlist API response data."""
 
@@ -231,6 +232,7 @@ class Album(Serializer):
         )
 
 
+# TODO: Move to library app
 class Track(Serializer):
     """Track API response data."""
 
@@ -306,3 +308,30 @@ class Artist(Serializer):
     def nullable_fields(cls: type["Artist"]) -> tuple:
         """Fields that can be null."""
         return ("",)
+
+
+# TODO: Move to library app
+class TrackFeaturesSerializer(BaseModel):
+    """Track Features model serializer."""
+
+    id: str
+    danceability: float
+    energy: float
+    key: int
+    loudness: float
+    mode: int
+    speechiness: float
+    acousticness: float
+    instrumentalness: float
+    liveness: float
+    valence: float
+    tempo: float
+    duration_ms: int
+    time_signature: int
+
+    @classmethod
+    def get(
+        cls: type["TrackFeaturesSerializer"], data: dict
+    ) -> "TrackFeaturesSerializer":
+        """Create a model serializer from a model."""
+        return cls(**data)

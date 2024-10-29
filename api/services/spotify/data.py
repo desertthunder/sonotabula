@@ -28,9 +28,17 @@ logger.add(
     format="{time} {level} {message}",
 )
 
+AUTH = SpotifyAuthService()
+
 
 class SpotifyDataService:
     """Single record data service."""
+
+    _auth: SpotifyAuthService
+
+    def __init__(self, auth: SpotifyAuthService | None = None) -> None:
+        """Add dependencies to the service."""
+        self._auth = auth or AUTH
 
     def get_user(self, user_pk: int) -> "AppUser":
         """Get user data."""
@@ -160,6 +168,43 @@ class SpotifyDataService:
             user.refresh_from_db()
 
             yield from self._fetch_audio_features(track_ids, user)
+
+    def fetch_audio_features_for_track(self, track_id: str, user_pk: int) -> dict:
+        """Fetch audio features for a track."""
+        user = self.get_user(user_pk)
+        path = SpotifyAPIEndpoints.TrackAudioFeatures.format(track_id=track_id)
+
+        try:
+            response = httpx.get(
+                url=f"{SpotifyAPIEndpoints.BASE_URL}/{path}",
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                logger.error(f"Error: {response.text}")
+
+                if (
+                    response.status_code == 401
+                    and "The access token expired" in response.text
+                ):
+                    raise SpotifyExpiredTokenError(response.text)
+                else:
+                    raise SpotifyAPIError(response.text)
+
+            return response.json()
+        except SpotifyExpiredTokenError:
+            self._auth.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            response = httpx.get(
+                url=f"{SpotifyAPIEndpoints.BASE_URL}/{path}",
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            response.raise_for_status()
+
+            return response.json()
 
     def _fetch_audio_features(
         self, track_ids: list[str], user: "AppUser"
