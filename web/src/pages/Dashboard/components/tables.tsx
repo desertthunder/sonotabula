@@ -139,19 +139,26 @@ const albumColumns = [
 ];
 
 const trackColumns = [
-  trackColumnHelper.display({
+  trackColumnHelper.accessor("image_url", {
+    header: () => null,
+    id: "image_url",
+    cell: (props) => (
+      <img src={props.row.original.image_url} alt="album" className="h-12" />
+    ),
+  }),
+  trackColumnHelper.accessor("name", {
     header: "Name",
     id: "name",
   }),
-  trackColumnHelper.display({
+  trackColumnHelper.accessor("artist_name", {
     header: "Artist",
     id: "artist_name",
   }),
-  trackColumnHelper.display({
+  trackColumnHelper.accessor("album_name", {
     header: "Album",
     id: "album_name",
   }),
-  trackColumnHelper.display({
+  trackColumnHelper.accessor("duration_ms", {
     header: "Duration",
     id: "duration_ms",
   }),
@@ -220,21 +227,6 @@ interface Props<T extends LibraryKey> {
   };
 }
 
-const getSearchPlaceholder = (scope: LibraryKey) => {
-  switch (scope) {
-    case LibraryKey.LibraryAlbums:
-      return "Search albums";
-    case LibraryKey.LibraryArtists:
-      return "Search artists";
-    case LibraryKey.LibraryPlaylists:
-      return "Search playlists";
-    case LibraryKey.LibraryTracks:
-      return "Search tracks";
-    default:
-      return "Search";
-  }
-};
-
 export function RealTimeTable<T extends LibraryKey>({
   scope,
   context,
@@ -262,31 +254,8 @@ export function RealTimeTable<T extends LibraryKey>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const placeholder = getSearchPlaceholder(scope);
-
   return (
     <div className="rounded-lg bg-slate-50 p-6 drop-shadow-lg">
-      <div className={["flex-1 flex flex-col gap-4 pb-4"].join(" ")}>
-        <div aria-roledescription="search form controls" className="flex">
-          <input
-            type="search"
-            className="p-2 rounded-md rounded-r-none border-[0.5px] border-slate-400 flex-1 text-white"
-            placeholder={placeholder}
-            disabled
-          />
-          <button
-            className={[
-              "px-4 py-2 rounded-l-none rounded-md gap-2 flex items-center",
-              "bg-green-400 border-[0.5px] border-slate-400",
-              "text-zinc-100",
-            ].join(" ")}
-            disabled
-          >
-            <i className="i-ri-search-line"></i>
-            <span>Search</span>
-          </button>
-        </div>
-      </div>
       <div className={["overflow-y-auto", "max-h-[450px]"].join(" ")}>
         <table className="h-[400px] text-sm w-full p-4 relative">
           <thead className="text-sm font-bold">

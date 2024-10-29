@@ -51,9 +51,81 @@ export async function fetchLibraryPlaylists(
 }
 
 /**
- * @description A hook to dispatch API request to fetch library playlists.
+ * @description Fetches library tracks.
  */
-export function useLibraryPlaylists(scope: LibraryKey, params: LibraryParams) {
+export async function fetchLibraryTracks(
+  token: string | null,
+  params: LibraryParams
+) {
+  const uri = new URL("/api/v1/library/tracks", window.location.origin);
+  uri.searchParams.append("page", params.page.toString());
+  uri.searchParams.append("page_size", params.page_size.toString());
+
+  const response = await fetch(uri.toString(), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch library tracks.");
+  }
+
+  return (await response.json()) as LibraryResponse<LibraryKey.LibraryTracks>;
+}
+
+export async function syncLibraryPlaylists(
+  token: string | null,
+  params: LibraryParams
+) {
+  const uri = new URL("/api/v1/library/playlists", window.location.origin);
+  uri.searchParams.append("page", params.page.toString());
+  uri.searchParams.append("page_size", params.page_size.toString());
+
+  const response = await fetch(uri.toString(), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to sync library playlists.");
+  }
+
+  return await response.json();
+}
+
+export async function syncLibraryTracks(
+  token: string | null,
+  params: LibraryParams
+) {
+  const uri = new URL("/api/v1/library/tracks", window.location.origin);
+  uri.searchParams.append("page", params.page.toString());
+  uri.searchParams.append("page_size", params.page_size.toString());
+
+  const response = await fetch(uri.toString(), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to sync library tracks.");
+  }
+
+  return await response.json();
+}
+
+/**
+ * @description A hook to select & dispatch API request to fetch library data.
+ */
+export function useLibraryData<T extends LibraryKey>(
+  scope: T,
+  params: LibraryParams
+) {
   const token = useTokenStore((state) => state.token);
 
   const searchParams = new URLSearchParams();
@@ -62,14 +134,23 @@ export function useLibraryPlaylists(scope: LibraryKey, params: LibraryParams) {
 
   const query = useQuery({
     queryKey: [scope, searchParams.toString()],
-    queryFn: async () => await fetchLibraryPlaylists(token, params),
+    queryFn: async () => {
+      switch (scope) {
+        case LibraryKey.LibraryPlaylists:
+          return await fetchLibraryPlaylists(token, params);
+        case LibraryKey.LibraryTracks:
+          return await fetchLibraryTracks(token, params);
+        default:
+          throw new Error("Invalid scope");
+      }
+    },
     refetchInterval: false,
   });
 
   return query;
 }
 
-export function useSyncPlaylists(scope: LibraryKey, params: LibraryParams) {
+export function useSync(scope: LibraryKey, params: LibraryParams) {
   const token = useTokenStore((state) => state.token);
 
   const searchParams = new URLSearchParams();
@@ -79,22 +160,14 @@ export function useSyncPlaylists(scope: LibraryKey, params: LibraryParams) {
   const mutation = useMutation({
     mutationKey: [scope, searchParams.toString()],
     mutationFn: async (_args?: string[]) => {
-      const uri = new URL("/api/v1/library/playlists", window.location.origin);
-      uri.searchParams.append("page", params.page.toString());
-      uri.searchParams.append("page_size", params.page_size.toString());
-
-      const response = await fetch(uri.toString(), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to sync library.");
+      switch (scope) {
+        case LibraryKey.LibraryPlaylists:
+          return await syncLibraryPlaylists(token, params);
+        case LibraryKey.LibraryTracks:
+          return await syncLibraryTracks(token, params);
+        default:
+          throw new Error("Invalid scope");
       }
-
-      return await response.json();
     },
   });
 

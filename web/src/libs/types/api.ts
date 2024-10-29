@@ -30,6 +30,7 @@ export type LibraryTrack = {
   album_id: string;
   duration_ms: number;
   link: string;
+  image_url: string;
 };
 
 export type LibraryArtist = {

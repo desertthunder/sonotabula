@@ -8,11 +8,7 @@ import { Tabs } from "./components/tabs";
 import { Drawers } from "./components/drawers";
 import { RealTimeTable } from "./components/tables";
 import type { DrawerKey } from "@/store/drawers";
-import {
-  LibraryParams,
-  useLibraryPlaylists,
-  useSyncPlaylists,
-} from "@/libs/hooks/api/v1";
+import { LibraryParams, useLibraryData, useSync } from "@/libs/hooks/api/v1";
 
 const initialParams = {
   total: 0,
@@ -44,8 +40,8 @@ export function Dashboard() {
     });
   };
 
-  const query = useLibraryPlaylists(scope, pageParams);
-  const mutation = useSyncPlaylists(scope, pageParams);
+  const query = useLibraryData(scope, pageParams);
+  const mutation = useSync(scope, pageParams);
 
   useEffect(() => {
     if (mutation.isSuccess) {

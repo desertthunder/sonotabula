@@ -24,6 +24,21 @@ export function Tabs({ scope, onChange, context }: Props) {
     return () => clearTimeout(timeout);
   }, [context.isPending]);
 
+  const isDisabled = (resource: LibraryKey) => {
+    if (isLoading) return true;
+
+    if (scope === resource) return true;
+
+    if (
+      ![LibraryKey.LibraryPlaylists, LibraryKey.LibraryTracks].includes(
+        resource
+      )
+    )
+      return true;
+
+    return false;
+  };
+
   return (
     <div className="mt-4 mb-2 gap-x-2 flex items-start justify-between">
       <div className="flex gap-x-2">
@@ -48,12 +63,10 @@ export function Tabs({ scope, onChange, context }: Props) {
                 "transition-all",
                 "group",
                 "group:transition-transform group:duration-300",
-                "pointer-events-none",
-                scope === resource ? "pointer-events-none bg-emerald-500" : "",
+                isDisabled(resource) ? "pointer-events-none" : "",
+                scope === resource ? "bg-emerald-500" : "",
               ].join(" ")}
-              disabled
-              // disabled={scope === resource}
-              value={resource}
+              disabled={isDisabled(resource)}
             >
               {resource === LibraryKey.LibraryPlaylists ? (
                 <i className="i-ri-play-list-2-fill group-hover:rotate-45" />
@@ -81,8 +94,9 @@ export function Tabs({ scope, onChange, context }: Props) {
             "hover:scale-110 hover:shadow-lg",
             "transition-transform duration-200",
             "group",
+            isDisabled(scope) ? "pointer-events-none bg-zinc-200" : "",
           ].join(" ")}
-          disabled={isLoading}
+          disabled={isDisabled(scope)}
           onClick={() => context.mutate(undefined)}
         >
           {isLoading ? (
