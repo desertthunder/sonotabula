@@ -94,9 +94,16 @@ export function Tabs({ scope, onChange, context }: Props) {
             "hover:scale-110 hover:shadow-lg",
             "transition-transform duration-200",
             "group",
-            isDisabled(scope) ? "pointer-events-none bg-zinc-200" : "",
+            [LibraryKey.LibraryAlbums, LibraryKey.LibraryArtists].includes(
+              scope
+            )
+              ? "pointer-events-none bg-zinc-200"
+              : "",
           ].join(" ")}
-          disabled={isDisabled(scope)}
+          disabled={[
+            LibraryKey.LibraryAlbums,
+            LibraryKey.LibraryArtists,
+          ].includes(scope)}
           onClick={() => context.mutate(undefined)}
         >
           {isLoading ? (

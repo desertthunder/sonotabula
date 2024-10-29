@@ -3,6 +3,7 @@
 from pydantic import BaseModel, Field
 
 from api.models import Playlist as PlaylistModel
+from api.models import Track as TrackModel
 from api.serializers.base import Serializer
 
 
@@ -239,9 +240,13 @@ class Track(Serializer):
     artist_id: str
     album_name: str
     album_id: str
+    album_release_date: str
     image_url: str
     duration_ms: int
     link: str
+    id: str | None = None
+    is_synced: bool = False
+    is_analyzed: bool = False
 
     @classmethod
     def mappings(cls: type["Track"]) -> dict[str, str]:
@@ -253,6 +258,7 @@ class Track(Serializer):
             "artist_id": "track.artists.0.id",
             "album_name": "track.album.name",
             "album_id": "track.album.id",
+            "album_release_date": "track.album.release_date",
             "image_url": "track.album.images.0.url",
             "duration_ms": "track.duration_ms",
             "link": "track.external_urls.spotify",
@@ -262,6 +268,18 @@ class Track(Serializer):
     def nullable_fields(cls: type["Track"]) -> tuple:
         """Fields that can be null."""
         return ("",)
+
+    @classmethod
+    def get(cls: type["Track"], response: dict) -> "Track":
+        """Create a Track object from JSON data."""
+        data = cls.map_response(response)
+
+        if record := TrackModel.objects.filter(spotify_id=data["spotify_id"]).first():
+            data["is_synced"] = record.is_synced
+            data["is_analyzed"] = record.is_analyzed
+            data["id"] = str(record.id)
+
+        return cls(**data)
 
 
 class Artist(Serializer):

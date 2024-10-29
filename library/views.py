@@ -14,8 +14,11 @@ from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializ
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.serializers.library import Track as TrackSerializer
 from api.services.spotify import SpotifyAuthService, SpotifyLibraryService
-from library.tasks import sync_playlists_from_request
-from library.tasks.playlists import sync_playlist_tracks_from_request
+from library.tasks import (
+    sync_playlist_tracks_from_request,
+    sync_playlists_from_request,
+    sync_tracks_from_request,
+)
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
@@ -100,7 +103,9 @@ class PlaylistViewSet(viewsets.ViewSet):
 
         sync_playlists_from_request.s(user_id, data).apply_async()
 
-        return Response(data={"message": "Syncing playlists..."}, status=HTTPStatus.OK)
+        return Response(
+            data={"message": "Syncing playlists..."}, status=HTTPStatus.ACCEPTED
+        )
 
     def retrieve(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
         """Retrieve a playlist by Spotify ID."""
@@ -152,11 +157,26 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
 
     def create(self, request: Request) -> Response:
         """Sync the current page of tracks."""
-        raise NotImplementedError
+        user_id = request.user.id
+        page_size, page, offset = self.get_page_params(request)
+        resp = self._library.library_tracks(user_id, limit=page_size, offset=offset)
+        data = [TrackSerializer.get(track).model_dump() for track in resp]
+
+        sync_tracks_from_request.s(user_id, data).apply_async()
+
+        return Response(
+            data={"message": "Syncing tracks..."}, status=HTTPStatus.ACCEPTED
+        )
 
     def retrieve(self, request: Request, pk: str) -> Response:
         """Retrieve a track by ID."""
-        raise NotImplementedError
+        user_id = request.user.id
+        track = self._library.library_track(user_id, pk)
+        data = TrackSerializer.get(track).model_dump()
+
+        sync_tracks_from_request.s(user_id, [data]).apply_async()
+
+        return Response(data=data, status=HTTPStatus.OK)
 
     def update(self, request: Request, pk: str) -> Response:
         """Update a track by ID."""

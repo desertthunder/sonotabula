@@ -60,6 +60,34 @@ class SpotifyLibraryService:
 
             yield from self._library_playlists(user=user, limit=limit, all=all)
 
+    def library_track(self, user_pk: int, track_id: str) -> dict:
+        """Get the user's track."""
+        user = self.get_user(user_pk)
+        try:
+            response = httpx.get(
+                url=f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.Track.format(track_id=track_id)}",
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                self.handle_error(response)
+
+            return response.json()
+        except SpotifyExpiredTokenError:
+            self.auth_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            response = httpx.get(
+                url=f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.Track.format(track_id=track_id)}",
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            if response.is_error:
+                self.handle_error(response)
+
+        return response.json()
+
     def library_playlists_total(self, user_pk: int) -> int:
         """Get the total number of playlists."""
         user = self.get_user(user_pk)
