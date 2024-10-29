@@ -197,38 +197,39 @@ const trackColumns = [
 ];
 
 const artistColumns = [
-  artistColumnHelper.display({
+  artistColumnHelper.accessor("image_url", {
     header: () => null,
     id: "image_url",
     cell: (props) => (
-      <img src={props.row.original.image_url} alt="album" className="h-12" />
+      <img src={props.getValue()} alt="album" className="h-12" />
     ),
   }),
-  artistColumnHelper.display({
+  artistColumnHelper.accessor("name", {
     header: "Name",
     id: "name",
   }),
-  artistColumnHelper.display({
+  artistColumnHelper.accessor("genres", {
     header: "Genres",
     id: "genres",
     cell: (props) => (
       <span>
-        {Array.isArray(props.row.original.genres)
-          ? props.row.original.genres.join(", ")
-          : props.row.original.genres}
+        {Array.isArray(props.getValue())
+          ? props.getValue().join(", ")
+          : props.getValue()}
       </span>
     ),
   }),
-  artistColumnHelper.display({
+  artistColumnHelper.accessor("spotify_id", {
     header: "Link",
-    id: "link",
+    id: "spotify_id",
     cell: (props) => (
       <a
-        className="hover:text-green-500 text-lg"
-        href={props.row.original.link}
+        href={`https://open.spotify.com/artist/${props.getValue()}`}
         target="_blank"
         rel="noreferrer"
+        className="hover:text-green-500 flex items-center gap-2"
       >
+        <span>Open</span>
         <i className="i-ri-external-link-line"></i>
       </a>
     ),

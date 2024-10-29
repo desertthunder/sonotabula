@@ -49,7 +49,7 @@ export function Tabs({ scope, onChange, context }: Props) {
                 "text-white",
                 "cursor-pointer",
                 "hover:text-white",
-                "hover:bg-emerald-500",
+                "hover:bg-emerald-400",
                 "rounded-lg",
                 "flex items-center gap-2",
                 "focus:outline-none",
@@ -59,7 +59,7 @@ export function Tabs({ scope, onChange, context }: Props) {
                 "group",
                 "group:transition-transform group:duration-300",
                 isDisabled(resource) ? "pointer-events-none" : "",
-                scope === resource ? "bg-emerald-500" : "",
+                scope === resource ? "bg-emerald-700" : "bg-emerald-500",
               ].join(" ")}
               disabled={isDisabled(resource)}
             >

@@ -70,8 +70,6 @@ class SpotifyAuthService:
 
             resp = response.json()
 
-            logger.debug(f"Response: {resp}")
-
             if not resp.get("access_token"):
                 raise SpotifyAPIError("Access token not found in response.")
 
@@ -99,8 +97,6 @@ class SpotifyAuthService:
                 raise SpotifyAPIError(response.text)
 
             resp = response.json()
-
-            logger.debug(f"Response: {resp}")
 
             client.close()
 

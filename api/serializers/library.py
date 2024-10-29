@@ -285,6 +285,7 @@ class Track(Serializer):
         return cls(**data)
 
 
+# TODO: Move to library app
 class Artist(Serializer):
     """Artist API response data."""
 

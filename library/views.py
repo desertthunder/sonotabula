@@ -11,6 +11,7 @@ from api.libs.constants import SpotifyAPIEndpoints
 from api.models import Library, Playlist
 from api.models.permissions import SpotifyAuth
 from api.serializers.library import Album as AlbumSerializer
+from api.serializers.library import Artist as ArtistSerializer
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.serializers.library import Track as TrackSerializer
@@ -34,6 +35,10 @@ DATA = SpotifyDataService()
 
 class ViewSetMixin:
     """ViewSet Mixin."""
+
+    _auth: SpotifyAuthService = AUTH
+    _library: SpotifyLibraryService = LIBRARY
+    _data: SpotifyDataService = DATA
 
     def get_page_params(self, request: Request) -> tuple[int, int, int]:
         """Get page size and page number from request query params."""
@@ -62,8 +67,6 @@ class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     _base_path = SpotifyAPIEndpoints.SavedPlaylists
-    _auth: SpotifyAuthService = AUTH
-    _library: SpotifyLibraryService = LIBRARY
 
     def get_model_instance(self, pk: str) -> Playlist:
         """Get a playlist instance by ID."""
@@ -128,9 +131,6 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     _base_path = SpotifyAPIEndpoints.SavedTracks
-    _auth: SpotifyAuthService = AUTH
-    _library: SpotifyLibraryService = LIBRARY
-    _data: SpotifyDataService = DATA
 
     def list(self, request: Request) -> Response:
         """List the current page of tracks."""
@@ -187,12 +187,21 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
         raise NotImplementedError
 
 
-class ArtistViewSet(viewsets.ViewSet):
+class ArtistViewSet(ViewSetMixin, viewsets.ViewSet):
     """Artist ViewSet."""
+
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request: Request) -> Response:
         """List all artists."""
-        raise NotImplementedError
+        user_id = request.user.id
+        page_size, page, offset = self.get_page_params(request)
+        total = self._library.library_artists_total(user_id)
+        artists = self._library.library_artists(user_id, limit=page_size, offset=offset)
+        data = [ArtistSerializer.get(artist).model_dump() for artist in artists]
+        response = {"data": data, "page_size": page_size, "page": page, "total": total}
+        return Response(data=response, status=HTTPStatus.OK)
 
     def create(self, request: Request) -> Response:
         """Create a new artist."""

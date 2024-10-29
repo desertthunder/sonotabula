@@ -128,7 +128,7 @@ class SpotifyLibraryService:
             yield from self._library_albums(user=user, limit=limit, all=all)
 
     def library_artists(
-        self, user_pk: int, limit: int = 50, all: bool = False
+        self, user_pk: int, limit: int = 50, offset: int = 0, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's followed artists.
 
@@ -137,7 +137,9 @@ class SpotifyLibraryService:
         user = self.get_user(user_pk)
 
         try:
-            yield from self._library_artists(user=user, limit=limit, all=all)
+            yield from self._library_artists(
+                user=user, limit=limit, offset=offset, all=all
+            )
         except SpotifyExpiredTokenError:
             self.auth_service.refresh_access_token(user.refresh_token)
 
@@ -223,6 +225,25 @@ class SpotifyLibraryService:
             logger.error(f"Error: {e}")
 
             raise SpotifyAPIError(str(e)) from e
+
+    def library_artists_total(self, user_pk: int) -> int:
+        """Get the total number of followed artists."""
+        user = self.get_user(user_pk)
+
+        response = httpx.get(
+            url=f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.FollowedArtists}",
+            headers={"Authorization": f"Bearer {user.access_token}"},
+            params={"limit": 1, "type": "artist"},
+        )
+
+        if response.is_error:
+            self.handle_error(response)
+
+        total = response.json().get("artists", {}).get("total", "0")
+
+        time.sleep(0.5)
+
+        return int(total)
 
     def _library_playlists(
         self, user: "AppUser", limit: int = 50, offset: int = 0, all: bool = False
@@ -311,7 +332,7 @@ class SpotifyLibraryService:
                 yield from resp.get("items")
 
     def _library_artists(
-        self, user: "AppUser", limit: int = 50, all: bool = False
+        self, user: "AppUser", limit: int = 50, offset: int = 0, all: bool = False
     ) -> typing.Iterable[dict]:
         """Get the user's followed artists."""
         yielded = 0
@@ -324,19 +345,16 @@ class SpotifyLibraryService:
                 if not all and yielded >= limit:
                     break
 
-                response = client.get(
-                    url=next,
-                    params={"type": "artist", "limit": limit if limit <= 50 else 50},
-                )
+                params = {"limit": limit if limit <= 50 else 50}
 
+                if offset > 0:
+                    params["offset"] = offset
+
+                response = client.get(url=next, params={"type": "artist", **params})
                 if response.is_error:
-                    logger.error(f"Error: {response.text}")
-
-                    raise SpotifyAPIError(response.text)
+                    self.handle_error(response)
 
                 resp = response.json()
-
-                logger.debug(f"Response: {resp}")
 
                 next = resp.get("artists", {}).get("next")
 
@@ -345,6 +363,10 @@ class SpotifyLibraryService:
 
                 if not all:
                     yielded += len(resp.get("artists", {}).get("items"))
+
+                logger.debug(
+                    f"Fetched {yielded} {resp.get("artists", {}).get("total")}"
+                )
 
                 yield from resp.get("artists", {}).get("items")
 

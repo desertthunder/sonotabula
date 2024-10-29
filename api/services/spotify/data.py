@@ -93,8 +93,6 @@ class SpotifyDataService:
 
                 resp = response.json()
 
-                logger.debug(f"Response: {resp}")
-
                 if path == SpotifyAPIEndpoints.FollowedArtists:
                     yield (path, resp.get("artists", {}))
                 else:
@@ -116,8 +114,6 @@ class SpotifyDataService:
                 raise SpotifyAPIError(response.text)
 
             resp = response.json()
-
-            logger.debug(f"Response: {resp}")
 
             client.close()
 
@@ -235,8 +231,6 @@ class SpotifyDataService:
                         raise SpotifyAPIError(response.text)
 
                 resp = response.json()
-
-                logger.debug(f"Response: {resp}")
 
                 time.sleep(0.5)
 

@@ -94,8 +94,6 @@ class SpotifyPlaybackService:
 
                 resp = response.json()
 
-                logger.debug(f"Response: {resp}")
-
                 next = resp.get("next")
 
                 if next is not None:
