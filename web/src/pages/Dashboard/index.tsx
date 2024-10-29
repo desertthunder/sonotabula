@@ -7,7 +7,6 @@ import { StatCard } from "./components/stats";
 import { Tabs } from "./components/tabs";
 import { Drawers } from "./components/drawers";
 import { RealTimeTable } from "./components/tables";
-import type { DrawerKey } from "@/store/drawers";
 import { LibraryParams, useLibraryData, useSync } from "@/libs/hooks/api/v1";
 
 const initialParams = {
@@ -90,12 +89,8 @@ export function Dashboard() {
       >
         {query.data ? (
           <Drawers
-            r={{
-              [LibraryKey.LibraryPlaylists]: query.data.data.map(
-                (p) =>
-                  `${LibraryKey.LibraryPlaylists}-${p.spotify_id}` as DrawerKey
-              ),
-            }}
+            scope={scope}
+            ids={query.data.data.map((item) => item.spotify_id)}
           />
         ) : null}
         <section className="flex flex-col gap-4 flex-1 text-sm mx-32">

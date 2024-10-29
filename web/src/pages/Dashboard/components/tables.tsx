@@ -1,5 +1,5 @@
 import { LibraryParams, LibraryResponse } from "@/libs/hooks/api/v1";
-import { decodeUnicode } from "@libs/helpers";
+import { decodeUnicode, formatDuration } from "@libs/helpers";
 import type {
   LibraryAlbum,
   LibraryArtist,
@@ -18,7 +18,15 @@ import {
 } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { TableRow } from "./row";
-import { ErrorCell, LoaderCell, PlaylistNameCell } from "./cells";
+import {
+  ErrorCell,
+  LoaderCell,
+  PlaylistIsSyncedCell,
+  PlaylistNameCell,
+  TrackIsAnalyzedCell,
+  TrackIsSyncedCell,
+  TrackNameCell,
+} from "./cells";
 import _ from "lodash";
 import { Pager } from "@/pages/Browser/components/forms/pagination";
 
@@ -75,22 +83,7 @@ const playlistColumns = [
   playlistColumnHelper.accessor("is_synced", {
     header: "Synced",
     id: "is_synced",
-    cell: (props) => (
-      <span
-        className={[
-          "text-xs",
-          props.row.original.is_synced ? "text-green-500" : "text-slate-400",
-        ].join(" ")}
-      >
-        {props.row.original.is_synced ? (
-          <i className="i-ri-check-line text-green-500" />
-        ) : (
-          <>
-            <i className="i-ri-close-line text-red-400" />
-          </>
-        )}
-      </span>
-    ),
+    cell: PlaylistIsSyncedCell,
   }),
   playlistColumnHelper.display({
     header: "Link",
@@ -149,6 +142,7 @@ const trackColumns = [
   trackColumnHelper.accessor("name", {
     header: "Name",
     id: "name",
+    cell: TrackNameCell,
   }),
   trackColumnHelper.accessor("artist_name", {
     header: "Artist",
@@ -161,6 +155,17 @@ const trackColumns = [
   trackColumnHelper.accessor("duration_ms", {
     header: "Duration",
     id: "duration_ms",
+    cell: (props) => <span>{formatDuration(props.getValue())}</span>,
+  }),
+  trackColumnHelper.accessor("is_synced", {
+    header: "Synced",
+    id: "is_synced",
+    cell: TrackIsSyncedCell,
+  }),
+  trackColumnHelper.accessor("is_analyzed", {
+    header: "Analyzed",
+    id: "is_analyzed",
+    cell: TrackIsAnalyzedCell,
   }),
   trackColumnHelper.display({
     header: "Link",

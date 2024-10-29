@@ -16,6 +16,11 @@ urlpatterns = [
         name="library-playlists",
     ),
     path(
+        "tracks/<str:spotify_id>/analysis",
+        TrackViewSet.as_view({"get": "data"}),
+        name="library-track-analysis",
+    ),
+    path(
         "tracks/<str:spotify_id>",
         TrackViewSet.as_view({"get": "retrieve"}),
         name="library-track",

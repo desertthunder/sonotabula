@@ -31,6 +31,8 @@ export type LibraryTrack = {
   duration_ms: number;
   link: string;
   image_url: string;
+  is_synced: boolean;
+  is_analyzed: boolean;
 };
 
 export type LibraryArtist = {

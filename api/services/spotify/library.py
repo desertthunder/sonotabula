@@ -153,7 +153,9 @@ class SpotifyLibraryService:
         user = self.get_user(user_pk)
 
         try:
-            yield from self._library_tracks(user=user, limit=limit, all=all)
+            yield from self._library_tracks(
+                user=user, limit=limit, offset=offset, all=all
+            )
         except SpotifyExpiredTokenError:
             self.auth_service.refresh_access_token(user.refresh_token)
 

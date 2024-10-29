@@ -13,6 +13,7 @@ from api.models.permissions import SpotifyAuth
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.serializers.library import Playlist as PlaylistSerializer
 from api.serializers.library import Track as TrackSerializer
+from api.serializers.views.browser import PlaylistTrackFeaturesSerializer
 from api.services.spotify import SpotifyAuthService, SpotifyLibraryService
 from library.tasks import (
     sync_playlist_tracks_from_request,
@@ -33,7 +34,7 @@ class ViewSetMixin:
         page = request.query_params.get("page", 1)
         offset = request.query_params.get("offset") or (int(page) - 1) * int(page_size)
 
-        logger.debug(f"Client query params: {page_size=}, {page=}, {offset=}")
+        logger.info(f"Client query params: {page_size=}, {page=}, {offset=}")
 
         return int(page_size), int(page), int(offset)
 
@@ -168,15 +169,32 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
             data={"message": "Syncing tracks..."}, status=HTTPStatus.ACCEPTED
         )
 
-    def retrieve(self, request: Request, pk: str) -> Response:
+    def retrieve(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
         """Retrieve a track by ID."""
         user_id = request.user.id
-        track = self._library.library_track(user_id, pk)
+        track = self._library.library_track(user_id, spotify_id)
         data = TrackSerializer.get(track).model_dump()
 
         sync_tracks_from_request.s(user_id, [data]).apply_async()
 
         return Response(data=data, status=HTTPStatus.OK)
+
+    def data(self, request: Request, spotify_id: str, *args, **kwargs) -> Response:
+        """Retrieve a track by ID."""
+        user_id = request.user.id
+        library = self.get_user_library(user_id)
+
+        if track := (
+            library.tracks.prefetch_related("features")
+            .filter(spotify_id=spotify_id)
+            .first()
+        ):
+            return Response(
+                data=PlaylistTrackFeaturesSerializer.get(track.features).model_dump(),
+                status=HTTPStatus.OK,
+            )
+        else:
+            return Response(data={}, status=HTTPStatus.OK)
 
     def update(self, request: Request, pk: str) -> Response:
         """Update a track by ID."""
