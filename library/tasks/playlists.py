@@ -5,12 +5,12 @@ from django.db.models import Q
 from loguru import logger
 
 from api.models import AppUser, Library, Playlist, Track
-from api.serializers.library import Playlist as PlaylistSerializer
 from api.services.spotify import (
     SpotifyAuthService,
     SpotifyDataService,
     SpotifyLibraryService,
 )
+from library.serializers import PlaylistAPISerializer
 
 user_service = SpotifyAuthService()
 data_service = SpotifyDataService()
@@ -20,7 +20,7 @@ library_service = SpotifyLibraryService(user_service)
 @shared_task
 def sync_playlists_from_request(user_id: int, api_playlists: list[dict]) -> None:
     """Sync playlists from a request."""
-    models = [PlaylistSerializer(**playlist) for playlist in api_playlists]
+    models = [PlaylistAPISerializer(**playlist) for playlist in api_playlists]
     user = AppUser.objects.get(id=user_id)
     library, _ = Library.objects.get_or_create(user_id=user_id)
 

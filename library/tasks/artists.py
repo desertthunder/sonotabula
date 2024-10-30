@@ -7,13 +7,13 @@ from loguru import logger
 
 from api.models import Artist, Library
 from api.models.music import Genre
-from api.serializers.library import Artist as ArtistSerializer
+from library.serializers import ArtistAPISerializer
 
 
 @shared_task
 def sync_artists_from_request(user_id: int, api_artists: list[dict]) -> None:
     """Sync artists from a request."""
-    data = [ArtistSerializer(**artist) for artist in api_artists]
+    data = [ArtistAPISerializer(**artist) for artist in api_artists]
     exists = [artist.spotify_id for artist in data]
 
     library, _ = Library.objects.get_or_create(user_id=user_id)

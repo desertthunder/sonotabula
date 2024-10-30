@@ -10,24 +10,26 @@ from rest_framework.response import Response
 from api.libs.constants import SpotifyAPIEndpoints
 from api.models import Library, Playlist
 from api.models.permissions import SpotifyAuth
-from api.serializers.library import Album as AlbumSerializer
-from api.serializers.library import Artist as ArtistSerializer
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
-from api.serializers.library import Playlist as PlaylistSerializer
-from api.serializers.library import Track as TrackSerializer
-from api.serializers.library import TrackFeaturesSerializer
 from api.services.spotify import (
     SpotifyAuthService,
     SpotifyDataService,
     SpotifyLibraryService,
 )
+from library.serializers import (
+    AlbumAPISerializer,
+    ArtistAPISerializer,
+    PlaylistAPISerializer,
+    TrackAPISerializer,
+    TrackFeaturesAPISerializer,
+)
 from library.tasks import (
     sync_artists_from_request,
     sync_playlist_tracks_from_request,
     sync_playlists_from_request,
+    sync_track_features_from_request,
     sync_tracks_from_request,
 )
-from library.tasks.track import sync_track_features_from_request
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
@@ -82,7 +84,7 @@ class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
         page_size, page, offset = self.get_page_params(request)
         total = self._library.library_playlists_total(user_id)
         resp = self._library.library_playlists(user_id, limit=page_size, offset=offset)
-        data = [PlaylistSerializer.get(playlist).model_dump() for playlist in resp]
+        data = [PlaylistAPISerializer.get(playlist).model_dump() for playlist in resp]
         response = {"data": data, "page_size": page_size, "page": page, "total": total}
         return Response(data=response, status=HTTPStatus.OK)
 
@@ -91,7 +93,7 @@ class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
         user_id = request.user.id
         page_size, page, offset = self.get_page_params(request)
         resp = self._library.library_playlists(user_id, limit=page_size, offset=offset)
-        data = [PlaylistSerializer.get(playlist).model_dump() for playlist in resp]
+        data = [PlaylistAPISerializer.get(playlist).model_dump() for playlist in resp]
         response = {"message": "Syncing playlists..."}
 
         sync_playlists_from_request.s(user_id, data).apply_async()
@@ -139,7 +141,7 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
         page_size, page, offset = self.get_page_params(request)
         total = self._library.library_tracks_total(user_id)
         resp = self._library.library_tracks(user_id, limit=page_size, offset=offset)
-        data = [TrackSerializer.get(track).model_dump() for track in resp]
+        data = [TrackAPISerializer.get(track).model_dump() for track in resp]
         response = {"data": data, "page_size": page_size, "page": page, "total": total}
         return Response(data=response, status=HTTPStatus.OK)
 
@@ -148,7 +150,7 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
         user_id = request.user.id
         page_size, _, offset = self.get_page_params(request)
         resp = self._library.library_tracks(user_id, limit=page_size, offset=offset)
-        data = [TrackSerializer.get(track).model_dump() for track in resp]
+        data = [TrackAPISerializer.get(track).model_dump() for track in resp]
         response = {"message": "Syncing tracks..."}
 
         sync_tracks_from_request.s(user_id, data).apply_async()
@@ -159,7 +161,7 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
         """Retrieve a track by ID."""
         user_id = request.user.id
         track = self._library.library_track(user_id, spotify_id)
-        data = TrackSerializer.get(track).model_dump()
+        data = TrackAPISerializer.get(track).model_dump()
 
         sync_tracks_from_request.s(user_id, [data]).apply_async()
 
@@ -169,7 +171,7 @@ class TrackViewSet(ViewSetMixin, viewsets.ViewSet):
         """Retrieve a track by ID."""
         user_id = request.user.id
         features = self._data.fetch_audio_features_for_track(spotify_id, user_id)
-        data = TrackFeaturesSerializer.get(features).model_dump()
+        data = TrackFeaturesAPISerializer.get(features).model_dump()
 
         sync_track_features_from_request.s(user_id, spotify_id, data).apply_async()
 
@@ -202,7 +204,7 @@ class ArtistViewSet(ViewSetMixin, viewsets.ViewSet):
 
         total = self._library.library_artists_total(user_id)
         artists = self._library.library_artists(user_id, limit=page_size, last=last)
-        models = [ArtistSerializer.get(artist) for artist in artists]
+        models = [ArtistAPISerializer.get(artist) for artist in artists]
         data = [model.model_dump() for model in models]
         response = {
             "data": data,
@@ -222,7 +224,7 @@ class ArtistViewSet(ViewSetMixin, viewsets.ViewSet):
         logger.debug(f"Cursor: {last=}")
 
         artists = self._library.library_artists(user_id, limit=page_size, last=last)
-        data = [ArtistSerializer.get(artist).model_dump() for artist in artists]
+        data = [ArtistAPISerializer.get(artist).model_dump() for artist in artists]
         response = {"message": "Syncing tracks..."}
 
         sync_artists_from_request.s(user_id, data).apply_async()
@@ -263,7 +265,7 @@ class AlbumViewSet(ViewSetMixin, viewsets.ViewSet):
         page_size, page, offset = self.get_page_params(request)
         total = self._library.library_albums_total(user_id)
         albums = self._library.library_albums(user_id, limit=page_size, offset=offset)
-        data = [AlbumSerializer.get(album).model_dump() for album in albums]
+        data = [AlbumAPISerializer.get(album).model_dump() for album in albums]
         response = {"data": data, "page_size": page_size, "page": page, "total": total}
         return Response(data=response, status=HTTPStatus.OK)
 
