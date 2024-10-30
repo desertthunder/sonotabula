@@ -18,8 +18,8 @@ from api.libs.requests import (
     SpotifyRedirectURI,
     SpotifyRefreshTokenRequest,
 )
-from api.models import AppUser
 from api.serializers.authentication import AccessToken, CurrentUser
+from core.models import AppUser
 
 logger.add("logs/spotify_auth.log", rotation="1 MB", retention="1 day", level="DEBUG")
 

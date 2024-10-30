@@ -8,11 +8,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from api.models import AppUser
 from api.models.permissions import SpotifyAuth
 from api.serializers.data import UserSavedItems
 from api.services.spotify.auth import SpotifyAuthService
 from api.services.spotify.data import SpotifyDataService
+from core.models import AppUser
 
 
 class UserSerializer(BaseModel):

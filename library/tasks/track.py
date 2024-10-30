@@ -4,12 +4,13 @@ from celery import shared_task
 from django.db.models import Q
 from loguru import logger
 
-from api.models import Album, AppUser, Artist, Library, Track, TrackFeatures
+from api.models import Album, Artist, Library, Track, TrackFeatures
 from api.services.spotify import (
     SpotifyAuthService,
     SpotifyDataService,
     SpotifyLibraryService,
 )
+from core.models import AppUser
 from library.serializers import TrackAPISerializer, TrackFeaturesAPISerializer
 
 AUTH = SpotifyAuthService()

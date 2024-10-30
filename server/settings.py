@@ -108,7 +108,7 @@ DATABASES = {
 }
 
 # Authentication
-AUTH_USER_MODEL = "api.AppUser"
+AUTH_USER_MODEL = "core.AppUser"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",

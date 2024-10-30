@@ -240,7 +240,7 @@ class ListeningHistory(models.Model):
     logged_at = models.DateTimeField(auto_now_add=True)
 
     track = models.ForeignKey("api.Track", on_delete=models.CASCADE)
-    user = models.ForeignKey("api.AppUser", on_delete=models.CASCADE)
+    user = models.ForeignKey("core.AppUser", on_delete=models.CASCADE)
 
     objects = models.Manager()
     history = ListeningHistoryManager()

@@ -14,7 +14,7 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 
-from api.models import AppUser
+from core.models import AppUser
 from server import settings
 
 

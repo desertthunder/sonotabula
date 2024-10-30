@@ -4,10 +4,10 @@ import random
 from django.test import TestCase
 from django.urls import reverse
 
-from api.models import AppUser
 from api.models.analysis import Analysis
 from api.models.permissions import Token
 from api.services.spotify import SpotifyAuthService
+from core.models import AppUser
 
 logging.disable(logging.ERROR)
 

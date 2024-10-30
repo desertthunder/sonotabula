@@ -121,7 +121,7 @@ class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
 
     # (TODO): this should be a many-to-many relationship
     user = models.ForeignKey(
-        "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
+        "core.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )
 
     libraries = models.ManyToManyField("api.Library", related_name="playlists")

@@ -12,8 +12,8 @@ from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
-from api.models import AppUser
 from api.services.spotify.auth import SpotifyAuthService
+from core.models import AppUser
 
 logger.add(
     "logs/spotify_playback.log",

@@ -8,7 +8,7 @@ from api.models.analysis import Analysis
 from api.models.music import Album, Artist, Library
 from api.models.playlist import Playlist, SyncPlaylist
 from api.models.track import SyncData, Track
-from api.models.users import AppUser
+from core.models import AppUser
 
 faker = Faker()
 

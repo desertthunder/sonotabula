@@ -99,7 +99,7 @@ class Acknowledgement(Model):
     )
 
     user = models.ForeignKey(
-        "api.AppUser",
+        "core.AppUser",
         on_delete=models.CASCADE,
         related_name="acknowledgements",
         null=False,
@@ -112,7 +112,7 @@ class Notification(Model):
 
     message = models.CharField(max_length=255, null=False, blank=False)
     user = models.ForeignKey(
-        "api.AppUser",
+        "core.AppUser",
         on_delete=models.CASCADE,
         related_name="notifications",
         null=False,
