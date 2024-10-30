@@ -3,13 +3,13 @@
  * @todo tracks page
  * @todo artists page
  */
-import "@fontsource-variable/inter";
 import { Routes } from "@libs/types";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
-import { Home, Signup } from "./pages";
+import { Home, Signup, Profile } from "./pages";
 import { BrowserLayout } from "./pages/Browser";
 import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
 import { Playlist } from "./pages/Browser/Playlist";
@@ -17,7 +17,6 @@ import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
 import { TracksPage as BrowserTracks } from "./pages/Browser/Tracks";
 import { Dashboard } from "./pages/Dashboard";
 import { DashboardLayout } from "./pages/Dashboard/layout";
-import "./styles/base.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,12 +55,15 @@ export function AppRouter() {
         <Route path={Routes.Login}>
           <Signup />
         </Route>
-        <Router base={Routes.Dashboard}>
+        <Router>
           <DashboardLayout>
-            <Route path="/">
+            <Route path="/dashboard">
               <Dashboard />
             </Route>
-            <Route path="/browser" nest>
+            <Route path="/dashboard/profile">
+              <Profile />
+            </Route>
+            <Route path="/dashboard/browser" nest>
               <BrowserLayout>
                 <Route path="/playlists" nest>
                   <BrowserPlaylists>
@@ -89,6 +91,7 @@ export default function Root() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppRouter />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

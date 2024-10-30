@@ -1,3 +1,6 @@
+/**
+ * @description Layout for dashboard pages.
+ */
 import { Navbar, Sidebar } from "@/components";
 import { useTokenValidator } from "@libs/hooks";
 import { useTokenStore } from "@/store";

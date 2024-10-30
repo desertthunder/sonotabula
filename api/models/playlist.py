@@ -4,6 +4,7 @@ import datetime
 import typing
 import uuid
 
+import pydantic
 from django.db import models
 from django.utils import timezone
 from django_stubs_ext.db.models import TypedModelMeta
@@ -22,20 +23,28 @@ class PlaylistSyncManager(models.Manager["Playlist"]):
     ) -> list["validation.SyncPlaylist"]:
         """Validate API data and prepare for syncing."""
         result = []
+        errored = []
         for playlist in playlists:
-            logger.debug(playlist.get("id"))
-            result.append(
-                validation.SyncPlaylist(
-                    name=playlist.get("name", ""),
-                    spotify_id=playlist.get("id", ""),
-                    owner_id=playlist.get("owner", {}).get("id"),
-                    version=playlist.get("snapshot_id"),
-                    image_url=playlist.get("images", [{}])[0].get("url"),
-                    public=playlist.get("public"),
-                    shared=playlist.get("collaborative"),
-                    description=playlist.get("description"),
+            try:
+                result.append(
+                    validation.SyncPlaylist(
+                        name=playlist.get("name", ""),
+                        spotify_id=playlist.get("id", ""),
+                        owner_id=playlist.get("owner", {}).get("id"),
+                        version=playlist.get("snapshot_id"),
+                        image_url=playlist.get("images", [{}])[0].get("url"),
+                        public=playlist.get("public"),
+                        shared=playlist.get("collaborative"),
+                        description=playlist.get("description"),
+                    )
                 )
-            )
+            except (ValueError, pydantic.ValidationError) as e:
+                logger.error(f"Failed to validate playlist: {playlist}. {e}")
+                errored.append(playlist)
+                continue
+
+        logger.debug(f"Pre-synced {len(result)} playlists.")
+        logger.debug(f"Errored {len(errored)} playlists")
 
         return result
 
@@ -103,7 +112,7 @@ class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     """
 
     version = models.CharField(max_length=255, blank=True, null=True)  # snapshot_id
-    image_url = models.URLField(blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True, max_length=1024)
     public = models.BooleanField(null=True, blank=True)
     shared = models.BooleanField(null=True, blank=True)  # collaborative
     description = models.TextField(blank=True, null=True)
@@ -112,7 +121,7 @@ class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
 
     # (TODO): this should be a many-to-many relationship
     user = models.ForeignKey(
-        "api.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
+        "core.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )
 
     libraries = models.ManyToManyField("api.Library", related_name="playlists")

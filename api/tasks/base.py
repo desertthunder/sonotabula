@@ -11,7 +11,6 @@ from api.models.analysis import Analysis, TrackFeatures
 from api.models.music import Album, Library
 from api.models.playlist import Playlist
 from api.models.track import Track
-from api.models.users import AppUser
 from api.serializers.library import Track as TrackSerializer
 from api.serializers.validation.analysis import SyncAnalysis
 from api.services.spotify import (
@@ -19,6 +18,7 @@ from api.services.spotify import (
     SpotifyDataService,
     SpotifyLibraryService,
 )
+from core.models import AppUser
 
 user_service = SpotifyAuthService()
 data_service = SpotifyDataService()

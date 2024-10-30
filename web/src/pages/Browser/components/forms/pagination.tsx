@@ -1,3 +1,6 @@
+import toInteger from "lodash/toInteger";
+import { useCallback, useMemo } from "react";
+
 export function PaginationForm({
   pageSize,
   setPageSize,
@@ -53,22 +56,22 @@ export const PagerButton = ({
   label,
   disabled,
   onClick,
+  className,
 }: {
   label: string;
   disabled?: boolean;
   onClick: () => void;
+  className?: string;
 }) => (
   <button
     className={[
       "flex gap-2 items-center",
-      "border border-slate-300",
-      "rounded-md",
-      "py-1",
-      label.includes("Prev") ? "pr-2" : "pl-2",
-      "bg-slate-100",
+      "py-2 px-4 font-semibold text-sm",
+      "bg-zinc-50 hover:bg-green-400",
       disabled
-        ? "cursor-not-allowed bg-slate-200 text-slate-500"
-        : "cursor-pointer hover:bg-slate-200",
+        ? "pointer-events-none bg-slate-200 text-slate-500"
+        : "cursor-pointer",
+      className,
     ].join(" ")}
     onClick={onClick}
     disabled={disabled}
@@ -76,37 +79,109 @@ export const PagerButton = ({
     {label.includes("Prev") ? (
       <i className="i-ri-arrow-left-s-line text-lg font-semibold" />
     ) : null}
-    <span className="text-xs">{label}</span>
+    <span>{label}</span>
     {label.includes("Next") ? (
       <i className="i-ri-arrow-right-s-line text-lg font-semibold" />
     ) : null}
   </button>
 );
 
-export function Pager({
-  page,
-  setPage,
-  totalPages,
-}: {
+interface PagerProps {
   page: number;
   setPage: (page: number) => void;
   totalPages?: number;
-}) {
+  showNumbers: boolean;
+  isLoading: boolean;
+}
+
+export function Pager(props: PagerProps) {
+  const labels = useMemo(() => {
+    if (!props.totalPages) {
+      return [];
+    }
+
+    const pages = Array.from({ length: props.totalPages }, (_, i) => i + 1);
+    const first = pages[0];
+    const last = pages[pages.length - 1];
+
+    if (props.totalPages < 10) {
+      return pages;
+    }
+
+    if (props.page < 5) {
+      return [...pages.slice(0, 5), "...", last];
+    }
+
+    if (props.page > props.totalPages - 5) {
+      return [first, "...", ...pages.slice(-5)];
+    }
+
+    return [
+      first,
+      "...",
+      ...pages.slice(props.page - 2, props.page + 1),
+      "...",
+      last,
+    ];
+  }, [props.page, props.totalPages]);
+
+  const nextHandler = useCallback(() => {
+    if (!props.totalPages) {
+      return;
+    }
+
+    props.setPage(Math.min(props.totalPages, props.page + 1));
+  }, [props]);
+
+  const prevHandler = useCallback(() => {
+    props.setPage(Math.max(1, props.page - 1));
+  }, [props]);
+
+  const numberedHandler = useCallback(
+    (page: string | number) => {
+      props.setPage(toInteger(page));
+    },
+    [props]
+  );
+
   return (
-    <div className="flex gap-4 m-4">
+    <div className="mt-4 py-4 border-t-2 flex items-center justify-center">
       <PagerButton
         label="Prev"
-        disabled={page === 1}
-        onClick={() => setPage(Math.max(1, page - 1))}
+        disabled={props.page === 1 || props.isLoading}
+        onClick={prevHandler}
+        className="border-x rounded-l  border-slate-400 border-y"
       />
-      <span className={["flex gap-2 items-center", "", "text-xs"].join(" ")}>
-        Page {page}
-        {totalPages ? ` of ${totalPages}` : null}
-      </span>
+      {props.showNumbers
+        ? labels.map((label, i) => {
+            if (label === "...") {
+              return (
+                <button
+                  disabled
+                  key={i}
+                  className="items-center py-2 px-6 font-bold text-sm border-y border-r border-slate-400"
+                >
+                  ...
+                </button>
+              );
+            }
+
+            return (
+              <PagerButton
+                key={i}
+                label={label.toString()}
+                disabled={props.page === label || props.isLoading}
+                onClick={() => numberedHandler(label)}
+                className="items-center py-2 border-y border-r border-slate-400"
+              />
+            );
+          })
+        : null}
       <PagerButton
         label="Next"
-        disabled={totalPages ? page === totalPages : true}
-        onClick={() => setPage(Math.min(totalPages ? totalPages : 1, page + 1))}
+        disabled={props.page === props.totalPages || props.isLoading}
+        onClick={nextHandler}
+        className="border-r border-y border-slate-400 rounded-r"
       />
     </div>
   );

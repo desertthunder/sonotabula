@@ -5,17 +5,23 @@ Parking Lot:
 """
 
 import json
-import logging
 import typing
 
 import httpx
+from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.libs.exceptions import SpotifyAPIError, SpotifyExpiredTokenError
-from api.models import AppUser
 from api.services.spotify.auth import SpotifyAuthService
+from core.models import AppUser
 
-logger = logging.getLogger("spotify_playback_service")
+logger.add(
+    "logs/spotify_playback.log",
+    rotation="1 MB",
+    retention="1 day",
+    level="DEBUG",
+    serialize=True,
+)
 auth_service = SpotifyAuthService()
 
 
@@ -87,8 +93,6 @@ class SpotifyPlaybackService:
                     self.handle_error(response)
 
                 resp = response.json()
-
-                logger.debug(f"Response: {resp}")
 
                 next = resp.get("next")
 

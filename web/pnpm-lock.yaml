@@ -11,7 +11,13 @@ importers:
       '@floating-ui/react':
         specifier: ^0.26.25
         version: 0.26.25(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@fontsource-variable/dm-sans':
+        specifier: ^5.1.0
+        version: 5.1.0
       '@fontsource-variable/inter':
+        specifier: ^5.1.0
+        version: 5.1.0
+      '@fontsource-variable/karla':
         specifier: ^5.1.0
         version: 5.1.0
       '@iconify-json/devicon':
@@ -38,6 +44,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.59.0
         version: 5.59.16(react@18.3.1)
+      '@tanstack/react-query-devtools':
+        specifier: ^5.59.16
+        version: 5.59.16(@tanstack/react-query@5.59.16(react@18.3.1))(react@18.3.1)
       '@tanstack/react-query-persist-client':
         specifier: ^5.59.0
         version: 5.59.16(@tanstack/react-query@5.59.16(react@18.3.1))(react@18.3.1)
@@ -404,8 +413,14 @@ packages:
   '@floating-ui/utils@0.2.8':
     resolution: {integrity: sha512-kym7SodPp8/wloecOpcmSnWJsK7M0E5Wg8UcFA+uO4B9s5d0ywXOEro/8HM9x0rW+TljRzul/14UYz3TleT3ig==}
 
+  '@fontsource-variable/dm-sans@5.1.0':
+    resolution: {integrity: sha512-wPhOMY/3ipy0t5ZIQk7FTKd3uZqE1XP2Yd2oKe3HfMWCYkotbcoMLkBQXcZzf/SgdCdczSP/hiO/PAZb84Kbxw==}
+
   '@fontsource-variable/inter@5.1.0':
     resolution: {integrity: sha512-Wj2dUGP0vUpxRGQTXQTCNJO+aLcFcQm+gUPXfj/aS877bQkEPBPv9JvZJpwdm2vzelt8NTZ+ausKlBCJjh2XIg==}
+
+  '@fontsource-variable/karla@5.1.0':
+    resolution: {integrity: sha512-YRmNh8L3wYO+iQhaCjt4aL3RmlGtEcxjGZQs3rAzFodJfDangKZg7jRRc4wWjlc8f9n/JSQdr9+iQ3f91stiTw==}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -735,11 +750,20 @@ packages:
   '@tanstack/query-core@5.59.16':
     resolution: {integrity: sha512-crHn+G3ltqb5JG0oUv6q+PMz1m1YkjpASrXTU+sYWW9pLk0t2GybUHNRqYPZWhxgjPaVGC4yp92gSFEJgYEsPw==}
 
+  '@tanstack/query-devtools@5.58.0':
+    resolution: {integrity: sha512-iFdQEFXaYYxqgrv63ots+65FGI+tNp5ZS5PdMU1DWisxk3fez5HG3FyVlbUva+RdYS5hSLbxZ9aw3yEs97GNTw==}
+
   '@tanstack/query-persist-client-core@5.59.16':
     resolution: {integrity: sha512-UXu9GEOXAlH4pROhct+zBuMeTXUIvHh9ECfKs8Ux2RgBFBs4hwUqlhUNjb/ezji4lxF+F0Dqtg48O60ii3DArg==}
 
   '@tanstack/query-sync-storage-persister@5.59.16':
     resolution: {integrity: sha512-5GRazdusJaH1lKTQmfQxXmhP9do+2smPazrZfYTvZBSabGdp3ZEf7J67IIG+ZrkYDW5jJj9lVulVHU8COvt47A==}
+
+  '@tanstack/react-query-devtools@5.59.16':
+    resolution: {integrity: sha512-Dejo39QBXmDqXZ3vdrk7vHDvs7TvL573/AX2NveMBmRAufAPYuE3oWSKP/gGqkDfEqyr4CmldOj+v9cKskUchQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.59.16
+      react: ^18 || ^19
 
   '@tanstack/react-query-persist-client@5.59.16':
     resolution: {integrity: sha512-JtcCHtGyRmwuSf/wzWfRqbTbq3C+fffaOZsSSWm/AXybql/Q+iA6TCqSS+vXX8s40o2yN4aKstr+W8pfn2qfsg==}
@@ -2152,7 +2176,11 @@ snapshots:
 
   '@floating-ui/utils@0.2.8': {}
 
+  '@fontsource-variable/dm-sans@5.1.0': {}
+
   '@fontsource-variable/inter@5.1.0': {}
+
+  '@fontsource-variable/karla@5.1.0': {}
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
@@ -2442,6 +2470,8 @@ snapshots:
 
   '@tanstack/query-core@5.59.16': {}
 
+  '@tanstack/query-devtools@5.58.0': {}
+
   '@tanstack/query-persist-client-core@5.59.16':
     dependencies:
       '@tanstack/query-core': 5.59.16
@@ -2450,6 +2480,12 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.59.16
       '@tanstack/query-persist-client-core': 5.59.16
+
+  '@tanstack/react-query-devtools@5.59.16(@tanstack/react-query@5.59.16(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-devtools': 5.58.0
+      '@tanstack/react-query': 5.59.16(react@18.3.1)
+      react: 18.3.1
 
   '@tanstack/react-query-persist-client@5.59.16(@tanstack/react-query@5.59.16(react@18.3.1))(react@18.3.1)':
     dependencies:

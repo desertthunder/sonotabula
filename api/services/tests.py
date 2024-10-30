@@ -8,7 +8,6 @@ from django.test import TestCase
 from django.test.testcases import SerializeMixin
 
 from api.models.playlist import Playlist
-from api.models.users import AppUser
 from api.serializers.authentication import CurrentUser
 from api.services.spotify import (
     SpotifyAuthService,
@@ -16,6 +15,7 @@ from api.services.spotify import (
     SpotifyLibraryService,
     SpotifyPlaybackService,
 )
+from core.models import AppUser
 
 logging.disable(logging.INFO)
 

@@ -278,6 +278,7 @@ class PlaylistModelSerializer(BaseModel):
             yield cls.get(model)
 
 
+# TODO: Rename to RetrievePlaylistSerializer
 class ExpandedPlaylistSerializer(BaseModel):
     """Expanded Playlist serializer."""
 

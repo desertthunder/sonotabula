@@ -4,11 +4,11 @@ Parking lot:
 - TODO: Get User Profile
 """
 
-import logging
 import os
 from http import HTTPMethod
 
 import httpx
+from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints, SpotifyAPIScopes
 from api.libs.exceptions import MissingAPICredentialsError, SpotifyAPIError
@@ -18,10 +18,10 @@ from api.libs.requests import (
     SpotifyRedirectURI,
     SpotifyRefreshTokenRequest,
 )
-from api.models import AppUser
 from api.serializers.authentication import AccessToken, CurrentUser
+from core.models import AppUser
 
-logger = logging.getLogger("spotify_auth_service")
+logger.add("logs/spotify_auth.log", rotation="1 MB", retention="1 day", level="DEBUG")
 
 
 class SpotifyAuthService:
@@ -70,8 +70,6 @@ class SpotifyAuthService:
 
             resp = response.json()
 
-            logger.debug(f"Response: {resp}")
-
             if not resp.get("access_token"):
                 raise SpotifyAPIError("Access token not found in response.")
 
@@ -100,8 +98,6 @@ class SpotifyAuthService:
 
             resp = response.json()
 
-            logger.debug(f"Response: {resp}")
-
             client.close()
 
         if not resp.get("display_name") or not resp.get("email") or not resp.get("id"):
@@ -114,6 +110,36 @@ class SpotifyAuthService:
                 "id": resp["id"],
             }
         )
+
+    def get_full_profile(self, user_id: int) -> dict:
+        """Fetch's current user's full profile."""
+        try:
+            user = AppUser.objects.get(id=user_id)
+            client = httpx.Client(
+                base_url=SpotifyAPIEndpoints.BASE_URL,
+                headers={"Authorization": f"Bearer {user.access_token}"},
+            )
+
+            response = client.get(url=SpotifyAPIEndpoints.CurrentUser)
+
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            if (
+                exc.response.status_code == 401
+                and "The access token expired" in exc.response.text
+            ):
+                user = self.refresh_access_token(user.refresh_token)
+                client.headers["Authorization"] = f"Bearer {user.access_token}"
+
+                response = client.get(url=SpotifyAPIEndpoints.CurrentUser)
+                response.raise_for_status()
+            else:
+                client.close()
+                raise exc
+        finally:
+            client.close()
+
+        return response.json()
 
     def build_redirect_uri(self) -> str:
         """Build the Spotify authorization URL."""

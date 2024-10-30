@@ -14,8 +14,8 @@ from loguru import logger
 from api.models.mixins import TimestampedModel
 from api.models.playlist import Playlist
 from api.models.track import Track
-from api.models.users import AppUser
 from api.serializers import validation
+from core.models import AppUser
 
 
 class AnalysisManager(models.Manager["Analysis"]):
@@ -185,7 +185,7 @@ class Analysis(TimestampedModel):
     playlist = models.OneToOneField(
         Playlist, on_delete=models.CASCADE, related_name="analysis"
     )
-    user = models.ForeignKey("api.AppUser", on_delete=models.CASCADE)
+    user = models.ForeignKey("core.AppUser", on_delete=models.CASCADE)
     tracks = models.ManyToManyField("api.Track", related_name="analyses")
 
     objects: models.Manager["Analysis"] = models.Manager()

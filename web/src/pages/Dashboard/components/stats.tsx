@@ -10,16 +10,16 @@ export function StatCard({ scope }: Props) {
   const context = useSavedCounts();
 
   return (
-    <div className="rounded-xl bg-zinc-100 text-black shadow-lg flex">
-      <div className="bg-gradient-to-br from-emerald-500 to-green-400 rounded-l-xl w-4" />
-      <section className="flex flex-col gap-2 p-4 ">
-        <h1 className="text-lg font-medium text-slate-900">
+    <div className="rounded-xl bg-zinc-100 text-black shadow-lg flex flex-1 hover:rotate-12 transition-transform duration-200">
+      <div className="bg-gradient-to-br from-emerald-500 to-green-400 rounded-l-lg w-4" />
+      <section className="flex flex-col px-3 py-2">
+        <h1 className="text-lg font-semibold tracking-tight leading-snug font-headings text-slate-800">
           {titleCase(scope)}
         </h1>
         {context.isLoading ? <span>Loading</span> : null}
         {context.isError ? <span>Error</span> : null}
         {context.data ? (
-          <h2 className="text-4xl text-primary font-medium">
+          <h2 className="text-xl text-emerald-500 font-medium font-sans leading-snug tracking-tighter">
             {context.data[scope as CountKey]}
           </h2>
         ) : null}

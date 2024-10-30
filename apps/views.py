@@ -9,13 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.models.permissions import SpotifyAuth
-from api.models.users import AppUser
 from api.services.spotify import (
     SpotifyAuthService,
     SpotifyDataService,
     SpotifyPlaybackService,
 )
 from apps.models import ListeningHistory, ListeningHistorySerializer
+from core.models import AppUser
 
 data_service = SpotifyDataService()
 auth_service = SpotifyAuthService()

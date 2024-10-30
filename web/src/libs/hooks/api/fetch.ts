@@ -7,44 +7,8 @@ import type {
   BrowserKey,
   BrowserResource,
 } from "@libs/types";
-import {
-  getLibraryEndpoint,
-  LibraryKey,
-  getBrowserEndpoint,
-} from "@libs/types";
+import { LibraryKey, getBrowserEndpoint } from "@libs/types";
 import isNil from "lodash/isNil";
-
-export async function libraryFetcher<T extends LibraryKey>(
-  resource: LibraryKey,
-  token: string,
-  limit?: number | null
-): Promise<LibraryResource<T>> {
-  const uri = new URL(getLibraryEndpoint(resource));
-
-  if (limit && limit > 50) {
-    uri.searchParams.append("limit", "50");
-  } else if (limit) {
-    uri.searchParams.append("limit", limit.toString());
-  }
-
-  const response = await fetch(uri.toString(), {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    return Promise.reject({
-      code: response.status,
-      message: response.statusText,
-    } as FetchError);
-  }
-
-  const data = await response.json();
-
-  return data["data"] as LibraryResource<T>;
-}
 
 export async function browserFetcher<T extends LibraryKey>(
   resource: LibraryKey,

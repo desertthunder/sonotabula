@@ -3,7 +3,7 @@
 from django.db import models
 from rest_framework.request import Request
 
-from api.models.users import AppUser
+from core.models import AppUser
 
 
 class FilterMeta:

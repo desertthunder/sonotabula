@@ -4,13 +4,13 @@ from rest_framework import views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request as DRFRequest
 
-from api.models import AppUser
 from api.models.permissions import SpotifyAuth
 from api.services.spotify import (
     SpotifyDataService,
     SpotifyLibraryService,
     SpotifyPlaybackService,
 )
+from core.models import AppUser
 
 # NOTE used for dependency injection
 default_playback_service = SpotifyPlaybackService()

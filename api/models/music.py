@@ -18,7 +18,7 @@ class Library(TimestampedModel):
     """Library metadata model."""
 
     user = models.OneToOneField(
-        "api.AppUser", on_delete=models.CASCADE, related_name="library"
+        "core.AppUser", on_delete=models.CASCADE, related_name="library"
     )
 
     artists = models.ManyToManyField("api.Artist", related_name="libraries")

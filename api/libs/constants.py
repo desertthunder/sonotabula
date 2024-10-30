@@ -7,9 +7,10 @@ the services package.
 """
 
 import enum
+import os
 
-WEB_APP_URL = "http://localhost:5173"
-REDIRECT_URI = "http://localhost:8000/api/login"
+WEB_APP_URL = os.getenv("WEB_APP_URL", "https://local.dashspot.dev")
+REDIRECT_URI = f"{WEB_APP_URL}/api/login"
 
 
 class SpotifyAPIEndpoints(enum.StrEnum):
