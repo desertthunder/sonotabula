@@ -1,5 +1,5 @@
 import { DrawerKey, useDrawerStore } from "@/store/drawers";
-import type { LibraryPlaylist, LibraryTrack } from "@libs/types";
+import type { LibraryArtist, LibraryPlaylist, LibraryTrack } from "@libs/types";
 import { LibraryKey } from "@libs/types";
 import type { CellContext } from "@tanstack/react-table";
 import { useCallback } from "react";
@@ -93,6 +93,20 @@ export function PlaylistIsSyncedCell(
 }
 
 export function TrackIsSyncedCell(props: CellContext<LibraryTrack, boolean>) {
+  return (
+    <span className={["text-xs"].join(" ")}>
+      {props.getValue() ? (
+        <i className="i-ri-check-line text-green-500" />
+      ) : (
+        <>
+          <i className="i-ri-close-line text-red-400" />
+        </>
+      )}
+    </span>
+  );
+}
+
+export function ArtistIsSyncedCell(props: CellContext<LibraryArtist, boolean>) {
   return (
     <span className={["text-xs"].join(" ")}>
       {props.getValue() ? (

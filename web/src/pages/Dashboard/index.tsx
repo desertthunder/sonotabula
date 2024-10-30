@@ -1,34 +1,84 @@
 /**
  * @description index of /dashboard url namespace
  */
-import { LibraryKey, Counts } from "@libs/types";
-import { useCallback, useEffect, useState } from "react";
-import { StatCard } from "./components/stats";
-import { Tabs } from "./components/tabs";
-import { Drawers } from "./components/drawers";
-import { RealTimeTable } from "./components/tables";
 import { LibraryParams, useLibraryData, useSync } from "@/libs/hooks/api/v1";
+import { Counts, LibraryArtist, LibraryKey } from "@libs/types";
+import last from "lodash/last";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useSearch } from "wouter";
+import { Drawers } from "./components/drawers";
+import { StatCard } from "./components/stats";
+import { RealTimeTable } from "./components/tables";
+import { Tabs } from "./components/tabs";
 
-const initialParams = {
+const initialParams: LibraryParams = {
   total: 0,
   page: 1,
   page_size: 10,
+  last: undefined,
 };
 
+/**
+ * useQueryUrlParams extracts the query parameters from the URL
+ * to determine the current scope of the dashboard table.
+ *
+ * @returns {LibraryKey}
+ */
+function useQueryUrlParams(): LibraryKey {
+  const search = useSearch();
+
+  if (!search) {
+    return LibraryKey.LibraryPlaylists;
+  }
+
+  const params = new URLSearchParams(search);
+  // We're looking for the `tab` key in the query parameters
+  // to determine the current scope of the dashboard table.
+  if (!params.get("tab")) {
+    return LibraryKey.LibraryPlaylists;
+  }
+
+  switch (params.get("tab")) {
+    case "tracks":
+      return LibraryKey.LibraryTracks;
+    case "albums":
+      return LibraryKey.LibraryAlbums;
+    case "artists":
+      return LibraryKey.LibraryArtists;
+    default:
+      return LibraryKey.LibraryPlaylists;
+  }
+}
+
 export function Dashboard() {
-  const [scope, setScope] = useState<LibraryKey>(LibraryKey.LibraryPlaylists);
+  const scope = useQueryUrlParams();
   const [pageParams, setPageParams] = useState<LibraryParams>(initialParams);
   const [pageData, setPageData] = useState<LibraryParams>(initialParams);
+  const [, setLocation] = useLocation();
 
-  const onTabChange = useCallback((key: LibraryKey) => {
-    setScope(key);
-    setPageParams(initialParams);
-  }, []);
+  const onTabChange = useCallback(
+    (key: LibraryKey) => {
+      switch (key) {
+        case LibraryKey.LibraryTracks:
+          return setLocation("/dashboard?tab=tracks");
+        case LibraryKey.LibraryAlbums:
+          return setLocation("/dashboard?tab=albums");
+        case LibraryKey.LibraryArtists:
+          return setLocation("/dashboard?tab=artists");
+        case LibraryKey.LibraryPlaylists:
+          return setLocation("/dashboard?tab=playlists");
+        default:
+          return setLocation("/dashboard");
+      }
+    },
+    [setLocation]
+  );
 
   const next = () => {
     setPageParams({
       ...pageParams,
       page: pageParams.page + 1,
+      last: pageData.last,
     });
   };
 
@@ -36,6 +86,7 @@ export function Dashboard() {
     setPageParams({
       ...pageParams,
       page: pageParams.page - 1,
+      last: pageData.last,
     });
   };
 
@@ -55,11 +106,25 @@ export function Dashboard() {
       return;
     }
 
-    setPageData({
+    const newPageData: LibraryParams = {
       total: query.data.total,
       page: query.data.page,
       page_size: query.data.page_size,
-    });
+      last: undefined,
+    };
+
+    if (scope === LibraryKey.LibraryArtists) {
+      const lastItem = last(query.data.data as LibraryArtist[])?.spotify_id;
+
+      setPageData({
+        ...newPageData,
+        last: lastItem,
+      });
+    } else {
+      setPageData(newPageData);
+    }
+
+    return () => {};
   }, [query.data, scope]);
 
   return (

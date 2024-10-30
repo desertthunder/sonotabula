@@ -128,7 +128,7 @@ class SpotifyLibraryService:
             yield from self._library_albums(user=user, limit=limit, all=all)
 
     def library_artists(
-        self, user_pk: int, limit: int = 50, offset: int = 0, all: bool = False
+        self, user_pk: int, limit: int = 50, all: bool = False, last: str | None = None
     ) -> typing.Iterable[dict]:
         """Get the user's followed artists.
 
@@ -137,9 +137,7 @@ class SpotifyLibraryService:
         user = self.get_user(user_pk)
 
         try:
-            yield from self._library_artists(
-                user=user, limit=limit, offset=offset, all=all
-            )
+            yield from self._library_artists(user=user, limit=limit, last=last, all=all)
         except SpotifyExpiredTokenError:
             self.auth_service.refresh_access_token(user.refresh_token)
 
@@ -332,7 +330,11 @@ class SpotifyLibraryService:
                 yield from resp.get("items")
 
     def _library_artists(
-        self, user: "AppUser", limit: int = 50, offset: int = 0, all: bool = False
+        self,
+        user: "AppUser",
+        limit: int = 50,
+        last: str | None = None,
+        all: bool = False,
     ) -> typing.Iterable[dict]:
         """Get the user's followed artists."""
         yielded = 0
@@ -345,10 +347,10 @@ class SpotifyLibraryService:
                 if not all and yielded >= limit:
                     break
 
-                params = {"limit": limit if limit <= 50 else 50}
+                params: dict[str, str | int] = {"limit": limit if limit <= 50 else 50}
 
-                if offset > 0:
-                    params["offset"] = offset
+                if last is not None:
+                    params["after"] = last
 
                 response = client.get(url=next, params={"type": "artist", **params})
                 if response.is_error:

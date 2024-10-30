@@ -41,6 +41,7 @@ export type LibraryArtist = {
   name: string;
   link: string;
   image_url: string;
+  is_synced: boolean;
 };
 
 export type FetchError = {

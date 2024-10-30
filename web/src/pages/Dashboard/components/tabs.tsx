@@ -8,6 +8,21 @@ interface Props {
   context: UseMutationResult<any>;
 }
 
+function getIconClassName(resource: LibraryKey) {
+  switch (resource) {
+    case LibraryKey.LibraryPlaylists:
+      return "i-ri-play-list-2-fill";
+    case LibraryKey.LibraryTracks:
+      return "i-ri-music-fill";
+    case LibraryKey.LibraryAlbums:
+      return "i-ri-album-fill";
+    case LibraryKey.LibraryArtists:
+      return "i-ri-user-2-fill";
+    default:
+      return "i-ri-circle-fill";
+  }
+}
+
 export function Tabs({ scope, onChange, context }: Props) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,16 +39,6 @@ export function Tabs({ scope, onChange, context }: Props) {
     return () => clearTimeout(timeout);
   }, [context.isPending]);
 
-  const isDisabled = (resource: LibraryKey) => {
-    if (isLoading) return true;
-
-    if (scope === resource) return true;
-
-    if (scope === LibraryKey.LibraryArtists) return true;
-
-    return false;
-  };
-
   return (
     <div className="mt-4 mb-2 gap-x-2 flex items-start justify-between">
       <div className="flex gap-x-2">
@@ -45,36 +50,28 @@ export function Tabs({ scope, onChange, context }: Props) {
               // className={scope === resource ? "active" : ""}
               className={[
                 "px-4 py-2",
-                "text-sm font-semibold",
-                "text-white",
+                "text-sm font-semibold text-white",
                 "cursor-pointer",
-                "hover:text-white",
-                "hover:bg-emerald-400",
                 "rounded-lg",
                 "flex items-center gap-2",
                 "focus:outline-none",
                 "focus:ring-2 focus:ring-emerald-500",
                 "focus:ring-offset-2 focus:ring-offset-zinc-100",
                 "transition-all",
-                "group",
-                "group:transition-transform group:duration-300",
-                isDisabled(resource) ? "pointer-events-none" : "",
-                scope === resource ? "bg-emerald-700" : "bg-emerald-500",
+                "group group:transition-transform group:duration-300",
+                isLoading ? "pointer-events-none" : "",
+                scope === resource
+                  ? "bg-emerald-700 pointer-events-none"
+                  : "bg-emerald-500 hover:bg-emerald-600 hover:text-white",
               ].join(" ")}
-              disabled={isDisabled(resource)}
+              disabled={isLoading || scope === resource}
             >
-              {resource === LibraryKey.LibraryPlaylists ? (
-                <i className="i-ri-play-list-2-fill group-hover:rotate-45" />
-              ) : null}
-              {resource === LibraryKey.LibraryTracks ? (
-                <i className="i-ri-music-fill group-hover:rotate-45" />
-              ) : null}
-              {resource === LibraryKey.LibraryAlbums ? (
-                <i className="i-ri-album-fill group-hover:rotate-45" />
-              ) : null}
-              {resource === LibraryKey.LibraryArtists ? (
-                <i className="i-ri-user-2-fill group-hover:rotate-45" />
-              ) : null}
+              <i
+                className={`${getIconClassName(
+                  resource
+                )} group-hover:rotate-45`}
+              />
+
               {LibraryTitles[resource]}
             </button>
           );
@@ -83,22 +80,14 @@ export function Tabs({ scope, onChange, context }: Props) {
       <div>
         <button
           className={[
-            "bg-white text-emerald-600",
+            "bg-white text-emerald-600 hover:bg-emerald-100",
             "rounded-lg p-2 flex items-center gap-2",
-            "hover:bg-emerald-100",
             "hover:scale-110 hover:shadow-lg",
             "transition-transform duration-200",
             "group",
-            [LibraryKey.LibraryAlbums, LibraryKey.LibraryArtists].includes(
-              scope
-            )
-              ? "pointer-events-none bg-zinc-200"
-              : "",
+            isLoading ? "pointer-events-none bg-zinc-200" : "",
           ].join(" ")}
-          disabled={[
-            LibraryKey.LibraryAlbums,
-            LibraryKey.LibraryArtists,
-          ].includes(scope)}
+          disabled={isLoading}
           onClick={() => context.mutate(undefined)}
         >
           {isLoading ? (

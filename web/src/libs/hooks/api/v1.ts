@@ -16,6 +16,7 @@ export type LibraryParams = {
   total: number;
   page: number;
   page_size: number;
+  last?: string;
 };
 
 export type LibraryResponse<T extends LibraryKey> = {
@@ -23,6 +24,7 @@ export type LibraryResponse<T extends LibraryKey> = {
   total: number;
   page: number;
   page_size: number;
+  last?: string;
 };
 
 /**
@@ -105,6 +107,10 @@ async function fetchLibraryArtists(
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
+  if (params.last) {
+    uri.searchParams.append("last", params.last);
+  }
+
   const response = await fetch(uri.toString(), {
     method: "GET",
     headers: {
@@ -163,6 +169,32 @@ export async function syncLibraryTracks(
   return await response.json();
 }
 
+export async function syncLibraryArtists(
+  token: string | null,
+  params: LibraryParams
+) {
+  const uri = new URL("/api/v1/library/artists", window.location.origin);
+  uri.searchParams.append("page", params.page.toString());
+  uri.searchParams.append("page_size", params.page_size.toString());
+
+  if (params.last) {
+    uri.searchParams.append("last", params.last);
+  }
+
+  const response = await fetch(uri.toString(), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to sync library artists.");
+  }
+
+  return await response.json();
+}
+
 /**
  * @description A hook to select & dispatch API request to fetch library data.
  */
@@ -175,6 +207,10 @@ export function useLibraryData<T extends LibraryKey>(
   const searchParams = new URLSearchParams();
   searchParams.append("page", params.page.toString());
   searchParams.append("page_size", params.page_size.toString());
+
+  if (params.last) {
+    searchParams.append("last", params.last);
+  }
 
   const query = useQuery({
     queryKey: [scope, searchParams.toString()],
@@ -200,10 +236,13 @@ export function useLibraryData<T extends LibraryKey>(
 
 export function useSync(scope: LibraryKey, params: LibraryParams) {
   const token = useTokenStore((state) => state.token);
-
   const searchParams = new URLSearchParams();
   searchParams.append("page", params.page.toString());
   searchParams.append("page_size", params.page_size.toString());
+
+  if (params.last) {
+    searchParams.append("last", params.last);
+  }
 
   const mutation = useMutation({
     mutationKey: [scope, searchParams.toString()],
@@ -213,6 +252,8 @@ export function useSync(scope: LibraryKey, params: LibraryParams) {
           return await syncLibraryPlaylists(token, params);
         case LibraryKey.LibraryTracks:
           return await syncLibraryTracks(token, params);
+        case LibraryKey.LibraryArtists:
+          return await syncLibraryArtists(token, params);
         default:
           throw new Error("Invalid scope");
       }

@@ -55,15 +55,15 @@ export function AppRouter() {
         <Route path={Routes.Login}>
           <Signup />
         </Route>
-        <Router base={Routes.Dashboard}>
+        <Router>
           <DashboardLayout>
-            <Route path="/">
+            <Route path="/dashboard">
               <Dashboard />
             </Route>
-            <Route path="/profile">
+            <Route path="/dashboard/profile">
               <Profile />
             </Route>
-            <Route path="/browser" nest>
+            <Route path="/dashboard/browser" nest>
               <BrowserLayout>
                 <Route path="/playlists" nest>
                   <BrowserPlaylists>

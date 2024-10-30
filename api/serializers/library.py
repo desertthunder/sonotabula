@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, Field
 
+from api.models import Artist as ArtistModel
 from api.models import Playlist as PlaylistModel
 from api.models import Track as TrackModel
 from api.serializers.base import Serializer
@@ -294,6 +295,8 @@ class Artist(Serializer):
     name: str
     link: str
     image_url: str
+    id: str | None = None
+    is_synced: bool = False
 
     @classmethod
     def mappings(cls: type["Artist"]) -> dict[str, str]:
@@ -310,6 +313,20 @@ class Artist(Serializer):
     def nullable_fields(cls: type["Artist"]) -> tuple:
         """Fields that can be null."""
         return ("",)
+
+    @classmethod
+    def get(cls: type["Artist"], response: dict) -> "Artist":
+        """Create an Artist object from JSON data."""
+        data = cls.map_response(response)
+
+        if record := ArtistModel.objects.filter(spotify_id=data["spotify_id"]).first():
+            data["id"] = str(record.id)
+            data["is_synced"] = record.is_synced
+
+        if data.get("genres") is None or data.get("genres") == "":
+            data["genres"] = ["N/A"]
+
+        return cls(**data)
 
 
 # TODO: Move to library app

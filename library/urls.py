@@ -4,8 +4,11 @@ from django.urls import path
 
 from library.views import AlbumViewSet, ArtistViewSet, PlaylistViewSet, TrackViewSet
 
+LIST_CREATE = {"get": "list", "post": "create"}
+RETRIEVE = {"get": "retrieve"}
+
 urlpatterns = [
-    path("artists", ArtistViewSet.as_view({"get": "list"}), name="library-artists"),
+    path("artists", ArtistViewSet.as_view({**LIST_CREATE}), name="library-artists"),
     path("albums", AlbumViewSet.as_view({"get": "list"}), name="library-albums"),
     path(
         "playlists/<str:spotify_id>",
@@ -13,9 +16,7 @@ urlpatterns = [
         name="library-playlist",
     ),
     path(
-        "playlists",
-        PlaylistViewSet.as_view({"get": "list", "post": "create"}),
-        name="library-playlists",
+        "playlists", PlaylistViewSet.as_view({**LIST_CREATE}), name="library-playlists"
     ),
     path(
         "tracks/<str:spotify_id>/analysis",
@@ -27,9 +28,5 @@ urlpatterns = [
         TrackViewSet.as_view({"get": "retrieve"}),
         name="library-track",
     ),
-    path(
-        "tracks",
-        TrackViewSet.as_view({"get": "list", "post": "create"}),
-        name="library-tracks",
-    ),
+    path("tracks", TrackViewSet.as_view({**LIST_CREATE}), name="library-tracks"),
 ]

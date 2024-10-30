@@ -19,6 +19,7 @@ import {
 import { useMemo } from "react";
 import { TableRow } from "./row";
 import {
+  ArtistIsSyncedCell,
   ErrorCell,
   LoaderCell,
   PlaylistIsSyncedCell,
@@ -219,6 +220,11 @@ const artistColumns = [
       </span>
     ),
   }),
+  artistColumnHelper.accessor("is_synced", {
+    header: "Synced",
+    id: "is_synced",
+    cell: ArtistIsSyncedCell,
+  }),
   artistColumnHelper.accessor("spotify_id", {
     header: "Link",
     id: "spotify_id",
@@ -351,6 +357,8 @@ export function RealTimeTable<T extends LibraryKey>({
         </table>
       </div>
       <Pager
+        showNumbers={scope !== LibraryKey.LibraryArtists} // artists use a cursor
+        isLoading={context.isLoading}
         page={pageData.page}
         setPage={pager.next}
         totalPages={Math.ceil(pageData.total / pageData.page_size) + 1}

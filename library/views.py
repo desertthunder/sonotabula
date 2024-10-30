@@ -22,6 +22,7 @@ from api.services.spotify import (
     SpotifyLibraryService,
 )
 from library.tasks import (
+    sync_artists_from_request,
     sync_playlist_tracks_from_request,
     sync_playlists_from_request,
     sync_tracks_from_request,
@@ -196,16 +197,37 @@ class ArtistViewSet(ViewSetMixin, viewsets.ViewSet):
     def list(self, request: Request) -> Response:
         """List all artists."""
         user_id = request.user.id
-        page_size, page, offset = self.get_page_params(request)
+        page_size, page, _ = self.get_page_params(request)
+        last = request.query_params.get("last")
+
         total = self._library.library_artists_total(user_id)
-        artists = self._library.library_artists(user_id, limit=page_size, offset=offset)
-        data = [ArtistSerializer.get(artist).model_dump() for artist in artists]
-        response = {"data": data, "page_size": page_size, "page": page, "total": total}
+        artists = self._library.library_artists(user_id, limit=page_size, last=last)
+        models = [ArtistSerializer.get(artist) for artist in artists]
+        data = [model.model_dump() for model in models]
+        response = {
+            "data": data,
+            "page_size": page_size,
+            "page": page,
+            "total": total,
+            "last": models[-1].spotify_id if models else None,
+        }
         return Response(data=response, status=HTTPStatus.OK)
 
     def create(self, request: Request) -> Response:
-        """Create a new artist."""
-        raise NotImplementedError
+        """Sync current page of artists."""
+        user_id = request.user.id
+        page_size, _, _ = self.get_page_params(request)
+        last = request.query_params.get("last")
+
+        logger.debug(f"Cursor: {last=}")
+
+        artists = self._library.library_artists(user_id, limit=page_size, last=last)
+        data = [ArtistSerializer.get(artist).model_dump() for artist in artists]
+        response = {"message": "Syncing tracks..."}
+
+        sync_artists_from_request.s(user_id, data).apply_async()
+
+        return Response(data=response, status=HTTPStatus.ACCEPTED)
 
     def retrieve(self, request: Request, pk: str) -> Response:
         """Retrieve an artist by ID."""
