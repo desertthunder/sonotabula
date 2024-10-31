@@ -1,4 +1,4 @@
-"""Async models for the browser app."""
+"""Async models for the live app."""
 
 from django.db import models
 

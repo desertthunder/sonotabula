@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     "api",
     "core",
     "apps",
-    "browser",
+    "live",
     "library",
     "django_celery_results",
 ]

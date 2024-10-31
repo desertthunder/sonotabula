@@ -9,8 +9,8 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer  # type: ignor
 from loguru import logger
 from pydantic import BaseModel
 
-from browser.models import Acknowledgement, Notification
 from core.models import AppUser
+from live.models import Acknowledgement, Notification
 
 
 class CustomCloseCode(enum.IntEnum):

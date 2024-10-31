@@ -12,7 +12,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter  # type: ignore
 from channels.security.websocket import AllowedHostsOriginValidator  # type: ignore
 from django.core.asgi import get_asgi_application
 
-import browser.routing
+import live.routing
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
@@ -22,7 +22,7 @@ application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket": AllowedHostsOriginValidator(
-            URLRouter(browser.routing.websocket_urlpatterns)
+            URLRouter(live.routing.websocket_urlpatterns)
         ),
     }
 )
