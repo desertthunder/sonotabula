@@ -78,3 +78,5 @@ The implementation of pagination is inconsistent across the Spotify API. For
 most resources, the `next` field with an `offset` parameter is used. However,
 for followed artists, a cursor is used and this requires the spotify ID of the
 last page's artist to be passed in the next request (as `after`).
+
+## Naming Things is Hard

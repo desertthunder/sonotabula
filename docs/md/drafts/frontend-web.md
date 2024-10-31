@@ -14,6 +14,21 @@ Styling is inspired by a number of sources, namely Tailwind UI, Flowbite, and
 Shadcn components. However, all business logic for components are hand-rolled.
 TailwindCSS is used for the components.
 
+### Color Palette
+
+![Color Palette](../../static/img/design/colors.png)
+
+```yaml
+- tailwind: 'green-500'
+    hex: '#10B981'
+- tailwind: 'emerald-500'
+    hex: '#22C55E'
+- tailwind: 'zinc-50'
+    hex: '#FAFAFA'
+- tailwind: 'rose-500'
+    hex: '#F43F5E'
+```
+
 ### Fonts
 
 The main body/sans font is `Inter`. Headings are in flux, between `DM Sans`,
@@ -39,7 +54,7 @@ Zustand
 
 ### API Requests
 
-React Query on top of `fetch`
+React Query on top of the browser `fetch` API.
 
 ### Component Implementations
 
