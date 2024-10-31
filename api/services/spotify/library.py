@@ -129,6 +129,11 @@ class SpotifyLibraryService:
             user.refresh_from_db()
 
             yield from self._library_albums(user=user, limit=limit, all=all)
+        except Exception as e:
+            logger.error("Request to get albums failed.")
+            logger.error(f"Error: {e}")
+
+            raise SpotifyAPIError(str(e)) from e
 
     def library_artists(
         self, user_pk: int, limit: int = 50, all: bool = False, last: str | None = None
@@ -328,7 +333,7 @@ class SpotifyLibraryService:
 
                 yielded += len(resp.get("items"))
 
-                logger.debug(f"Fetched {yielded} {resp.get("total")}")
+                logger.debug(f"Fetched {yielded} of {resp.get("total")}")
 
                 yield from resp.get("items")
 
@@ -467,3 +472,33 @@ class SpotifyLibraryService:
                 time.sleep(0.75)
 
             yield from resp.get("items")
+
+    def _library_album(self, user: "AppUser", album_id: str) -> dict:
+        """Get the user's album."""
+        response = httpx.get(
+            url=f"{SpotifyAPIEndpoints.BASE_URL}/{SpotifyAPIEndpoints.Album.format(album_id=album_id)}",
+            headers={"Authorization": f"Bearer {user.access_token}"},
+        )
+
+        if response.is_error:
+            self.handle_error(response)
+
+        return response.json()
+
+    def library_album(self, user_pk: int, album_id: str) -> dict:
+        """Get the user's album."""
+        user = self.get_user(user_pk)
+
+        try:
+            return self._library_album(user=user, album_id=album_id)
+        except SpotifyExpiredTokenError:
+            self.auth_service.refresh_access_token(user.refresh_token)
+
+            user.refresh_from_db()
+
+            return self._library_album(user=user, album_id=album_id)
+        except Exception as e:
+            logger.error(f"Request to get album {album_id} failed.")
+            logger.error(f"Error: {e}")
+
+            raise SpotifyAPIError(str(e)) from e

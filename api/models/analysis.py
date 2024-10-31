@@ -12,6 +12,7 @@ import pandas as pd
 from django.db import models
 from loguru import logger
 
+from api.models.album import Album
 from api.models.mixins import TimestampedModel
 from api.models.playlist import Playlist
 from api.models.track import Track
@@ -21,6 +22,56 @@ from core.models import AppUser
 
 class AnalysisManager(models.Manager["Analysis"]):
     """Manager for analysis models."""
+
+    def prep_album(self, album_pk: uuid.UUID, user_pk: int) -> list[str]:
+        """Analyze an album."""
+        album = Album.objects.get(pk=album_pk)
+
+        if not album.is_synced:
+            raise ValueError(f"Album {str(album.pk)} | {album.name} is not synced.")
+
+        results = album.tracks.all().values_list("spotify_id", flat=True)
+
+        return list(results)
+
+    def analyze_album(
+        self, album_pk: str | uuid.UUID, user_pk: int, items: typing.Iterable[dict]
+    ) -> uuid.UUID:
+        """Validate track data."""
+        album = Album.objects.get(pk=album_pk)
+        user = AppUser.objects.get(pk=user_pk)
+
+        if not album.is_synced:
+            raise ValueError(f"Album {str(album.pk)} | {album.name} is not synced.")
+
+        analysis, _ = self.get_or_create(
+            version=f"album:{album.pk}",
+            album_id=album.pk,
+            user=user,
+        )
+
+        tracks = []
+
+        for item in items:
+            data = validation.SyncAnalysis(**item)
+            feature_data = data.model_dump().copy()
+            spotify_id = feature_data.pop("id")
+
+            track = album.tracks.get(spotify_id=spotify_id)
+
+            _ = TrackFeatures.objects.get_or_create(**feature_data, track_id=track.pk)
+
+            tracks.append(track)
+
+        analysis.tracks.set(tracks)
+        album.is_analyzed = True
+
+        analysis.save()
+        album.save()
+
+        analysis.refresh_from_db()
+
+        return analysis.pk
 
     def pre_analysis(self, playlist_pk: uuid.UUID, user_pk: int) -> list[str]:
         """Analyze a playlist."""
@@ -157,15 +208,29 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         logger.debug(f"Computation Data: {data}")
 
-        computation, _ = Computation.objects.get_or_create(
-            analysis_id=analysis.pk,
-            playlist_id=analysis.playlist.pk,
-            data=data,
-        )
+        if analysis.playlist is not None:
+            computation, _ = Computation.objects.get_or_create(
+                analysis_id=analysis.pk,
+                playlist_id=analysis.playlist.pk,
+                data=data,
+            )
 
-        logger.debug(f"Computation: {computation}")
+            logger.debug(f"Computation: {computation}")
 
-        return computation.pk
+            return computation.pk
+
+        if analysis.album is not None:
+            computation, _ = Computation.objects.get_or_create(
+                analysis_id=analysis.pk,
+                album_id=analysis.album.pk,
+                data=data,
+            )
+
+            logger.debug(f"Computation: {computation}")
+
+            return computation.pk
+
+        raise ValueError("Analysis must have a playlist or album.")
 
 
 class TrackFeatures(TimestampedModel):
@@ -212,7 +277,10 @@ class Analysis(TimestampedModel):
     )
     version = models.CharField(max_length=255, unique=True, null=False)
     playlist = models.OneToOneField(
-        Playlist, on_delete=models.CASCADE, related_name="analysis"
+        Playlist, on_delete=models.CASCADE, related_name="analysis", null=True
+    )
+    album = models.OneToOneField(
+        Album, on_delete=models.CASCADE, related_name="analysis", null=True
     )
     user = models.ForeignKey("core.AppUser", on_delete=models.CASCADE)
     tracks = models.ManyToManyField("api.Track", related_name="analyses")
@@ -251,7 +319,10 @@ class Computation(TimestampedModel):
         Analysis, on_delete=models.CASCADE, related_name="data"
     )
     playlist = models.ForeignKey(
-        Playlist, on_delete=models.CASCADE, related_name="computation"
+        "api.Playlist", on_delete=models.CASCADE, related_name="computation", null=True
+    )
+    album = models.ForeignKey(
+        "api.Album", on_delete=models.CASCADE, related_name="computation", null=True
     )
     data = models.JSONField(
         validators=[validation.ComputationValidator.validate_data], null=False
