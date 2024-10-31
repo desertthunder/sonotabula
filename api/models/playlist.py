@@ -1,6 +1,7 @@
 """Playlist Model."""
 
 import datetime
+import json
 import typing
 import uuid
 
@@ -17,6 +18,75 @@ from api.serializers import validation
 
 class PlaylistSyncManager(models.Manager["Playlist"]):
     """Manager for syncing user playlists."""
+
+    def clean_playlist(self, playlist: dict) -> validation.SyncPlaylist:
+        """Clean playlist data."""
+        try:
+            owner = playlist.get("owner")
+            version = playlist.get("snapshot_id")
+            image_url = playlist.get("images", [{}])[0].get("url")
+            public = playlist.get("public")
+            shared = playlist.get("collaborative")
+            name = playlist.get("name")
+            spotify_id = playlist.get("id")
+
+            if not owner:
+                raise ValueError("Playlist has no owner.")
+            elif not owner.get("id"):
+                raise ValueError("Playlist owner has no id.")
+
+            owner_id = owner.get("id")
+
+            if not version:
+                raise ValueError("Playlist has no version.")
+            if not name or not spotify_id:
+                raise ValueError("Playlist has no name or spotify_id (required).")
+
+            data = {
+                "name": name,
+                "spotify_id": spotify_id,
+                "owner_id": owner_id,
+                "version": version,
+                "image_url": image_url,
+                "public": public,
+                "shared": shared,
+                "description": playlist.get("description"),
+            }
+
+            logger.info(f"Cleaned playlist: {data}")
+
+            return validation.SyncPlaylist(**data)
+        except (ValueError, pydantic.ValidationError) as e:
+            logger.error(e)
+
+            raise ValueError("Failed to validate playlist") from e
+
+    def sync_playlist(self, cleaned: dict, user_pk: int) -> "Playlist":
+        """Sync a single playlist."""
+        data = validation.SyncPlaylist(**cleaned)
+        playlist, _ = self.update_or_create(
+            spotify_id=data.spotify_id,
+            defaults={
+                **data.model_dump(),
+                "user_id": user_pk,
+            },
+        )
+
+        if not playlist.version:
+            logger.error(f"Data: {json.dumps(cleaned, indent=2)}")
+
+            raise ValueError(
+                f"Playlist {playlist.pk}:{playlist.spotify_id} has no version."
+            )
+
+        return playlist
+
+    def complete_playlist_sync(self, playlist: "Playlist") -> uuid.UUID:
+        """Complete playlist sync."""
+        playlist.is_synced = True
+        playlist.save()
+
+        return playlist.pk
 
     def pre_sync(
         self, playlists: typing.Iterable[dict]

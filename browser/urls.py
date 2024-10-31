@@ -1,0 +1,1 @@
+"""Browser URL configuration."""

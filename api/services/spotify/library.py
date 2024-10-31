@@ -1,6 +1,5 @@
 """Spotify data service."""
 
-import json
 import time
 import typing
 
@@ -29,8 +28,12 @@ class SpotifyLibraryService:
     def handle_error(self, response: httpx.Response) -> None:
         """Handle Spotify API errors."""
         logger.error(f"Error: {response.text}")
+        logger.error(f"Status: {response.status_code}")
 
-        error = json.loads(response.text).get("error")
+        if response.text and response.json():
+            error = response.json().get("error")
+        else:
+            error = {"status": response.status_code, "message": response.text}
 
         if (
             error.get("status") == 401

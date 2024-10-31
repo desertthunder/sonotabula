@@ -7,6 +7,7 @@
 import typing
 import uuid
 
+import numpy as np
 import pandas as pd
 from django.db import models
 from loguru import logger
@@ -35,7 +36,7 @@ class AnalysisManager(models.Manager["Analysis"]):
         return list(results)
 
     def analyze(
-        self, playlist_pk: str, user_pk: int, items: typing.Iterable[dict]
+        self, playlist_pk: str | uuid.UUID, user_pk: int, items: typing.Iterable[dict]
     ) -> uuid.UUID:
         """Validate track data."""
         playlist = Playlist.objects.get(pk=playlist_pk)
@@ -84,7 +85,12 @@ class AnalysisManager(models.Manager["Analysis"]):
         return df
 
     def compute(self, analysis_pk: uuid.UUID) -> dict:
-        """Compute playlist analysis."""
+        """Compute playlist analysis.
+
+        1. Build the dataset
+        2. Calculate averages, superlatives, and counts.
+        3. Return the computed data.
+        """
         data = self.build_dataset(analysis_pk)
 
         logger.debug(f"Data: {data.head()}")
@@ -115,11 +121,24 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         for field in computation_fields:
             computed_data["averages"][field] = data[field].mean()
+            min_value = data[field].min()
+            max_value = data[field].max()
+
+            # Serialize numpy float64 to python float
+            if isinstance(np.float64, type(min_value)):
+                min_value = float(min_value)
+            else:
+                min_value = int(min_value)
+
+            if isinstance(np.float64, type(max_value)):
+                max_value = float(max_value)
+            else:
+                max_value = int(max_value)
 
             computed_data["superlatives"][field] = {
-                "min": data[field].min(),
+                "min": min_value,
                 "min_track_id": str(data["track_id"].loc[data[field].idxmin()]),
-                "max": data[field].max(),
+                "max": max_value,
                 "max_track_id": str(data["track_id"].loc[data[field].idxmax()]),
             }
 
@@ -129,12 +148,22 @@ class AnalysisManager(models.Manager["Analysis"]):
         return computed_data
 
     def set_computation(self, analysis_pk: uuid.UUID, data: dict) -> uuid.UUID:
-        """Set computation data."""
+        """Set computation data.
+
+        Persist the computed data to the database.
+        Returns the computation primary key.
+        """
         analysis = self.model.objects.get(id=analysis_pk)
 
+        logger.debug(f"Computation Data: {data}")
+
         computation, _ = Computation.objects.get_or_create(
-            analysis_id=analysis.pk, playlist_id=analysis.playlist.pk, data=data
+            analysis_id=analysis.pk,
+            playlist_id=analysis.playlist.pk,
+            data=data,
         )
+
+        logger.debug(f"Computation: {computation}")
 
         return computation.pk
 
