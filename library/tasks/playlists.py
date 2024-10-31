@@ -4,12 +4,13 @@ from celery import chain, shared_task
 from django.db.models import Q
 from loguru import logger
 
-from api.models import Library, Playlist, Track
+from api.models import Playlist, Track
 from api.services.spotify import (
     SpotifyAuthService,
     SpotifyDataService,
     SpotifyLibraryService,
 )
+from browser.models import Library
 from core.models import AppUser
 from library.serializers import PlaylistAPISerializer
 

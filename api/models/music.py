@@ -14,17 +14,6 @@ from api.models.mixins import (
 )
 
 
-class Library(TimestampedModel):
-    """Library metadata model."""
-
-    user = models.OneToOneField(
-        "core.AppUser", on_delete=models.CASCADE, related_name="library"
-    )
-
-    artists = models.ManyToManyField("api.Artist", related_name="libraries")
-    tracks = models.ManyToManyField("api.Track", related_name="libraries")
-
-
 class Album(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     """Album model.
 
@@ -38,7 +27,6 @@ class Album(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
     label = models.CharField(max_length=255, blank=True, null=True)
     copyright = models.CharField(max_length=255, blank=True, null=True)
     release_year = models.IntegerField()
-    libraries = models.ManyToManyField(Library, related_name="albums")
     genres = models.ManyToManyField("api.Genre", related_name="albums")
 
 

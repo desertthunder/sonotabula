@@ -5,8 +5,9 @@ import uuid
 from celery import shared_task
 from loguru import logger
 
-from api.models import Artist, Library
+from api.models import Artist
 from api.models.music import Genre
+from browser.models import Library
 from library.serializers import ArtistAPISerializer
 
 

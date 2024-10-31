@@ -124,8 +124,6 @@ class Playlist(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
         "core.AppUser", related_name="playlists", on_delete=models.PROTECT, null=True
     )
 
-    libraries = models.ManyToManyField("api.Library", related_name="playlists")
-
     objects: models.Manager["Playlist"] = models.Manager()
     sync = PlaylistSyncManager()
 
