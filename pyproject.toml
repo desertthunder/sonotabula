@@ -32,6 +32,8 @@ pandas-stubs = "^2.2.3.241009"
 loguru = "^0.7.2"
 channels = {extras = ["daphne"], version = "^4.1.0"}
 channels-redis = "^4.2.0"
+click = "^8.1.7"
+rich = "^13.9.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.7"
