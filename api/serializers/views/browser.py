@@ -230,6 +230,7 @@ class PlaylistTrackSerializer(BaseModel):
             yield cls.get(model)
 
 
+# TODO: Remove this serializer
 class PlaylistModelSerializer(BaseModel):
     """Playlist model serializer."""
 

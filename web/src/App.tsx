@@ -10,9 +10,8 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
 import { Home, Profile, Signup } from "./pages";
-import { Dashboard } from "./pages/Dashboard";
-import { DashboardLayout } from "./pages/Dashboard/layout";
-
+import { Dashboard, DashboardLayout } from "./pages/Dashboard";
+import { PlaylistsBrowser } from "./pages/Dashboard/Browser";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -56,6 +55,9 @@ export function AppRouter() {
           </Route>
           <Route path="/dashboard/profile">
             <Profile />
+          </Route>
+          <Route path="/dashboard/browser/playlists">
+            <PlaylistsBrowser />
           </Route>
         </DashboardLayout>
       </Router>

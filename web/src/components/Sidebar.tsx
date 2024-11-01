@@ -116,8 +116,16 @@ export function Sidebar() {
         <section className="flex flex-col">
           <SidebarLink href="/dashboard" label="Dashboard" />
           <SidebarLink href="/dashboard/browser/playlists" label="Playlists" />
-          <SidebarLink href="/dashboard/browser/tracks" label="Tracks" />
-          <SidebarLink href="/dashboard/browser/albums" label="Albums" />
+          <SidebarLink
+            href="/dashboard/browser/tracks"
+            label="Tracks"
+            disabled
+          />
+          <SidebarLink
+            href="/dashboard/browser/albums"
+            label="Albums"
+            disabled
+          />
         </section>
 
         <ExternalLinks />

@@ -33,6 +33,7 @@ urlpatterns = [
         name="list-browser-tracks",
     ),
     path("playback/", include("apps.urls")),
+    path("v1/browser/", include("browser.urls")),
     path("v1/library/", include("library.urls")),
     # TODO: Implement
     # path("v1/profile/saved", ProfileViewSet.as_view({"get": "list"}), \
