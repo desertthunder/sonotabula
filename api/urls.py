@@ -13,16 +13,6 @@ urlpatterns = [
     # TODO: Move to core (see below)
     path("data/saved", data.UserSavedItemsView.as_view(), name="user-saved-items"),
     path(
-        "browser/playlist/<str:playlist_id>/tracks",
-        browser.BrowserPlaylistView.as_view(),
-        name="get-browser-playlist",
-    ),
-    path(
-        "browser/playlists",
-        browser.BrowserPlaylistListView.as_view(),
-        name="list-browser-playlists",
-    ),
-    path(
         "browser/albums",
         browser.BrowserAlbumListView.as_view(),
         name="list-browser-albums",

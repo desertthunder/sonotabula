@@ -11,61 +11,9 @@ from django.http import (
 )
 from rest_framework.request import Request as DRFRequest
 
-from api.filters import AlbumFilterSet, PlaylistFilterSet, TrackFilterSet
-from api.models.playlist import Playlist
+from api.filters import AlbumFilterSet, TrackFilterSet
 from api.serializers.views import browser as responses
 from api.views.base import BrowserView
-
-
-# /browser/playlists/
-class BrowserPlaylistView(BrowserView):
-    """Playlist tracks browser view.
-
-    GET /api/browser/playlists/{playlist_id}/tracks
-    """
-
-    filterset = None
-
-    def get(
-        self, request: DRFRequest, playlist_id: str, *args, **kwargs
-    ) -> HttpResponse:
-        """Get request."""
-        playlist = (
-            Playlist.objects.prefetch_related("analysis")
-            .prefetch_related("tracks")
-            .prefetch_related("tracks__features")
-            .get(pk=playlist_id)
-        )
-
-        return JsonResponse(
-            data=responses.ExpandedPlaylistSerializer.to_response(playlist)
-        )
-
-
-class BrowserPlaylistListView(BrowserView):
-    """Get the user's persisted playlists.
-
-    GET /api/browser/playlists
-    """
-
-    filterset = PlaylistFilterSet()
-
-    def get(self, request: DRFRequest, *args, **kwargs) -> HttpResponse:
-        """Get the user's playlists.
-
-        Endpoint: GET /api/browser/playlists
-        """
-        page = request.query_params.get("page", 1)
-        page_size = request.query_params.get("page_size", 10)
-        records = self.filterset(request)
-        paginator = Paginator(object_list=records, per_page=page_size)
-
-        return JsonResponse(
-            data=responses.PaginatedPlaylistListSerializer.from_paginator(
-                paginator=paginator,
-                page=int(page),
-            ).model_dump()
-        )
 
 
 # /browser/tracks/

@@ -1,13 +1,37 @@
-import { useCallback, useState } from "react";
-import { usePlaylistFilters } from "./store";
+import { useCallback, useEffect, useState } from "react";
+import {
+  FilterKeys,
+  usePlaylistFilters,
+  setFilters,
+  removeFilter,
+} from "./store";
 import _ from "lodash";
 
-function Checkbox() {
+interface CheckboxProps {
+  filter: FilterKeys;
+}
+
+function Checkbox({ filter }: CheckboxProps) {
   const [checked, setChecked] = useState(false);
 
   const onClick = useCallback(() => {
-    setChecked((prev) => !prev);
+    setChecked((prev) => {
+      return !prev;
+    });
   }, [setChecked]);
+
+  // if (checked) {
+  //   setFilters(filter, "true");
+  // } else {
+  //   removeFilter(filter);
+  // }
+  useEffect(() => {
+    if (checked) {
+      setFilters(filter, "1");
+    } else {
+      removeFilter(filter);
+    }
+  }, [checked, filter]);
 
   return (
     <button
@@ -84,16 +108,16 @@ export function FilterForm() {
           </select>
         </div>
         <div className="flex flex-col gap-2 items-center">
-          <label htmlFor="isPublic">Public</label>
-          <Checkbox />
+          <label>My Playlists</label>
+          <Checkbox filter="my_playlists" />
         </div>
         <div className="flex flex-col gap-2 items-center">
-          <label htmlFor="isPrivate">Shared</label>
-          <Checkbox />
+          <label>Private</label>
+          <Checkbox filter="private" />
         </div>
         <div className="flex flex-col gap-2 items-center">
-          <label htmlFor="isCollaborative">Analyzed</label>
-          <Checkbox />
+          <label>Analyzed</label>
+          <Checkbox filter="is_analyzed" />
         </div>
         <div className="flex flex-col gap-2 w-1/4">
           <label htmlFor="labels-range-input" className="flex flex-col gap-1">

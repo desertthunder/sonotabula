@@ -1,42 +1,23 @@
-import {
-  useReactTable,
-  createColumnHelper,
-  getCoreRowModel,
-  flexRender,
-} from "@tanstack/react-table";
-import { useQuery } from "@tanstack/react-query";
 import { useTokenStore } from "@/store";
-import { Menu } from "./menu";
-import { usePlaylistFilters } from "./filters/store";
+import { useQuery } from "@tanstack/react-query";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import _ from "lodash";
 import { useEffect, useMemo } from "react";
+import { usePlaylistFilters } from "./filters/store";
+import type { BrowserPlaylist } from "./types";
+import { PlaylistActionsCell } from "./cells";
 /**
  * {"json":{"is_synced":true,"is_analyzed":true,"description":"With Brian McBride, The Dead Texan, William Basinski and more","owner_id":"spotify","version":"ZyPYkgAAAACmpgMNhm9gMhsvWVQyX5cB","image_url":"https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/radio/artist/36pCa1JHc6hlGbfEmLzJQc/en","public":true,"shared":false,"id":"88a0fa4f-f2eb-46e6-9731-f4b289b4fe62","name":"Stars Of The Lid Radio","spotify_id":"37i9dQZF1E4pndHPIu7Fgn"}}
  */
-type BrowserPlaylist = {
-  is_synced: boolean;
-  is_analyzed: boolean;
-  description: string;
-  owner_id: string;
-  version: string;
-  image_url: string;
-  public: boolean;
-  shared: boolean;
-  id: string;
-  name: string;
-  spotify_id: string;
-};
 
 const columnHelper = createColumnHelper<BrowserPlaylist>();
 
 const columns = [
-  columnHelper.accessor("id", {
-    header: () => null,
-    cell: () => (
-      <form className="flex justify-center w-16 text-center">
-        <input type="checkbox" />
-      </form>
-    ),
-  }),
   columnHelper.accessor("image_url", {
     header: () => null,
     cell: (props) => (
@@ -97,17 +78,16 @@ const columns = [
         </>
       );
     },
-    cell: (props) => {
-      return (
-        <span className={props.getValue() ? "text-green-500" : "text-red-500"}>
-          {props.getValue() ? "Yes" : "No"}
-        </span>
-      );
-    },
+    cell: (props) =>
+      props.getValue() ? (
+        <i className="i-ri-check-line text-emerald-500" />
+      ) : (
+        <i className="i-ri-close-line text-rose-500" />
+      ),
   }),
-  columnHelper.display({
+  columnHelper.accessor("id", {
     header: "Actions",
-    cell: () => <Menu />,
+    cell: (props) => <PlaylistActionsCell playlistID={props.getValue()} />,
   }),
   columnHelper.accessor("spotify_id", {
     header: "Link",
@@ -152,16 +132,26 @@ export function Table() {
   const page = usePlaylistFilters((state) => state.page);
   const pageSize = usePlaylistFilters((state) => state.pageSize);
   const updateFetching = usePlaylistFilters((state) => state.updateFetching);
+  const filters = usePlaylistFilters((state) => state.filters);
 
   const params = useMemo(() => {
     const params = new URLSearchParams();
     params.set("page", page.toString());
     params.set("page_size", pageSize.toString());
+
+    for (const [key, value] of filters) {
+      params.set(key, value);
+    }
+
     return params;
-  }, [page, pageSize]);
+  }, [page, pageSize, filters]);
 
   const query = useQuery({
-    queryKey: ["browser", "playlists", params.toString()],
+    queryKey: _.flatten([
+      "browser",
+      "playlists",
+      ...Array.from(params.entries()),
+    ]),
     queryFn: async () => {
       const data = await fetchPlaylists(token, params);
 

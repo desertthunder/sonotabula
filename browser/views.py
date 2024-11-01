@@ -7,6 +7,7 @@ These are audio features stored under a user's
 
 import typing
 
+from django.db import models
 from loguru import logger
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -15,8 +16,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from api.models.permissions import SpotifyAuth
+from browser.filters import PlaylistFilterSet
 from browser.models import Library
 from browser.serializers import ListPlaylistSerializer, PaginationParams
+from core.filters import FilterSet
 
 
 class LibraryRelationMixin(typing.Protocol):
@@ -68,24 +71,26 @@ class BaseBrowserViewSet(
 ):
     """Base class for browser viewsets."""
 
-    pass
+    filter_class: type[FilterSet]
+
+    def get_queryset(self, request: Request) -> models.QuerySet:
+        """Get queryset."""
+        return self.filter_class()(request)
 
 
 class PlaylistViewSet(BaseBrowserViewSet):
     """Playlist viewset."""
 
+    filter_class = PlaylistFilterSet
     relation: str = "playlists"
     authentication_classes = [SpotifyAuth]
     permission_classes = [IsAuthenticated]
 
     def list(self, request: Request) -> Response:
         """List all playlists."""
-        library = self.get_library(request)
+        qs = self.get_queryset(request)
         return Response(
-            data=ListPlaylistSerializer.to_response(
-                library.playlists.all(),
-                self.get_params(request),
-            ),
+            data=ListPlaylistSerializer.to_response(qs.all(), self.get_params(request)),
             status=status.HTTP_200_OK,
         )
 

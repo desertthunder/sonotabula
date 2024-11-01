@@ -2,6 +2,7 @@
  * Playlists Dashboard Browser Page
  */
 
+import React from "react";
 import { FilterForm } from "./filters/form";
 import { BrowserPlaylistPagination } from "./filters/pagination";
 import { Table } from "./table";
@@ -27,9 +28,8 @@ function Breadcrumbs() {
     <header className="flex flex-col justify-between p-4 bg-white border-t">
       <p className="text-gray-500 flex items-center">
         {Links.map((link, index) => (
-          <>
+          <React.Fragment key={index}>
             <Link
-              key={index}
               href={link.href}
               className={
                 link.disabled ? "pointer-events-none" : "hover:text-emerald-500"
@@ -40,7 +40,7 @@ function Breadcrumbs() {
             {index < Links.length - 1 && (
               <i className="i-ri-arrow-right-s-line align-middle" />
             )}
-          </>
+          </React.Fragment>
         ))}
       </p>
       <h1 className="text-2xl font-medium">Playlists Browser</h1>

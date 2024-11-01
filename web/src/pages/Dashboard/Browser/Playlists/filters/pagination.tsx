@@ -7,6 +7,7 @@ export function BrowserPlaylistPagination() {
   const pageSize = usePlaylistFilters((state) => state.pageSize);
   const setPage = usePlaylistFilters((state) => state.setPage);
   const isLoading = usePlaylistFilters((state) => state.isFetching);
+
   return (
     <footer className="bg-white border-y" data-testid="pagination">
       <Pager
