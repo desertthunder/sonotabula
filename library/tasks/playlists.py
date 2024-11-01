@@ -1,6 +1,8 @@
 """Syncing of library data from real-time endpoints."""
 
-from celery import chain, shared_task
+import time
+
+from celery import group, shared_task
 from django.db.models import Q
 from loguru import logger
 
@@ -60,15 +62,14 @@ def sync_playlists_from_request(user_id: int, api_playlists: list[dict]) -> None
 def dispatch_sync_playlist_tracks(user_id: int) -> None:
     """Dispatch a chain of tasks to sync playlist tracks."""
     library = Library.objects.get(user__id=user_id)
-    chained = []
+    tasks = []
 
-    for item, pl in enumerate(library.playlists.filter(is_synced=False).all()):
-        if item == 0:
-            chained.append(sync_playlist_tracks.s(user_id, pl.spotify_id))
-        else:
-            chained.append(sync_playlist_tracks.s(pl.spotify_id))
+    for pl in library.playlists.filter(is_synced=False).all():
+        sig = sync_playlist_tracks.s(user_id, pl.spotify_id)
 
-    chain(*chained).apply_async()
+        tasks.append(sig)
+
+    group(*tasks).apply_async()
 
 
 @shared_task
@@ -83,7 +84,12 @@ def sync_playlist_tracks_from_request(user_id: int, api_playlist: dict) -> None:
 def sync_playlist_tracks(user_pk: int, spotify_id: str) -> int:
     """Sync playlist tracks from Spotify to the database."""
     playlist = Playlist.objects.get(spotify_id=spotify_id)
+
+    logger.info(f"Syncing playlist tracks for {playlist.pk} | {playlist.spotify_id}")
+
+    time.sleep(0.5)
     response = data_service.fetch_playlist_tracks(spotify_id, user_pk)
+    time.sleep(0.5)
 
     cleaned = Track.sync.pre_sync(response)
     data = Track.sync.do(cleaned)

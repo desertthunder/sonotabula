@@ -82,10 +82,14 @@ class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
         Fetched in real time from the Spotify API.
         """
         user_id = request.user.id
+        library = self.get_user_library(user_id)
         page_size, page, offset = self.get_page_params(request)
         total = self._library.library_playlists_total(user_id)
         resp = self._library.library_playlists(user_id, limit=page_size, offset=offset)
-        data = [PlaylistAPISerializer.get(playlist).model_dump() for playlist in resp]
+        data = [
+            PlaylistAPISerializer.get(playlist, library).model_dump()
+            for playlist in resp
+        ]
         response = {"data": data, "page_size": page_size, "page": page, "total": total}
         return Response(data=response, status=HTTPStatus.OK)
 
