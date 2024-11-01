@@ -155,8 +155,6 @@ export function Table() {
     queryFn: async () => {
       const data = await fetchPlaylists(token, params);
 
-      updateTotal(data.pagination.total);
-
       return data;
     },
   });
@@ -167,9 +165,11 @@ export function Table() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (query.data?.pagination) {
-    updateTotal(query.data.pagination.total);
-  }
+  useEffect(() => {
+    if (query.data) {
+      updateTotal(query.data.pagination.total);
+    }
+  }, [query.data, updateTotal]);
 
   useEffect(() => {
     const isFetching = query.isLoading || query.isFetching || query.isFetching;
