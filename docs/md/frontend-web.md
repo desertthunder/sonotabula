@@ -76,6 +76,7 @@ A similar strategy will be used for modals & confirm dialogs.
 1. Tables
 2. Description Lists
 3. Cards
+4. Charts - represented with Chart.js.
 
 ### Pagination
 

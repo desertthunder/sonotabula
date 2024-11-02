@@ -19,6 +19,7 @@ from rest_framework.viewsets import ViewSet
 
 from api.models.permissions import SpotifyAuth
 from api.models.playlist import Playlist
+from api.serializers.views.browser import ExpandedPlaylistSerializer
 from browser.filters import PlaylistFilterSet
 from browser.models import Library
 from browser.serializers import (
@@ -244,11 +245,22 @@ class PlaylistViewSet(BaseBrowserViewSet):
             - tracks (paginated)
             - computation
         """
-        playlist = self.get_queryset(request).get(pk=playlist_pk)
+        playlist = (
+            self.get_queryset(request)
+            .prefetch_related(
+                "tracks",
+                "analysis",
+                "tracks__album",
+                "tracks__album__artists",
+            )
+            .get(id=uuid.UUID(playlist_pk))
+        )
+
         return Response(
-            data=RetrievePlaylistSerializer.to_response_data(
-                playlist,
-            ),
+            data={
+                **RetrievePlaylistSerializer.to_response_data(playlist),
+                **ExpandedPlaylistSerializer.to_response(playlist),
+            },
             status=status.HTTP_200_OK,
         )
 

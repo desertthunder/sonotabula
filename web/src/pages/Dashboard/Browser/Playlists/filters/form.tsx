@@ -4,7 +4,7 @@ import {
   usePlaylistFilters,
   setFilters,
   removeFilter,
-} from "./store";
+} from "@/store/filters";
 import _ from "lodash";
 
 interface CheckboxProps {
@@ -20,11 +20,6 @@ function Checkbox({ filter }: CheckboxProps) {
     });
   }, [setChecked]);
 
-  // if (checked) {
-  //   setFilters(filter, "true");
-  // } else {
-  //   removeFilter(filter);
-  // }
   useEffect(() => {
     if (checked) {
       setFilters(filter, "1");
@@ -47,7 +42,7 @@ function Checkbox({ filter }: CheckboxProps) {
   );
 }
 
-function Range() {
+export function Range() {
   const [value, setValue] = useState(5);
   return (
     <div className="flex items-center gap-2">
@@ -84,29 +79,28 @@ export function FilterForm() {
   );
 
   return (
-    <section className="p-4 bg-emerald-500 text-zinc-50 flex flex-col gap-2">
-      <h2 className="text-lg">Form Filters</h2>
-      <div className="flex gap-4">
-        <div className="flex flex-col gap-2 text-sm items-center">
-          <label htmlFor="pageSize">Per Page</label>
-          <select
-            name="pageSize"
-            onChange={handlePageSizeChange}
-            className={[
-              "bg-gray-50 border border-gray-300 rounded",
-              "text-gray-900",
-              "focus:ring-green-500 focus:border-green-500 block w-full",
-              "py-2",
-            ].join(" ")}
-            value={pageSize}
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={15}>15</option>
-            <option value={20}>20</option>
-            <option value={25}>25</option>
-          </select>
-        </div>
+    <div className="flex gap-4 p-4 justify-start">
+      <div className="flex flex-col gap-2 text-sm items-center">
+        <label htmlFor="pageSize">Per Page</label>
+        <select
+          name="pageSize"
+          onChange={handlePageSizeChange}
+          className={[
+            "bg-gray-50 border border-gray-300 rounded",
+            "text-gray-900",
+            "focus:ring-green-500 focus:border-green-500 block w-full",
+            "py-2",
+          ].join(" ")}
+          value={pageSize}
+        >
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={15}>15</option>
+          <option value={20}>20</option>
+          <option value={25}>25</option>
+        </select>
+      </div>
+      <section className="flex-1 flex items-center justify-evenly">
         <div className="flex flex-col gap-2 items-center">
           <label>My Playlists</label>
           <Checkbox filter="my_playlists" />
@@ -119,16 +113,7 @@ export function FilterForm() {
           <label>Analyzed</label>
           <Checkbox filter="is_analyzed" />
         </div>
-        <div className="flex flex-col gap-2 w-1/4">
-          <label htmlFor="labels-range-input" className="flex flex-col gap-1">
-            <span>Playlist Size</span>
-            <span className="text-xs text-gray-200 italic">
-              Number of tracks
-            </span>
-          </label>
-          <Range />
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

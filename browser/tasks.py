@@ -213,9 +213,6 @@ class PlaylistAnalysis(PlaylistTask):
 
     def _run(self) -> None:
         """Run the playlist analysis chain."""
-        if not self.pre_flight():
-            return
-
         analysis_result = self.analysis()
         computation_result = self.computation(analysis_result)
         logger.debug(f"Analysis result: {analysis_result}")

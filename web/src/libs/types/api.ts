@@ -90,10 +90,17 @@ export type BrowserResource<T extends BrowserKey> =
 export type LibraryCounts = { [key in CountKey]: number };
 export type LibraryCountsResponse = { data: LibraryCounts };
 
-/**
- * Browser Types
- */
-export type PlaylistTrackFeatures = {
+// Browser Types
+
+export type Superlative = {
+  min: number;
+  min_track_id: string;
+  max: number;
+  max_track_id: string;
+};
+
+export type TrackFeatures = {
+  id: string;
   danceability: number;
   energy: number;
   key: number;
@@ -110,26 +117,62 @@ export type PlaylistTrackFeatures = {
 };
 
 export type ComputedKey = keyof Omit<
-  PlaylistTrackFeatures,
+  TrackFeatures,
   "duration_ms" | "time_signature" | "key" | "mode"
 >;
-
-export type PlaylistComputations = {
-  superlatives: Record<
-    ComputedKey,
-    {
-      min: number;
-      min_track_id: string;
-      max: number;
-      max_track_id: string;
-    }
-  >;
-  averages: Record<ComputedKey, number>;
-  count: {
-    key: Record<number, number>;
-    mode: Record<number, number>;
-    time_signature: Record<number, number>;
+export type Superlatives = {
+  danceability: Superlative;
+  energy: Superlative;
+  loudness: Superlative;
+  speechiness: Superlative;
+  acousticness: Superlative;
+  instrumentalness: Superlative;
+  liveness: Superlative;
+  valence: Superlative;
+  tempo: Superlative;
+  duration_ms: Superlative;
+};
+export type Computations = {
+  // superlatives: Record<ComputedKey, Superlative>;
+  // averages: Record<ComputedKey, number>;
+  // count: {
+  //   key: Record<number, number>;
+  //   mode: Record<number, number>;
+  //   time_signature: Record<number, number>;
+  // };
+  superlatives: Superlatives;
+  averages: {
+    danceability: number;
+    energy: number;
+    loudness: number;
+    speechiness: number;
+    acousticness: number;
+    instrumentalness: number;
+    liveness: number;
+    valence: number;
+    tempo: number;
+    duration_ms: number;
   };
+  count: {
+    key: Record<string, number>;
+    mode: Record<string, number>;
+    time_signature: Record<string, number>;
+  };
+};
+
+export type BrowserPlaylistDetail = {
+  id: string;
+  name: string;
+  spotify_url: string;
+  num_tracks: number;
+  is_synced: boolean;
+  is_analyzed: boolean;
+  description: string;
+  owner_id: string;
+  version: string;
+  image_url: string;
+  public: boolean;
+  shared: boolean;
 };
 
 export type BrowserPlaylistTrack = {
@@ -139,16 +182,21 @@ export type BrowserPlaylistTrack = {
   spotify_id: string;
   duration: number;
   spotify_url: string;
-  features: PlaylistTrackFeatures | null;
-  album_name: string | null;
-  album_art: string | null;
+  features: TrackFeatures;
+  album_name: string;
+  album_art: string;
+  artists: {
+    id: string;
+    name: string;
+    spotify_id: string;
+  }[];
 };
 
 export type BrowserPlaylistResponse = {
   data: {
-    playlist: BrowserPlaylist;
+    playlist: BrowserPlaylistDetail;
     tracks: BrowserPlaylistTrack[];
-    computations: PlaylistComputations;
+    computations: Computations | null;
   };
 };
 

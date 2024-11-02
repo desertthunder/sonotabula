@@ -8,7 +8,6 @@ provided by the Spotify API.
 import typing
 import uuid
 
-import numpy as np
 import pandas as pd
 from django.db import models
 from loguru import logger
@@ -211,21 +210,10 @@ class AnalysisManager(models.Manager["Analysis"]):
             min_value = data[field].min()
             max_value = data[field].max()
 
-            # Serialize numpy float64 to python float
-            if isinstance(np.float64, type(min_value)):
-                min_value = float(min_value)
-            else:
-                min_value = int(min_value)
-
-            if isinstance(np.float64, type(max_value)):
-                max_value = float(max_value)
-            else:
-                max_value = int(max_value)
-
             computed_data["superlatives"][field] = {
-                "min": min_value,
+                "min": str(min_value),
                 "min_track_id": str(data["track_id"].loc[data[field].idxmin()]),
-                "max": max_value,
+                "max": str(max_value),
                 "max_track_id": str(data["track_id"].loc[data[field].idxmax()]),
             }
 
@@ -245,10 +233,10 @@ class AnalysisManager(models.Manager["Analysis"]):
         logger.debug(f"Computation Data: {data}")
 
         if analysis.playlist is not None:
-            computation, _ = Computation.objects.get_or_create(
+            computation, _ = Computation.objects.update_or_create(
                 analysis_id=analysis.pk,
                 playlist_id=analysis.playlist.pk,
-                data=data,
+                defaults={"data": data},
             )
 
             logger.debug(f"Computation: {computation}")

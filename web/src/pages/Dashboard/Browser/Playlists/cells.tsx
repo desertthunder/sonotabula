@@ -6,45 +6,13 @@ import {
   useInteractions,
   useDismiss,
 } from "@floating-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useTokenStore } from "@/store";
-
-type TaskArgs = {
-  pid: string;
-  operation: "sync" | "analyze";
-  token: string | null;
-};
-
-async function callTask({ pid, operation, token }: TaskArgs) {
-  if (!token) {
-    throw new Error("No token available");
-  }
-
-  const url = new URL(`/api/v1/browser/playlists/${pid}`, window.location.href);
-
-  const res = await fetch(url.toString(), {
-    method: "PATCH",
-    body: JSON.stringify({ operation }),
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to ${operation} playlist`);
-  }
-
-  return await res.json();
-}
+import { usePlaylistAction } from "@/libs/hooks/mutations";
 
 export function PlaylistActionsCell(props: { playlistID: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const token = useTokenStore((state) => state.token);
-  const taskMutation = useMutation({
-    mutationFn: callTask,
-  });
+  const syncMutation = usePlaylistAction(props.playlistID, "sync");
+  const analyzeMutation = usePlaylistAction(props.playlistID, "analyze");
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -66,17 +34,17 @@ export function PlaylistActionsCell(props: { playlistID: string }) {
   ]);
 
   const syncHandler = useCallback(() => {
-    taskMutation.mutate({ pid: props.playlistID, operation: "sync", token });
+    syncMutation.mutate();
     setIsOpen(false);
-  }, [props, taskMutation, token]);
+  }, [syncMutation]);
 
   const analyzeHandler = useCallback(() => {
-    taskMutation.mutate({ pid: props.playlistID, operation: "analyze", token });
+    analyzeMutation.mutate();
     setIsOpen(false);
-  }, [props, taskMutation, token]);
+  }, [analyzeMutation]);
 
   useEffect(() => {
-    if (taskMutation.isPending) {
+    if (syncMutation.isPending || analyzeMutation.isPending) {
       setIsLoading(true);
 
       return;
@@ -87,7 +55,7 @@ export function PlaylistActionsCell(props: { playlistID: string }) {
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }, [taskMutation.isPending]);
+  }, [syncMutation.isPending, analyzeMutation.isPending]);
 
   return (
     <>

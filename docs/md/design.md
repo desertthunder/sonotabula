@@ -2,7 +2,7 @@
 
 Home page (as of October 12):
 
-![Home Page](../../static/img/screencap.png)
+![Home Page](../../static/img/demo.png)
 
 ...versus the original concept:
 

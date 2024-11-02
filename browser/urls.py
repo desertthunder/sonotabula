@@ -12,7 +12,9 @@ urlpatterns = [
     ),
     path(
         "playlists/<str:playlist_pk>",
-        PlaylistViewSet.as_view({"put": "update", "patch": "partial_update"}),
+        PlaylistViewSet.as_view(
+            {"put": "update", "patch": "partial_update", "get": "retrieve"}
+        ),
         name="browser__playlist",
     ),
     path(

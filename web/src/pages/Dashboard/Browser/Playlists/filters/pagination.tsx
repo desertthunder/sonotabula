@@ -1,4 +1,4 @@
-import { usePlaylistFilters } from "./store";
+import { usePlaylistFilters } from "@/store/filters";
 import { Pager } from "@/pages/Dashboard/components/pagination";
 
 export function BrowserPlaylistPagination() {

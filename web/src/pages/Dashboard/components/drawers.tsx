@@ -7,6 +7,7 @@ import _ from "lodash";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
+// TODO: Move to common/libs
 function useDrawer(drawerId: DrawerKey) {
   const meta = useDrawerStore(
     useShallow((state) => ({
@@ -122,6 +123,7 @@ async function fetchTrackAnalysis(key: DrawerKey, token: string | null) {
   return await res.json();
 }
 
+// TODO: Move to common/components
 function DrawerLoader() {
   return (
     <div className="h-full flex flex-col gap-2 items-center justify-center">
@@ -131,6 +133,7 @@ function DrawerLoader() {
   );
 }
 
+// TODO: Move to common/components
 function DrawerError() {
   return (
     <div className="h-full flex flex-col gap-2 items-center justify-center">
@@ -140,6 +143,7 @@ function DrawerError() {
   );
 }
 
+// TODO: Move to common/components
 function KeyValue({
   title,
   children,
@@ -155,6 +159,7 @@ function KeyValue({
   );
 }
 
+// TODO:" Move to common/components"
 function KeyValueList({
   children,
   colSpan,
@@ -173,6 +178,7 @@ function KeyValueList({
   );
 }
 
+// TODO:" Move to common/components"
 function DrawerHeader({
   title,
   handler,
@@ -193,6 +199,7 @@ function DrawerHeader({
   );
 }
 
+// TODO:" Move to common/components"
 function DrawerContent({ children }: { children: React.ReactNode }) {
   return (
     <main className="text-sm font-titles tracking-tight leading-tight font-medium">
@@ -201,14 +208,15 @@ function DrawerContent({ children }: { children: React.ReactNode }) {
   );
 }
 
+// TODO: Move to common/components
+function Cover({ url }: { url: string }) {
+  return <img src={url} alt="Cover" className="col-span-2 p-2" />;
+}
+
 interface DrawerProps {
   children?: React.ReactNode;
   drawerId: DrawerKey;
   token: string | null;
-}
-
-function Cover({ url }: { url: string }) {
-  return <img src={url} alt="Cover" className="col-span-2 p-2" />;
 }
 
 export function LibraryPlaylistDrawer({

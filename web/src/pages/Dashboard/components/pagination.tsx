@@ -1,6 +1,7 @@
 import toInteger from "lodash/toInteger";
 import { useCallback, useMemo } from "react";
 
+// TODO: Move to common/shared components
 export function PaginationForm({
   pageSize,
   setPageSize,

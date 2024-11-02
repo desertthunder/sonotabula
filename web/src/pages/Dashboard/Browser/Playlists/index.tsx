@@ -6,11 +6,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import { FilterForm } from "./filters/form";
 import { BrowserPlaylistPagination } from "./filters/pagination";
 import { Table } from "./table";
-import { Link } from "wouter";
 import { useTokenStore } from "@/store";
-import { usePlaylistFilters } from "./filters/store";
+import { usePlaylistFilters } from "@/store/filters";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSavedCounts } from "@/libs/hooks";
+import { Breadcrumbs } from "@/components/common/breadcrumbs";
 
 interface BrowserCardProps {
   title: string;
@@ -19,39 +19,11 @@ interface BrowserCardProps {
   children?: React.ReactNode;
 }
 
-function Breadcrumbs() {
-  const Links = [
-    { label: "Home", href: "/", disabled: false },
-    { label: "Dashboard", href: "/dashboard", disabled: false },
-    {
-      label: "Playlists",
-      href: "/dashboard/browser/playlists",
-      disabled: true,
-    },
-  ];
-  return (
-    <header className="flex flex-col justify-between p-4 bg-white border-t">
-      <p className="text-gray-500 flex items-center">
-        {Links.map((link, index) => (
-          <React.Fragment key={index}>
-            <Link
-              href={link.href}
-              className={
-                link.disabled ? "pointer-events-none" : "hover:text-emerald-500"
-              }
-            >
-              <span className="group-hover:text-emerald-500">{link.label}</span>
-            </Link>
-            {index < Links.length - 1 && (
-              <i className="i-ri-arrow-right-s-line align-middle" />
-            )}
-          </React.Fragment>
-        ))}
-      </p>
-      <h1 className="text-2xl font-medium">Playlists Browser</h1>
-    </header>
-  );
-}
+type PlaylistMetadata = {
+  total_synced: number;
+  total_analyzed: number;
+  total_tracks: number;
+};
 
 export function BrowserCard({
   title,
@@ -62,7 +34,7 @@ export function BrowserCard({
   return (
     <article className="bg-white border-t border-emerald-500 flex flex-col gap-2">
       <header className="text-lg p-4 pb-2">{title}</header>
-      <section className="p-4 border-y">
+      <section className="px-4 py-2 border-y text-2xl font-semibold font-titles align-middle">
         {content ? (
           content
         ) : children ? (
@@ -71,7 +43,9 @@ export function BrowserCard({
           <p className="text-gray-500">No content</p>
         )}
       </section>
-      <footer className="text-xs text-gray-500 p-4">{helpText}</footer>
+      <footer className="text-xs text-gray-500 px-4 pb-2 align-middle">
+        {helpText}
+      </footer>
     </article>
   );
 }
@@ -113,7 +87,7 @@ async function fetchPlaylistsMetadata(token: string | null) {
     throw new Error("Failed to fetch playlists metadata");
   }
 
-  return await response.json();
+  return (await response.json()) as PlaylistMetadata;
 }
 
 function usePlaylistsMetadata() {
@@ -232,12 +206,11 @@ export function PlaylistsBrowser() {
           ) : null}
         </BrowserCard>
       </section>
-      <FilterForm />
       <main
         data-testid="table"
         className="bg-white flex flex-col flex-1 overflow-auto"
       >
-        <header className="p-4 flex items-center justify-between">
+        <header className="p-4 flex items-center justify-between border-y border-t-emerald-500">
           <div>
             <h2 className="text-lg">Table</h2>
             <p>Table Content</p>
@@ -263,9 +236,8 @@ export function PlaylistsBrowser() {
             </button>
           </div>
         </header>
-        <section className="overflow-auto">
-          <Table />
-        </section>
+        <FilterForm />
+        <Table />
       </main>
       <BrowserPlaylistPagination />
     </div>

@@ -12,6 +12,7 @@ import { Route, Router, Switch } from "wouter";
 import { Home, Profile, Signup } from "./pages";
 import { Dashboard, DashboardLayout } from "./pages/Dashboard";
 import { PlaylistsBrowser } from "./pages/Dashboard/Browser";
+import { PlaylistDetailPage } from "./pages/Dashboard/Browser/Playlists/detail";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -55,6 +56,9 @@ export function AppRouter() {
           </Route>
           <Route path="/dashboard/profile">
             <Profile />
+          </Route>
+          <Route path="/dashboard/browser/playlists/:id">
+            <PlaylistDetailPage />
           </Route>
           <Route path="/dashboard/browser/playlists">
             <PlaylistsBrowser />
