@@ -182,3 +182,5 @@ export function Dashboard() {
     </div>
   );
 }
+
+export { DashboardLayout } from "./layout";

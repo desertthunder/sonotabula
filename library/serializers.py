@@ -5,6 +5,7 @@ import typing
 from pydantic import BaseModel
 
 from api.models import Artist, Playlist, Track
+from browser.models import Library
 
 
 class APISerializer(BaseModel):
@@ -48,7 +49,9 @@ class APISerializer(BaseModel):
         return data
 
     @classmethod
-    def get(cls: type[typing.Self], response: dict) -> typing.Self:
+    def get(
+        cls: type[typing.Self], response: dict, library: Library | None = None
+    ) -> typing.Self:
         """Create a Serializer object from JSON data."""
         data: dict = cls.map_response(response)
 
@@ -56,11 +59,11 @@ class APISerializer(BaseModel):
 
     @classmethod
     def list(
-        cls: type[typing.Self], response: list[dict]
+        cls: type[typing.Self], response: list[dict], library: Library | None = None
     ) -> typing.Iterable[typing.Self]:
         """Create a list of Serializer objects from JSON data."""
         for item in response:
-            yield cls.get(item)
+            yield cls.get(item, library)
 
 
 class PlaylistAPISerializer(APISerializer):
@@ -107,7 +110,9 @@ class PlaylistAPISerializer(APISerializer):
 
     @classmethod
     def get(
-        cls: type["PlaylistAPISerializer"], response: dict
+        cls: type["PlaylistAPISerializer"],
+        response: dict,
+        library: Library | None = None,
     ) -> "PlaylistAPISerializer":
         """Create a Playlist object from JSON data."""
         data = cls.map_response(response)
@@ -125,7 +130,9 @@ class PlaylistAPISerializer(APISerializer):
         elif is_shared is not None:
             data["shared"] = is_shared
 
-        if record := Playlist.objects.filter(spotify_id=data["spotify_id"]).first():
+        if library is not None and (
+            record := library.playlists.filter(spotify_id=data["spotify_id"]).first()
+        ):
             data["is_synced"] = record.is_synced
             data["id"] = str(record.id)
 
@@ -224,7 +231,9 @@ class TrackAPISerializer(APISerializer):
         return ("",)
 
     @classmethod
-    def get(cls: type["TrackAPISerializer"], response: dict) -> "TrackAPISerializer":
+    def get(
+        cls: type["TrackAPISerializer"], response: dict, *args, **kwargs
+    ) -> "TrackAPISerializer":
         """Create a Track object from JSON data."""
         data = cls.map_response(response)
 
@@ -264,7 +273,9 @@ class ArtistAPISerializer(APISerializer):
         return ("",)
 
     @classmethod
-    def get(cls: type["ArtistAPISerializer"], response: dict) -> "ArtistAPISerializer":
+    def get(
+        cls: type["ArtistAPISerializer"], response: dict, *args, **kwargs
+    ) -> "ArtistAPISerializer":
         """Create an Artist object from JSON data."""
         data = cls.map_response(response)
 

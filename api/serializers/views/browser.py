@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from api.models import Album, Playlist, Track, TrackFeatures
 from api.models.analysis import Computation
+from api.models.music import Artist
 from api.serializers.validation import ComputationValidator
 
 
@@ -143,6 +144,25 @@ class PlaylistTrackFeaturesSerializer(BaseModel):
         )
 
 
+class PlaylistTrackArtistSerializer(BaseModel):
+    """Track Artist model serializer."""
+
+    id: str
+    name: str
+    spotify_id: str
+
+    @classmethod
+    def get(
+        cls: type["PlaylistTrackArtistSerializer"], model: Artist
+    ) -> "PlaylistTrackArtistSerializer":
+        """Create a model serializer from a model."""
+        return cls(
+            id=str(model.id),
+            name=model.name,
+            spotify_id=model.spotify_id,
+        )
+
+
 class PlaylistTrackSerializer(BaseModel):
     """Browser Playlist Track model serializer."""
 
@@ -155,6 +175,7 @@ class PlaylistTrackSerializer(BaseModel):
     features: PlaylistTrackFeaturesSerializer | None = None
     album_name: str | None = None
     album_art: str | None = None
+    artists: list[PlaylistTrackArtistSerializer] | None = None
 
     @classmethod
     def from_paginator(
@@ -200,10 +221,17 @@ class PlaylistTrackSerializer(BaseModel):
         album_name = None
         features = None
         album_art = None
+        artists = None
 
         if hasattr(model, "album") and model.album is not None:
             album_name = model.album.name
             album_art = model.album.image_url
+
+            if hasattr(model.album, "artists") and model.album.artists is not None:
+                artists = [
+                    PlaylistTrackArtistSerializer.get(artist)
+                    for artist in model.album.artists.all()
+                ]
 
         if hasattr(model, "features") and model.features is not None:
             features = PlaylistTrackFeaturesSerializer.get(model.features)
@@ -218,6 +246,7 @@ class PlaylistTrackSerializer(BaseModel):
             album_art=album_art,
             features=features,
             album_name=album_name,
+            artists=artists,
         )
 
     @classmethod
@@ -230,6 +259,7 @@ class PlaylistTrackSerializer(BaseModel):
             yield cls.get(model)
 
 
+# TODO: Remove this serializer
 class PlaylistModelSerializer(BaseModel):
     """Playlist model serializer."""
 
@@ -305,8 +335,20 @@ class ExpandedPlaylistSerializer(BaseModel):
                 else None,
                 tracks=[PlaylistTrackSerializer.get(track) for track in tracks],
             )
-        else:
-            raise ValueError("Playlist does not have an analysis.")
+        elif hasattr(model, "tracks") and model.tracks is not None:
+            return cls(
+                playlist=PlaylistModelSerializer.get(model),
+                computations=None,
+                tracks=[
+                    PlaylistTrackSerializer.get(track) for track in model.tracks.all()
+                ],
+            )
+
+        return cls(
+            playlist=PlaylistModelSerializer.get(model),
+            computations=None,
+            tracks=None,
+        )
 
     @classmethod
     def to_response(

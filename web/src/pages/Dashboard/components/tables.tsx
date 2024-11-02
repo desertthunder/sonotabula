@@ -16,8 +16,8 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import toInteger from "lodash/toInteger";
 import { useMemo } from "react";
-import { TableRow } from "./row";
 import {
   ArtistIsSyncedCell,
   ErrorCell,
@@ -28,8 +28,8 @@ import {
   TrackIsSyncedCell,
   TrackNameCell,
 } from "./cells";
-import _ from "lodash";
-import { Pager } from "@/pages/Browser/components/forms/pagination";
+import { Pager } from "./pagination";
+import { TableRow } from "./row";
 
 const artistColumnHelper = createColumnHelper<LibraryArtist>();
 const playlistColumnHelper = createColumnHelper<LibraryPlaylist>();
@@ -317,7 +317,7 @@ export function RealTimeTable<T extends LibraryKey>({
                 {columns.map((_c, index) => (
                   <LoaderCell
                     key={index}
-                    loader={index === _.toInteger(columns.length / 2)}
+                    loader={index === toInteger(columns.length / 2)}
                   />
                 ))}
               </TableRow>
@@ -327,7 +327,7 @@ export function RealTimeTable<T extends LibraryKey>({
                 {columns.map((_c, index) => (
                   <ErrorCell
                     key={index}
-                    error={index === _.toInteger(columns.length / 2)}
+                    error={index === toInteger(columns.length / 2)}
                   />
                 ))}
               </TableRow>

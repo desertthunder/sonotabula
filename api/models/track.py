@@ -7,13 +7,28 @@ from django.db import models
 from django.utils import timezone
 from loguru import logger
 
+from api.blocks import AlbumTrackSyncBlock
+from api.models.album import Album
 from api.models.mixins import CanBeAnalyzedMixin
-from api.models.music import Album, Artist, SpotifyModel, TimestampedModel
+from api.models.music import Artist, SpotifyModel, TimestampedModel
 from api.serializers import validation
 
 
 class TrackSyncManager(models.Manager["Track"]):
     """Sync tracks, albums, and artists."""
+
+    def sync_album_track(self, album: Album, cleaned: AlbumTrackSyncBlock) -> "Track":
+        """Sync album track."""
+        track, _ = self.model.objects.update_or_create(
+            spotify_id=cleaned.spotify_id,
+            defaults={
+                "name": cleaned.name,
+                "duration": cleaned.duration,
+                "album": album,
+            },
+        )
+
+        return track
 
     def pre_sync(
         self, items: list[dict] | typing.Iterable[dict]

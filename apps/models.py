@@ -8,10 +8,10 @@ from django.db import models
 from django_stubs_ext.db.models import TypedModelMeta
 from pydantic import BaseModel
 
-from api.models.music import Album, Artist
-from api.models.track import Track
+from api.models import Album, Artist, Track
 
 
+# TODO: Rename to `Block`
 class ListeningHistorySerializer(BaseModel):
     """Listening history serializer."""
 
@@ -205,7 +205,11 @@ class ListeningHistoryManager(models.Manager["ListeningHistory"]):
         return obj
 
     def build(
-        self, serialized: "ListeningHistorySerializer", user_pk: int, *args, **kwargs
+        self,
+        serialized: "ListeningHistorySerializer",
+        user_pk: int,
+        *args,
+        **kwargs,
     ) -> "ListeningHistory":
         """Create a history record.
 

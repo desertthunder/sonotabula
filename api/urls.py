@@ -13,16 +13,6 @@ urlpatterns = [
     # TODO: Move to core (see below)
     path("data/saved", data.UserSavedItemsView.as_view(), name="user-saved-items"),
     path(
-        "browser/playlist/<str:playlist_id>/tracks",
-        browser.BrowserPlaylistView.as_view(),
-        name="get-browser-playlist",
-    ),
-    path(
-        "browser/playlists",
-        browser.BrowserPlaylistListView.as_view(),
-        name="list-browser-playlists",
-    ),
-    path(
         "browser/albums",
         browser.BrowserAlbumListView.as_view(),
         name="list-browser-albums",
@@ -33,6 +23,7 @@ urlpatterns = [
         name="list-browser-tracks",
     ),
     path("playback/", include("apps.urls")),
+    path("v1/browser/", include("browser.urls")),
     path("v1/library/", include("library.urls")),
     # TODO: Implement
     # path("v1/profile/saved", ProfileViewSet.as_view({"get": "list"}), \

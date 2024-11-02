@@ -9,15 +9,10 @@ import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
-import { Home, Signup, Profile } from "./pages";
-import { BrowserLayout } from "./pages/Browser";
-import { BrowseAlbumsPage as BrowserAlbums } from "./pages/Browser/Albums";
-import { Playlist } from "./pages/Browser/Playlist";
-import { PlaylistsPage as BrowserPlaylists } from "./pages/Browser/Playlists";
-import { TracksPage as BrowserTracks } from "./pages/Browser/Tracks";
-import { Dashboard } from "./pages/Dashboard";
-import { DashboardLayout } from "./pages/Dashboard/layout";
-
+import { Home, Profile, Signup } from "./pages";
+import { Dashboard, DashboardLayout } from "./pages/Dashboard";
+import { PlaylistsBrowser } from "./pages/Dashboard/Browser";
+import { PlaylistDetailPage } from "./pages/Dashboard/Browser/Playlists/detail";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -44,46 +39,33 @@ persistQueryClient({
 
 export function AppRouter() {
   return (
-    <>
-      <Switch>
-        <Route path={Routes.Home}>
-          <Home />
-        </Route>
-        <Route path={Routes.Signup}>
-          <Signup />
-        </Route>
-        <Route path={Routes.Login}>
-          <Signup />
-        </Route>
-        <Router>
-          <DashboardLayout>
-            <Route path="/dashboard">
-              <Dashboard />
-            </Route>
-            <Route path="/dashboard/profile">
-              <Profile />
-            </Route>
-            <Route path="/dashboard/browser" nest>
-              <BrowserLayout>
-                <Route path="/playlists" nest>
-                  <BrowserPlaylists>
-                    <Route path="/:id">
-                      <Playlist />
-                    </Route>
-                  </BrowserPlaylists>
-                </Route>
-                <Route path="/albums">
-                  <BrowserAlbums />
-                </Route>
-                <Route path="/tracks">
-                  <BrowserTracks />
-                </Route>
-              </BrowserLayout>
-            </Route>
-          </DashboardLayout>
-        </Router>
-      </Switch>
-    </>
+    <Switch>
+      <Route path={Routes.Home}>
+        <Home />
+      </Route>
+      <Route path={Routes.Signup}>
+        <Signup />
+      </Route>
+      <Route path={Routes.Login}>
+        <Signup />
+      </Route>
+      <Router>
+        <DashboardLayout>
+          <Route path="/dashboard">
+            <Dashboard />
+          </Route>
+          <Route path="/dashboard/profile">
+            <Profile />
+          </Route>
+          <Route path="/dashboard/browser/playlists/:id">
+            <PlaylistDetailPage />
+          </Route>
+          <Route path="/dashboard/browser/playlists">
+            <PlaylistsBrowser />
+          </Route>
+        </DashboardLayout>
+      </Router>
+    </Switch>
   );
 }
 

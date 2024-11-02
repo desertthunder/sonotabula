@@ -6,40 +6,26 @@ Parking Lot
 
 from django.db import models
 
-from api.models.mixins import (
-    CanBeAnalyzedMixin,
-    CanBeSyncedMixin,
-    SpotifyModel,
-    TimestampedModel,
-)
+from api.blocks import AlbumArtistSyncBlock
+from api.models.album import Album
+from api.models.mixins import CanBeSyncedMixin, SpotifyModel, TimestampedModel
 
 
-class Library(TimestampedModel):
-    """Library metadata model."""
+class ArtistSyncManager(models.Manager["Artist"]):
+    """Manager for syncing artists."""
 
-    user = models.OneToOneField(
-        "core.AppUser", on_delete=models.CASCADE, related_name="library"
-    )
+    def sync_album_artist(
+        self, album: Album, cleaned: AlbumArtistSyncBlock
+    ) -> "Artist":
+        """Sync album artist."""
+        artist, _ = self.model.objects.update_or_create(
+            spotify_id=cleaned.spotify_id,
+            defaults={"name": cleaned.name},
+        )
 
-    artists = models.ManyToManyField("api.Artist", related_name="libraries")
-    tracks = models.ManyToManyField("api.Track", related_name="libraries")
+        artist.albums.add(album)
 
-
-class Album(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
-    """Album model.
-
-    Required fields for creation:
-        - name
-        - spotify_id
-    """
-
-    album_type = models.CharField(max_length=255, blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
-    label = models.CharField(max_length=255, blank=True, null=True)
-    copyright = models.CharField(max_length=255, blank=True, null=True)
-    release_year = models.IntegerField()
-    libraries = models.ManyToManyField(Library, related_name="albums")
-    genres = models.ManyToManyField("api.Genre", related_name="albums")
+        return artist
 
 
 class Artist(SpotifyModel, TimestampedModel, CanBeSyncedMixin):
@@ -52,8 +38,11 @@ class Artist(SpotifyModel, TimestampedModel, CanBeSyncedMixin):
 
     image_url = models.URLField(blank=True, null=True)
     spotify_follower_count = models.IntegerField(blank=True, null=True)
-    albums = models.ManyToManyField(Album, related_name="artists")
+    albums = models.ManyToManyField("api.Album", related_name="artists")
     genres = models.ManyToManyField("api.Genre", related_name="artists")
+
+    sync = ArtistSyncManager()
+    objects = models.Manager()
 
 
 class Genre(TimestampedModel):

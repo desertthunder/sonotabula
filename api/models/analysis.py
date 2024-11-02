@@ -1,7 +1,8 @@
 """Analysis models.
 
-(TODO): Reassess need for tracks foreign key in Analysis model.
-(TODO): Add album as foreign key to Track model.
+Contains Django orm models for playlist and album analysis,
+as well as persisted computations, based on audio features
+provided by the Spotify API.
 """
 
 import typing
@@ -11,6 +12,7 @@ import pandas as pd
 from django.db import models
 from loguru import logger
 
+from api.models.album import Album
 from api.models.mixins import TimestampedModel
 from api.models.playlist import Playlist
 from api.models.track import Track
@@ -21,8 +23,64 @@ from core.models import AppUser
 class AnalysisManager(models.Manager["Analysis"]):
     """Manager for analysis models."""
 
+    # ALBUM ANALYSIS CREATION
+    def prep_album(self, album_pk: uuid.UUID, user_pk: int) -> list[str]:
+        """Analyze an album."""
+        album = Album.objects.get(pk=album_pk)
+
+        if not album.is_synced:
+            raise ValueError(f"Album {str(album.pk)} | {album.name} is not synced.")
+
+        results = album.tracks.all().values_list("spotify_id", flat=True)
+
+        return list(results)
+
+    def analyze_album(
+        self, album_pk: str | uuid.UUID, user_pk: int, items: typing.Iterable[dict]
+    ) -> uuid.UUID:
+        """Validate track data."""
+        album = Album.objects.get(pk=album_pk)
+        user = AppUser.objects.get(pk=user_pk)
+
+        if not album.is_synced:
+            raise ValueError(f"Album {str(album.pk)} | {album.name} is not synced.")
+
+        analysis, _ = self.get_or_create(
+            version=f"album:{album.pk}",
+            album_id=album.pk,
+            user=user,
+        )
+
+        tracks = []
+
+        for item in items:
+            data = validation.SyncAnalysis(**item)
+            feature_data = data.model_dump().copy()
+            spotify_id = feature_data.pop("id")
+
+            track = album.tracks.get(spotify_id=spotify_id)
+
+            _ = TrackFeatures.objects.get_or_create(**feature_data, track_id=track.pk)
+
+            tracks.append(track)
+
+        analysis.tracks.set(tracks)
+        album.is_analyzed = True
+
+        analysis.save()
+        album.save()
+
+        analysis.refresh_from_db()
+
+        return analysis.pk
+
+    # PLAYLIST ANALYSIS CREATION
     def pre_analysis(self, playlist_pk: uuid.UUID, user_pk: int) -> list[str]:
-        """Analyze a playlist."""
+        """Setup playlist analysis.
+
+        Retrieves the list of track Spotify IDs from the playlist record
+        to fetch the audio features from the Spotify API.
+        """
         playlist = Playlist.objects.get(pk=playlist_pk)
 
         if not playlist.is_synced:
@@ -35,9 +93,18 @@ class AnalysisManager(models.Manager["Analysis"]):
         return list(results)
 
     def analyze(
-        self, playlist_pk: str, user_pk: int, items: typing.Iterable[dict]
+        self, playlist_pk: str | uuid.UUID, user_pk: int, items: typing.Iterable[dict]
     ) -> uuid.UUID:
-        """Validate track data."""
+        """Validate track data.
+
+        Builds an analysis record from the playlist and track data provided by
+        the Spotify API.
+
+        The playlist from the database is retrieved, then checked for the existence
+        of an Analysis object with the same version tag. If the playlist is
+        already analyzed, the function returns the primary key of the existing
+        Analysis object.
+        """
         playlist = Playlist.objects.get(pk=playlist_pk)
         user = AppUser.objects.get(pk=user_pk)
 
@@ -46,9 +113,24 @@ class AnalysisManager(models.Manager["Analysis"]):
                 f"Playlist {str(playlist.pk)} | {playlist.name} is not synced."
             )
 
-        analysis, _ = self.get_or_create(
-            version=playlist.version, playlist_id=playlist.pk, user=user
-        )  # type: ignore
+        version_tag = (
+            f"version:{playlist.pk}:{playlist.version}"
+            if playlist.version
+            else f"playlist:{playlist.pk}"
+        )
+
+        if playlist.is_analyzed and self.filter(version=version_tag).exists():
+            logger.info(f"Playlist {playlist.pk} is already analyzed.")
+            logger.debug(f"Version Tag: {version_tag}")
+            return self.get(version=version_tag).pk
+
+        analysis, _ = self.update_or_create(
+            playlist_id=playlist.pk,
+            user=user,
+            defaults={
+                "version": version_tag,
+            },
+        )
 
         tracks = []
 
@@ -73,10 +155,15 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         return analysis.pk
 
+    # COMPUTATION OPERATIONS
     def build_dataset(self, analysis_pk: uuid.UUID) -> pd.DataFrame:
-        """Calculate playlist analysis."""
+        """Calculate playlist stats."""
         features = (
-            TrackFeatures.objects.filter(track__analyses__id=analysis_pk).all().values()
+            TrackFeatures.objects.filter(
+                track__analyses__id=analysis_pk,
+            )
+            .all()
+            .values()
         )
 
         df = pd.DataFrame(features)  # type: ignore
@@ -84,7 +171,12 @@ class AnalysisManager(models.Manager["Analysis"]):
         return df
 
     def compute(self, analysis_pk: uuid.UUID) -> dict:
-        """Compute playlist analysis."""
+        """Compute playlist analysis.
+
+        1. Build the dataset
+        2. Calculate averages, superlatives, and counts.
+        3. Return the computed data.
+        """
         data = self.build_dataset(analysis_pk)
 
         logger.debug(f"Data: {data.head()}")
@@ -115,11 +207,13 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         for field in computation_fields:
             computed_data["averages"][field] = data[field].mean()
+            min_value = data[field].min()
+            max_value = data[field].max()
 
             computed_data["superlatives"][field] = {
-                "min": data[field].min(),
+                "min": str(min_value),
                 "min_track_id": str(data["track_id"].loc[data[field].idxmin()]),
-                "max": data[field].max(),
+                "max": str(max_value),
                 "max_track_id": str(data["track_id"].loc[data[field].idxmax()]),
             }
 
@@ -129,14 +223,38 @@ class AnalysisManager(models.Manager["Analysis"]):
         return computed_data
 
     def set_computation(self, analysis_pk: uuid.UUID, data: dict) -> uuid.UUID:
-        """Set computation data."""
+        """Set computation data.
+
+        Persist the computed data to the database.
+        Returns the computation primary key.
+        """
         analysis = self.model.objects.get(id=analysis_pk)
 
-        computation, _ = Computation.objects.get_or_create(
-            analysis_id=analysis.pk, playlist_id=analysis.playlist.pk, data=data
-        )
+        logger.debug(f"Computation Data: {data}")
 
-        return computation.pk
+        if analysis.playlist is not None:
+            computation, _ = Computation.objects.update_or_create(
+                analysis_id=analysis.pk,
+                playlist_id=analysis.playlist.pk,
+                defaults={"data": data},
+            )
+
+            logger.debug(f"Computation: {computation}")
+
+            return computation.pk
+
+        if analysis.album is not None:
+            computation, _ = Computation.objects.get_or_create(
+                analysis_id=analysis.pk,
+                album_id=analysis.album.pk,
+                data=data,
+            )
+
+            logger.debug(f"Computation: {computation}")
+
+            return computation.pk
+
+        raise ValueError("Analysis must have a playlist or album.")
 
 
 class TrackFeatures(TimestampedModel):
@@ -183,7 +301,10 @@ class Analysis(TimestampedModel):
     )
     version = models.CharField(max_length=255, unique=True, null=False)
     playlist = models.OneToOneField(
-        Playlist, on_delete=models.CASCADE, related_name="analysis"
+        Playlist, on_delete=models.CASCADE, related_name="analysis", null=True
+    )
+    album = models.OneToOneField(
+        Album, on_delete=models.CASCADE, related_name="analysis", null=True
     )
     user = models.ForeignKey("core.AppUser", on_delete=models.CASCADE)
     tracks = models.ManyToManyField("api.Track", related_name="analyses")
@@ -222,7 +343,10 @@ class Computation(TimestampedModel):
         Analysis, on_delete=models.CASCADE, related_name="data"
     )
     playlist = models.ForeignKey(
-        Playlist, on_delete=models.CASCADE, related_name="computation"
+        "api.Playlist", on_delete=models.CASCADE, related_name="computation", null=True
+    )
+    album = models.ForeignKey(
+        "api.Album", on_delete=models.CASCADE, related_name="computation", null=True
     )
     data = models.JSONField(
         validators=[validation.ComputationValidator.validate_data], null=False

@@ -6,9 +6,11 @@ from faker import Faker
 from rest_framework.request import Request
 
 from api.filters.albums import AlbumFilterSet
-from api.filters.playlist import PlaylistFilterSet
 from api.filters.tracks import TrackFilterSet
-from api.models import Album, Analysis, AppUser, Library, Playlist, Track
+from api.models import Album, Analysis, Playlist, Track
+from browser.filters import PlaylistFilterSet
+from browser.models import Library
+from core.models import AppUser
 
 faker = Faker()
 

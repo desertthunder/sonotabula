@@ -6,7 +6,7 @@ stored and then encoded as a JWT. The JWT is stored in the React app's state.
 
 ## Implementation
 
-**Sign-up**: Client side route at `/signup`
+### **Sign-up**: Client side route at `/signup`
 
 - The sign-up button sends an empty `POST` request to the server at `/api/signup/`
     - The server redirects the user to the Spotify Authorization page.
@@ -16,7 +16,7 @@ stored and then encoded as a JWT. The JWT is stored in the React app's state.
     - Then the server creates a new user with the access token and refresh token,
     and the user's spotify id and email address.
 
-**Login**: Client side route at `/login`
+### **Login**: Client side route at `/login`
 
 - The login button sends an empty `PUT` request to the server at `/api/login/`
 - Upon receiving the authorization code, the server requests an access token

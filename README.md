@@ -10,7 +10,7 @@ It is built with Django, Postgres, Celery, and React on top of the Spotify API.
 By adding additional integration with Wikipedia and MusicBrainz, DashSpot builds
 a comprehensive database of music metadata relevant to them.
 
-![DashSpot Screenshot](./doc/static/img/screencap.png)
+![DashSpot Screenshot](./docs/static/img/demo.png)
 
 Check out the [docs](https://dashspot-dev.netlify.app/)!
 
@@ -23,46 +23,46 @@ use bitwarden to manage my secrets.
 cp .env.sample .env
 ```
 
+### Virtual Environment
+
+```bash
+asdf install # Optional, relies on .tool-versions
+```
+
+```bash
+pip install poetry
+poetry env use python 3.12
+source $(poetry env info --path)/bin/activate
+poetry install
+```
+
+### Database
+
+The settings module relies on a database environment variable. How you set this
+up is up to you. I use a shared docker container for postgres databases on my
+local machines. What's important is that the server is running and the database
+is created, with up to date credentials in the `.env` file.
+
+```bash
+./manage.py migrate
+```
+
 ### Running the application
 
-1. `docker-compose up` for the postgres database & redis server
+1. Make sure you set the Spotify API credentials in the `.env` file, and setup
+    the Spotify API callback URL in the Spotify Developer Dashboard.
 2. `./manage.py runserver` to start the Django server (don't forget to apply
    migrations before you start the server)
 3. `celery -A server worker -l INFO`
-4. `celery -A server flower`
 
 Alternatively, you can use the `Makefile` to run the application (see `make help`).
 Running the workers through the `Makefile` has hot-reloading with watchdog (`watchmedo`).
 
 ```bash
-docker compose up
 make server
 make worker
-make flower
+make flower # Optional, for monitoring the workers
 ```
-
-## Back-end
-
-This is a Django application that uses REST framework for serializing and
-deserializing objects.
-
-## Front-end
-
-This dashboard is built using React & Tailwind.
-
-## Documentation
-
-### Design
-
-#### Colors
-
-The colors are inspired by the Spotify brand colors and come from the base
-colors in the Tailwind CSS framework.
-
-Primary: Emerald 600
-Secondary: Sky 500
-Text: Zinc 800
-Background: Neutral 200
 
 ## Spotify API
 
