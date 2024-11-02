@@ -1,10 +1,30 @@
 """Browser API Response serializers."""
 
+import enum
 import typing
 
+from celery import states
+from celery.result import AsyncResult
 from django.core.paginator import Paginator
 from django.db import models
 from pydantic import BaseModel
+
+from api.models.playlist import Playlist
+
+
+class TaskState(enum.StrEnum):
+    """Celery task states."""
+
+    PENDING = states.PENDING
+    RECEIVED = states.RECEIVED
+    STARTED = states.STARTED
+    SUCCESS = states.SUCCESS
+    FAILURE = states.FAILURE
+    REVOKED = states.REVOKED
+    REJECTED = states.REJECTED
+    RETRY = states.RETRY
+    IGNORED = states.IGNORED
+
 
 # from api.models import Album, Playlist, Track, TrackFeatures, Computation
 # from api.models.analysis import Computation
@@ -111,7 +131,28 @@ class ListPlaylistSerializer(ListResponseMixin, Serializer):
 class RetrievePlaylistSerializer(Serializer):
     """Serializer for retrieving Playlist objects in the browser context."""
 
-    pass
+    @classmethod
+    def to_response_data(
+        cls: type["RetrievePlaylistSerializer"], obj: Playlist
+    ) -> dict:
+        """Convert data to a response."""
+        _cls = PlaylistBaseSerializer
+        _data = _cls.model_construct()
+        _data.id = str(obj.id)
+        _data.name = obj.name
+        _data.spotify_id = obj.spotify_id
+        _data.is_analyzed = obj.is_analyzed
+        _data.is_synced = obj.is_synced
+        _data.description = obj.description
+        _data.owner_id = obj.owner_id
+        _data.version = obj.version
+        _data.image_url = obj.image_url
+        _data.public = obj.public
+        _data.shared = obj.shared
+
+        _cls.model_validate(_data)
+
+        return _data.model_dump()
 
 
 class CreatePlaylistTaskSerializer(Serializer):
@@ -124,3 +165,17 @@ class UpdatePlaylistTaskSerializer(Serializer):
     """Serializer for updating PlaylistTask objects in the browser context."""
 
     pass
+
+
+class TaskResultSerializer(Serializer):
+    """Serializer for TaskResult objects in the browser context."""
+
+    task_id: str
+    status: TaskState
+
+    @classmethod
+    def from_result(
+        cls: type["TaskResultSerializer"], result: AsyncResult
+    ) -> "TaskResultSerializer":
+        """Create a TaskResultSerializer from an AsyncResult."""
+        return cls(task_id=result.task_id, status=TaskState(result.status))

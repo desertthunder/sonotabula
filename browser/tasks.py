@@ -5,11 +5,13 @@ Tasks for syncing and analyzing playlists and their tracks.
 Any task with user_id as an argument makes an API call.
 """
 
+import enum
 import time
 import typing
 import uuid
 
 from celery import group, shared_task
+from celery.states import FAILURE, PENDING, SUCCESS
 from loguru import logger
 
 from api.blocks import AlbumArtistSyncBlock, AlbumSyncBlock, AlbumTrackSyncBlock
@@ -30,8 +32,26 @@ LIBRARY = SpotifyLibraryService(auth_service=AUTH)
 DATA = SpotifyDataService()
 
 
+class TaskStatus(enum.StrEnum):
+    """Task status."""
+
+    Running = PENDING
+    Success = SUCCESS
+    Failed = FAILURE
+
+
+@shared_task
+def pause_execution_task(seconds: int = 5) -> None:
+    """Pause execution for a given number of seconds."""
+    time.sleep(seconds)
+
+    return None
+
+
 class Task:
     """Task base class."""
+
+    status: TaskStatus
 
     def _run(self, *args, **kwargs) -> None:
         raise NotImplementedError("Subclasses must implement _run.")
@@ -39,14 +59,21 @@ class Task:
     def __call__(self, *args, **kwargs) -> typing.Self:
         """Run the album analysis chain."""
         try:
-            self.status = "RUNNING"
+            self.status = TaskStatus.Running
             self._run(*args, **kwargs)
-            self.status = "SUCCESS"
+            self.status = TaskStatus.Success
         except Exception as e:
+            self.status = TaskStatus.Failed
             logger.error(e)
-            self.status = "FAILURE"
+
+            raise e from e
 
         return self
+
+
+############################################
+# Playlist Tasks                           #
+############################################
 
 
 class PlaylistTask(Task):
@@ -54,7 +81,6 @@ class PlaylistTask(Task):
 
     user_id: int
     playlist_id: uuid.UUID
-    status: str = "PENDING"
 
     def __init__(self, user_id: int, playlist_id: uuid.UUID) -> None:
         """Create a new task for a playlist."""
@@ -64,6 +90,27 @@ class PlaylistTask(Task):
 
 class PlaylistSync(PlaylistTask):
     """Collection of tasks for syncing playlists."""
+
+    def pre_flight(self) -> bool:
+        """Check the version of the playlist and skip if it's already synced.
+
+        Tells us if we *should* sync the playlist.
+        """
+        playlist = Playlist.objects.get(id=self.playlist_id)
+
+        if playlist.is_synced:
+            response = LIBRARY.library_playlist(self.user_id, playlist.spotify_id)
+
+            if (
+                snapshot_id := response.get("snapshot_id")
+            ) and snapshot_id == playlist.version:
+                logger.info(
+                    f"Playlist {self.playlist_id} has already been synced. Skipping."
+                )
+
+                return False
+
+        return True
 
     def sync(self) -> tuple[list[dict], uuid.UUID]:
         """Dispatch playlist sync."""
@@ -102,6 +149,10 @@ class PlaylistSync(PlaylistTask):
 
     def _run(self) -> None:
         """Run the playlist sync chain."""
+        if not self.pre_flight():
+            return
+
+        time.sleep(1)  # Pause after the preflight API call
         sync_result = self.sync()
         track_result = self.track_sync(sync_result)
 
@@ -110,6 +161,20 @@ class PlaylistSync(PlaylistTask):
 
 class PlaylistAnalysis(PlaylistTask):
     """Collection of tasks for analyzing playlists."""
+
+    def pre_flight(self) -> bool:
+        """Check that the playlist has been synced and analyzed.
+
+        Skip the analysis if the playlist has already been analyzed.
+        """
+        playlist = Playlist.objects.get(id=self.playlist_id)
+        if playlist.is_analyzed:
+            logger.info(
+                f"Playlist {self.playlist_id} has already been analyzed. Skipping."
+            )
+            return False
+
+        return True
 
     def analysis(self) -> uuid.UUID:
         """Dispatch playlist analysis."""
@@ -148,6 +213,9 @@ class PlaylistAnalysis(PlaylistTask):
 
     def _run(self) -> None:
         """Run the playlist analysis chain."""
+        if not self.pre_flight():
+            return
+
         analysis_result = self.analysis()
         computation_result = self.computation(analysis_result)
         logger.debug(f"Analysis result: {analysis_result}")
@@ -192,6 +260,22 @@ def sync_playlist(playlist_id: uuid.UUID, user_id: int) -> str:
 
 
 @shared_task
+def sync_and_analyze_playlist(playlist_id: uuid.UUID, user_id: int) -> None:
+    """Sync and analyze a playlist."""
+    group(
+        sync_playlist.s(
+            playlist_id,
+            user_id,
+        ),
+        pause_execution_task.s(5),
+        analyze_playlist.s(
+            playlist_id,
+            user_id,
+        ),
+    ).apply_async()
+
+
+@shared_task
 def sync_playlists(user_id: int, playlist_ids: list[uuid.UUID]) -> None:
     """Sync multiple playlists."""
     tasks = [
@@ -205,12 +289,16 @@ def sync_playlists(user_id: int, playlist_ids: list[uuid.UUID]) -> None:
     group(tasks).apply_async()
 
 
+############################################
+# Album Tasks                              #
+############################################
+
+
 class AlbumTask(Task):
     """Album task base class."""
 
     user_id: int
     album_id: uuid.UUID | None = None
-    status: str = "PENDING"
 
     def __init__(self, user_id: int, album_id: uuid.UUID | None = None) -> None:
         """Create a new task for an album."""
@@ -256,7 +344,9 @@ class AlbumSync(AlbumTask):
             raise ValueError("Album ID is required.")
 
         album = Album.objects.get(id=self.album_id)
+
         response = LIBRARY.library_album(self.user_id, album.spotify_id)
+        time.sleep(1)
 
         if data := response.get("album"):
             self.cleaned_album = Album.sync.clean_data(data)
@@ -321,8 +411,9 @@ class AlbumSync(AlbumTask):
 
                 self.complete(track_id)
         except Exception as e:
+            self.status = TaskStatus.Failed
             logger.error(e)
-            self.status = "FAILURE"
+            raise e from e
 
 
 class AlbumAnalysis(AlbumTask):

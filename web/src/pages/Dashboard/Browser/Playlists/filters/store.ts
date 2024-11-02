@@ -19,6 +19,7 @@ const defaultState: PlaylistFilterState = {
 } as const;
 
 interface PlaylistFilterActions {
+  getAllParams: () => URLSearchParams;
   updatePageSize: (pageSize: number) => void;
   updateTotal: (total: number) => void;
   setPage: (page: number) => void;
@@ -30,8 +31,22 @@ interface PlaylistFilterActions {
 
 export const usePlaylistFilters = create<
   PlaylistFilterState & PlaylistFilterActions
->()((set, _get) => ({
+>()((set, get) => ({
   ...defaultState,
+  getAllParams: () => {
+    const { page, pageSize, filters } = get();
+
+    const params = new URLSearchParams();
+
+    params.set("page", page.toString());
+    params.set("page_size", pageSize.toString());
+
+    for (const [key, value] of filters) {
+      params.set(key, value);
+    }
+
+    return params;
+  },
   reset: () => {
     set(() => defaultState);
   },
@@ -43,11 +58,13 @@ export const usePlaylistFilters = create<
   },
   setPage: (page: number) => {
     set((state) => {
-      if (page < 1) return state;
-
-      if (page * state.pageSize > state.total) return state;
-
-      return { page };
+      if (page < 1) {
+        return state;
+      } else if (page * state.pageSize > state.total) {
+        return state;
+      } else {
+        return { page };
+      }
     });
   },
   updatePageSize: (pageSize: number) => {
@@ -55,14 +72,18 @@ export const usePlaylistFilters = create<
   },
   nextPage: () => {
     set((state) => {
-      if (state.page * state.pageSize >= state.total) return state;
+      if (state.page * state.pageSize >= state.total) {
+        return state;
+      }
 
       return { page: state.page + 1 };
     });
   },
   previousPage: () => {
     set((state) => {
-      if (state.page === 1) return state;
+      if (state.page === 1) {
+        return state;
+      }
 
       return { page: state.page - 1 };
     });

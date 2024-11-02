@@ -1,7 +1,8 @@
 """Analysis models.
 
-(TODO): Reassess need for tracks foreign key in Analysis model.
-(TODO): Add album as foreign key to Track model.
+Contains Django orm models for playlist and album analysis,
+as well as persisted computations, based on audio features
+provided by the Spotify API.
 """
 
 import typing
@@ -23,6 +24,7 @@ from core.models import AppUser
 class AnalysisManager(models.Manager["Analysis"]):
     """Manager for analysis models."""
 
+    # ALBUM ANALYSIS CREATION
     def prep_album(self, album_pk: uuid.UUID, user_pk: int) -> list[str]:
         """Analyze an album."""
         album = Album.objects.get(pk=album_pk)
@@ -73,8 +75,13 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         return analysis.pk
 
+    # PLAYLIST ANALYSIS CREATION
     def pre_analysis(self, playlist_pk: uuid.UUID, user_pk: int) -> list[str]:
-        """Analyze a playlist."""
+        """Setup playlist analysis.
+
+        Retrieves the list of track Spotify IDs from the playlist record
+        to fetch the audio features from the Spotify API.
+        """
         playlist = Playlist.objects.get(pk=playlist_pk)
 
         if not playlist.is_synced:
@@ -89,7 +96,16 @@ class AnalysisManager(models.Manager["Analysis"]):
     def analyze(
         self, playlist_pk: str | uuid.UUID, user_pk: int, items: typing.Iterable[dict]
     ) -> uuid.UUID:
-        """Validate track data."""
+        """Validate track data.
+
+        Builds an analysis record from the playlist and track data provided by
+        the Spotify API.
+
+        The playlist from the database is retrieved, then checked for the existence
+        of an Analysis object with the same version tag. If the playlist is
+        already analyzed, the function returns the primary key of the existing
+        Analysis object.
+        """
         playlist = Playlist.objects.get(pk=playlist_pk)
         user = AppUser.objects.get(pk=user_pk)
 
@@ -98,9 +114,24 @@ class AnalysisManager(models.Manager["Analysis"]):
                 f"Playlist {str(playlist.pk)} | {playlist.name} is not synced."
             )
 
-        analysis, _ = self.get_or_create(
-            version=playlist.version, playlist_id=playlist.pk, user=user
-        )  # type: ignore
+        version_tag = (
+            f"version:{playlist.pk}:{playlist.version}"
+            if playlist.version
+            else f"playlist:{playlist.pk}"
+        )
+
+        if playlist.is_analyzed and self.filter(version=version_tag).exists():
+            logger.info(f"Playlist {playlist.pk} is already analyzed.")
+            logger.debug(f"Version Tag: {version_tag}")
+            return self.get(version=version_tag).pk
+
+        analysis, _ = self.update_or_create(
+            playlist_id=playlist.pk,
+            user=user,
+            defaults={
+                "version": version_tag,
+            },
+        )
 
         tracks = []
 
@@ -125,10 +156,15 @@ class AnalysisManager(models.Manager["Analysis"]):
 
         return analysis.pk
 
+    # COMPUTATION OPERATIONS
     def build_dataset(self, analysis_pk: uuid.UUID) -> pd.DataFrame:
-        """Calculate playlist analysis."""
+        """Calculate playlist stats."""
         features = (
-            TrackFeatures.objects.filter(track__analyses__id=analysis_pk).all().values()
+            TrackFeatures.objects.filter(
+                track__analyses__id=analysis_pk,
+            )
+            .all()
+            .values()
         )
 
         df = pd.DataFrame(features)  # type: ignore

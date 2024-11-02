@@ -50,7 +50,9 @@ Wouter
 
 ### State Management
 
-Zustand
+Zustand is used to manage global state in the application, as well as managing
+data for some contexts. The token is persisted in `localStorage` and is called by
+the `useTokenStore` hook that is leveraged by the queries across the application.
 
 ### API Requests
 

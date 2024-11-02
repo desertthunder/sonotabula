@@ -6,7 +6,9 @@ These are audio features stored under a user's
 """
 
 import typing
+import uuid
 
+from django.core.paginator import Paginator
 from django.db import models
 from loguru import logger
 from rest_framework import status
@@ -16,9 +18,21 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from api.models.permissions import SpotifyAuth
+from api.models.playlist import Playlist
 from browser.filters import PlaylistFilterSet
 from browser.models import Library
-from browser.serializers import ListPlaylistSerializer, PaginationParams
+from browser.serializers import (
+    ListPlaylistSerializer,
+    PaginationParams,
+    RetrievePlaylistSerializer,
+    TaskResultSerializer,
+)
+from browser.tasks import (
+    analyze_playlist,
+    sync_and_analyze_playlist,
+    sync_playlist,
+    sync_playlists,
+)
 from core.filters import FilterSet
 
 
@@ -78,8 +92,13 @@ class BaseBrowserViewSet(
         return self.filter_class()(request)
 
 
-class PlaylistViewSet(BaseBrowserViewSet):
-    """Playlist viewset."""
+class PlaylistMetaViewSet(BaseBrowserViewSet):
+    """Browser Playlist ViewSet.
+
+    Returns a collection of statistics and metadata
+    about playlists that have been persisted/synced
+    to the database and associated with a user's library.
+    """
 
     filter_class = PlaylistFilterSet
     relation: str = "playlists"
@@ -87,24 +106,151 @@ class PlaylistViewSet(BaseBrowserViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request: Request) -> Response:
-        """List all playlists."""
+        """GET /playlists.
+
+        Filters and returns a paginated list of playlists based
+        on query parameters.
+        """
+        qs = Playlist.objects.filter(libraries__user_id=request.user.id)
+
+        data = {
+            "total_synced": qs.filter(is_synced=True).count(),
+            "total_analyzed": qs.filter(is_analyzed=True).count(),
+            "total_synced_tracks": qs.filter(is_synced=True)
+            .aggregate(
+                track_count=models.Count("tracks"),
+            )
+            .get("track_count"),
+            "total_analyzed_tracks": qs.filter(is_analyzed=True)
+            .aggregate(
+                track_count=models.Count("tracks"),
+            )
+            .get("track_count"),
+            "total_unanalyzed_tracks": qs.filter(is_analyzed=False)
+            .aggregate(
+                track_count=models.Count("tracks"),
+            )
+            .get("track_count"),
+            "total_tracks": qs.aggregate(
+                track_count=models.Count("tracks"),
+            ).get("track_count"),
+        }
+
+        logger.info(f"Playlist metadata: {data}")
+
+        return Response(data=data, status=status.HTTP_200_OK)
+
+
+class PlaylistViewSet(BaseBrowserViewSet):
+    """Browser (persisted) Playlist API Views.
+
+    Query methods return filtered records of one or many
+    playlists that have been persisted/synced to the database
+    and associated with a user's library.
+
+    Action methods dispatch tasks to sync or analyze playlists
+    and their tracks.
+    """
+
+    filter_class = PlaylistFilterSet
+    relation: str = "playlists"
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request: Request) -> Response:
+        """GET /playlists.
+
+        Filters and returns a paginated list of playlists based
+        on query parameters.
+        """
         qs = self.get_queryset(request)
         return Response(
-            data=ListPlaylistSerializer.to_response(qs.all(), self.get_params(request)),
+            data=ListPlaylistSerializer.to_response(
+                qs.all(),
+                self.get_params(request),
+            ),
             status=status.HTTP_200_OK,
         )
 
+    def update(self, request: Request, playlist_pk: str, *args, **kwargs) -> Response:
+        """PUT /playlists/{pk}.
+
+        Does a complete update of a playlist, i.e. dispatches
+        a celery group that syncs & then analyzes the playlist.
+        """
+        result = sync_and_analyze_playlist.s(
+            uuid.UUID(playlist_pk), request.user.id
+        ).apply_async()
+
+        return Response(
+            data={"task_id": result.id, "status": result.status, "state": result.state},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    def partial_update(
+        self, request: Request, playlist_pk: str, *args, **kwargs
+    ) -> Response:
+        """PATCH /playlists/{pk}.
+
+        Partially updates a playlist, i.e. only syncs or analyzes
+        the playlist. Defaults to sync.
+        """
+        logger.debug(request.data)
+        if request.data.get("operation") == "analyze":
+            result = analyze_playlist.s(
+                uuid.UUID(playlist_pk), request.user.id
+            ).apply_async()
+        else:
+            result = sync_playlist.s(
+                uuid.UUID(playlist_pk), request.user.id
+            ).apply_async()
+
+        return Response(
+            data=TaskResultSerializer.from_result(result),
+            status=status.HTTP_202_ACCEPTED,
+        )
+
     def create(self, request: Request) -> Response:
-        """Create a playlist."""
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+        """POST /playlists.
 
-    def retrieve(self, request: Request, pk: str | None = None) -> Response:
-        """Retrieve a playlist."""
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+        Based on params (filtered queryset), this view dispatches
+        a batch of celery tasks to analyze the playlists.
+        """
+        qs = self.get_queryset(request)
+        params = self.get_params(request)
+        objects = (
+            Paginator(qs.all(), per_page=params.page_size)
+            .page(
+                params.page,
+            )
+            .object_list
+        )
 
-    def update(self, request: Request, pk: str | None = None) -> Response:
-        """Update a playlist."""
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+        result = sync_playlists.s(
+            request.user.id,
+            [obj.id for obj in objects],
+        ).apply_async()
+
+        return Response(
+            data=TaskResultSerializer.from_result(result),
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    def retrieve(self, request: Request, playlist_pk: str, *args, **kwargs) -> Response:
+        """GET /playlists/{pk}.
+
+        Retrieves a single playlist by its primary key, and related
+        objects:
+            - tracks (paginated)
+            - computation
+        """
+        playlist = self.get_queryset(request).get(pk=playlist_pk)
+        return Response(
+            data=RetrievePlaylistSerializer.to_response_data(
+                playlist,
+            ),
+            status=status.HTTP_200_OK,
+        )
 
     def destroy(self, request: Request, pk: str | None = None) -> Response:
         """Destroy a playlist."""

@@ -19,5 +19,5 @@ on external sources.
 
 ## These Docs
 
-Since we're using conventional [commits](./commits.md), a changelog could be
-generated on releases. I might write my own.
+Since we're using conventional [commits](./development/commits.md), a changelog
+could be generated on releases. I might write my own.

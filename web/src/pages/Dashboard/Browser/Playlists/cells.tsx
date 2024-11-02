@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   useTransitionStyles,
   useFloating,
@@ -6,9 +6,45 @@ import {
   useInteractions,
   useDismiss,
 } from "@floating-ui/react";
+import { useMutation } from "@tanstack/react-query";
+import { useTokenStore } from "@/store";
+
+type TaskArgs = {
+  pid: string;
+  operation: "sync" | "analyze";
+  token: string | null;
+};
+
+async function callTask({ pid, operation, token }: TaskArgs) {
+  if (!token) {
+    throw new Error("No token available");
+  }
+
+  const url = new URL(`/api/v1/browser/playlists/${pid}`, window.location.href);
+
+  const res = await fetch(url.toString(), {
+    method: "PATCH",
+    body: JSON.stringify({ operation }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to ${operation} playlist`);
+  }
+
+  return await res.json();
+}
 
 export function PlaylistActionsCell(props: { playlistID: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const token = useTokenStore((state) => state.token);
+  const taskMutation = useMutation({
+    mutationFn: callTask,
+  });
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -30,14 +66,28 @@ export function PlaylistActionsCell(props: { playlistID: string }) {
   ]);
 
   const syncHandler = useCallback(() => {
-    console.log("Sync", props.playlistID); // eslint-disable-line no-console
+    taskMutation.mutate({ pid: props.playlistID, operation: "sync", token });
     setIsOpen(false);
-  }, [props]);
+  }, [props, taskMutation, token]);
 
   const analyzeHandler = useCallback(() => {
-    console.log("Analyze", props.playlistID); // eslint-disable-line no-console
+    taskMutation.mutate({ pid: props.playlistID, operation: "analyze", token });
     setIsOpen(false);
-  }, [props]);
+  }, [props, taskMutation, token]);
+
+  useEffect(() => {
+    if (taskMutation.isPending) {
+      setIsLoading(true);
+
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [taskMutation.isPending]);
 
   return (
     <>
@@ -49,12 +99,17 @@ export function PlaylistActionsCell(props: { playlistID: string }) {
             "flex items-center px-2 py-1 text-sm",
             "shadow rounded",
             "hover:bg-emerald-500 hover:text-white hover:border-emerald-500",
+            isLoading ? "cursor-wait pointer-events-none" : "",
           ].join(" ")}
+          disabled={isLoading}
         >
           <span className="hidden lg:inline">Actions</span>
           <i
             className={[
-              "i-ri-arrow-down-s-line lg:ml-2",
+              isLoading
+                ? "i-ri-loader-2-line animate-spin"
+                : "i-ri-arrow-down-s-line",
+              "lg:ml-2",
               "duration-500 transition-transform",
               isOpen ? "transform rotate-180" : "",
               "text-center",

@@ -2,11 +2,16 @@
  * Playlists Dashboard Browser Page
  */
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FilterForm } from "./filters/form";
 import { BrowserPlaylistPagination } from "./filters/pagination";
 import { Table } from "./table";
 import { Link } from "wouter";
+import { useTokenStore } from "@/store";
+import { usePlaylistFilters } from "./filters/store";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useSavedCounts } from "@/libs/hooks";
+
 interface BrowserCardProps {
   title: string;
   helpText: string;
@@ -71,7 +76,90 @@ export function BrowserCard({
   );
 }
 
+async function AnalyzePage({
+  token,
+  params,
+}: {
+  token: string | null;
+  params: URLSearchParams;
+}) {
+  const url = new URL("/api/v1/browser/playlists", window.location.origin);
+  url.search = params.toString();
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: "POST",
+  });
+
+  return await response.json();
+}
+
+async function fetchPlaylistsMetadata(token: string | null) {
+  if (!token) {
+    throw new Error("No token available");
+  }
+
+  const url = new URL("/api/v1/browser/playlists/meta", window.location.origin);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch playlists metadata");
+  }
+
+  return await response.json();
+}
+
+function usePlaylistsMetadata() {
+  const token = useTokenStore((state) => state.token);
+  const query = useQuery({
+    queryKey: ["browser", "playlists", "metadata"],
+    queryFn: () => fetchPlaylistsMetadata(token),
+  });
+
+  return query;
+}
+
+function usePageAnalysisMutation() {
+  const token = useTokenStore((state) => state.token);
+  const getParams = usePlaylistFilters((state) => state.getAllParams);
+
+  const mutation = useMutation({
+    mutationFn: () => AnalyzePage({ token, params: getParams() }),
+  });
+
+  return mutation;
+}
+
 export function PlaylistsBrowser() {
+  const [isLoading, setIsLoading] = useState(false);
+  const counts = useSavedCounts();
+  const metadata = usePlaylistsMetadata();
+  const mutation = usePageAnalysisMutation();
+
+  const handleAnalyzePageClick = useCallback(() => {
+    setIsLoading(true);
+    mutation.mutate();
+  }, [mutation]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (mutation.isPending) return;
+
+      setIsLoading(false);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [mutation.isPending]);
+
   return (
     <div className="flex flex-col w-full text-sm min-h-min">
       <section data-testid="search-bar" className="p-4 bg-white">
@@ -82,26 +170,98 @@ export function PlaylistsBrowser() {
         <BrowserCard
           title="Total Playlists"
           helpText="The number of playlists saved in your spotify library."
-          content="Card 1 Content"
-        />
+        >
+          {counts.isLoading ? (
+            <i className="i-ri-loader-line animate-spin" />
+          ) : counts.isError ? (
+            <span className="text-rose-500 font-medium">
+              Something went wrong
+            </span>
+          ) : counts.data ? (
+            <span className="text-emerald-500 font-medium">
+              {counts.data.playlists}
+            </span>
+          ) : null}
+        </BrowserCard>
         <BrowserCard
           title="Synced Playlists"
           helpText="The number of playlists synced with your spotify account."
-        />
+        >
+          {metadata.isLoading ? (
+            <i className="i-ri-loader-line animate-spin" />
+          ) : metadata.isError ? (
+            <span className="text-rose-500 font-medium">
+              Something went wrong
+            </span>
+          ) : metadata.data ? (
+            <span className="text-emerald-500 font-medium">
+              {metadata.data.total_synced}
+            </span>
+          ) : null}
+        </BrowserCard>
         <BrowserCard
           title="Analyzed"
           helpText="The number of playlists analyzed for recommendations."
-        />
-        <BrowserCard title="Card 4" helpText="Card 4 Help Text" />
+        >
+          {metadata.isLoading ? (
+            <i className="i-ri-loader-line animate-spin" />
+          ) : metadata.isError ? (
+            <span className="text-rose-500 font-medium">
+              Something went wrong
+            </span>
+          ) : metadata.data ? (
+            <span className="text-emerald-500 font-medium">
+              {metadata.data.total_analyzed}
+            </span>
+          ) : null}
+        </BrowserCard>
+        <BrowserCard
+          title="Total Tracks"
+          helpText="The number of tracks in your synced playlists."
+        >
+          {metadata.isLoading ? (
+            <i className="i-ri-loader-line animate-spin" />
+          ) : metadata.isError ? (
+            <span className="text-rose-500 font-medium">
+              Something went wrong
+            </span>
+          ) : metadata.data ? (
+            <span className="text-emerald-500 font-medium">
+              {metadata.data.total_tracks}
+            </span>
+          ) : null}
+        </BrowserCard>
       </section>
       <FilterForm />
       <main
         data-testid="table"
         className="bg-white flex flex-col flex-1 overflow-auto"
       >
-        <header className="p-4">
-          <h2 className="text-lg">Table</h2>
-          <p>Table Content</p>
+        <header className="p-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg">Table</h2>
+            <p>Table Content</p>
+          </div>
+          <div>
+            <button
+              className={[
+                "bg-white text-emerald-500",
+                "border-emerald-500 border",
+                "flex items-center px-4 py-2 text-sm",
+                "shadow rounded",
+                "hover:bg-emerald-500 hover:text-white",
+                isLoading ? "cursor-wait pointer-events-none" : "",
+              ].join(" ")}
+              disabled={isLoading}
+              onClick={handleAnalyzePageClick}
+            >
+              {isLoading ? (
+                <i className="i-ri-loader-line animate-spin" />
+              ) : (
+                <span>Analyze Page</span>
+              )}
+            </button>
+          </div>
         </header>
         <section className="overflow-auto">
           <Table />

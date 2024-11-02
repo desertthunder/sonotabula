@@ -68,6 +68,10 @@ Tasks are a mix of classes to store operation state, and functions for the worke
 to discover and execute. The tasks are stored in the `tasks` module of its respective
 app/context.
 
+Pausing tasks is done by adding a simple wrapper around `time.sleep`. In the
+browser tasks module this is the `delay_execution` function in between sync
+and analysis tasks.
+
 ### Syncing
 
 Serializing data from the Spotify API to the database and then client is done
