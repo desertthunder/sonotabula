@@ -16,7 +16,7 @@ TailwindCSS is used for the components.
 
 ### Color Palette
 
-![Color Palette](../../static/img/design/colors.png)
+![Color Palette](../static/img/design/colors.png)
 
 ```yaml
 - tailwind: 'green-500'
