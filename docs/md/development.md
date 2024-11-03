@@ -41,3 +41,12 @@ Scopes (not enforced):
 The documentation built with docusaurus and is deployed to netlify on commits to main.
 There are also dev deployments that are triggered on commits to any branch with an
 open PR. See the docusaurus docs for more information on the process [here](https://docusaurus.io/docs/deployment#deploying-to-netlify).
+
+## Code Style
+
+Code style on the back-end is enforced by Ruff and a number of Flake8 plugins.
+The `ruff.toml` file is in the root of the repository. Docstrings are also enforced,
+but I am reconsidering the usefulness of this, as I've ended up with docs that just
+repeat the function signature or the class's name. Most helpful have been BugBear, and Mccabe.
+
+The front-end uses ESLint with plugins for TypeScript & React Query.

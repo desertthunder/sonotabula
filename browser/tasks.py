@@ -27,6 +27,7 @@ from api.services.spotify import (
     SpotifyLibraryService,
 )
 from browser.models import Library
+from live.models import Notification
 from live.tasks import start_task_execution, task_complete
 
 AUTH = SpotifyAuthService()
@@ -239,13 +240,16 @@ def _analyze_playlist(task_id: str, playlist_id: uuid.UUID, user_id: int) -> str
     return task_id
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, name="analyze_playlist")
 def analyze_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> None:
     """Notification wrapper/dispatch for playlist analysis."""
     chain(
         start_task_execution.s(
             self.request.id,
             user_id,
+            str(playlist_id),
+            Notification.Resources.Playlist,
+            Notification.Operations.Analyze,
             {
                 "playlist_id": str(playlist_id),
                 "task_type": "analyze_playlist",
@@ -256,8 +260,8 @@ def analyze_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> 
     ).apply_async()
 
 
-@shared_task(bind=True)
-def sync_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> str:
+@shared_task(name="sync_playlist")
+def _sync_playlist(task_id: str, playlist_id: uuid.UUID, user_id: int) -> str:
     """Sync library playlists.
 
     Creates a chain for each playlist (using the primary key):
@@ -268,38 +272,54 @@ def sync_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> str
 
     Puts the chains in a group and applies them asynchronously.
     """
-    start_task_execution.s(
-        self.request.id,
-        user_id,
-        {
-            "playlist_id": str(playlist_id),
-            "task_type": "sync_playlist",
-        },
-    ).apply()
-
     runner = PlaylistSync(user_id, playlist_id)
 
     runner.__call__()
 
-    task_complete.s(str(self.request.id), runner.status).apply()
-
-    return runner.status
+    return task_id
 
 
-@shared_task
-def sync_and_analyze_playlist(playlist_id: uuid.UUID, user_id: int) -> None:
-    """Sync and analyze a playlist."""
-    group(
-        sync_playlist.s(
-            playlist_id,
+@shared_task(bind=True, name="sync_playlist")
+def sync_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> None:
+    """Notification wrapper/dispatch for playlist sync."""
+    chain(
+        start_task_execution.s(
+            self.request.id,
             user_id,
+            str(playlist_id),
+            Notification.Resources.Playlist,
+            Notification.Operations.Sync,
+            {
+                "playlist_id": str(playlist_id),
+                "task_type": "sync_playlist",
+            },
         ),
-        pause_execution_task.s(5),
-        analyze_playlist.s(
-            playlist_id,
-            user_id,
-        ),
+        _sync_playlist.s(playlist_id, user_id),
+        task_complete.s(),
     ).apply_async()
+
+
+@shared_task(bind=True)
+def sync_and_analyze_playlist(
+    self: CeleryTask, playlist_id: uuid.UUID, user_id: int
+) -> None:
+    """Sync and analyze a playlist."""
+    chain(
+        start_task_execution.s(
+            self.request.id,
+            user_id,
+            str(playlist_id),
+            Notification.Resources.Playlist,
+            Notification.Operations.FullSync,
+            {
+                "playlist_id": str(playlist_id),
+                "task_type": "sync_and_analyze_playlist",
+            },
+        ),
+        _sync_playlist.s(playlist_id, user_id),
+        _analyze_playlist.s(playlist_id, user_id),
+        task_complete.s(),
+    )
 
 
 @shared_task

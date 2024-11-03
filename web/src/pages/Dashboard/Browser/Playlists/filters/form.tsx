@@ -34,7 +34,7 @@ function Checkbox({ filter }: CheckboxProps) {
       onClick={onClick}
     >
       {checked ? (
-        <i className="i-ri-checkbox-fill text-emerald-500 group-hover:i-ri-blank-line p-2.5" />
+        <i className="i-ri-checkbox-fill text-primary group-hover:i-ri-blank-line p-2.5" />
       ) : (
         <i className="i-ri-checkbox-blank-line text-gray-500 group-hover:i-ri-checkbox-line p-2.5" />
       )}

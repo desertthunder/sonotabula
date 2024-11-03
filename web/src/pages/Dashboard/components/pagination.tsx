@@ -68,7 +68,7 @@ export const PagerButton = ({
     className={[
       "flex gap-2 items-center",
       "py-2 px-4 font-semibold text-sm",
-      "bg-zinc-50 hover:bg-green-400",
+      "bg-surface hover:bg-green-400",
       disabled
         ? "pointer-events-none bg-slate-200 text-slate-500"
         : "cursor-pointer",

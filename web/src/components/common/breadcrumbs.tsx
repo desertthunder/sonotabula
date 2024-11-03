@@ -1,24 +1,32 @@
-import { Link, useRoute } from "wouter";
+import capitalize from "lodash/capitalize";
 import React, { useMemo } from "react";
+import { Link, useRoute } from "wouter";
 
-export function Breadcrumbs({ title }: { title?: string }) {
+export function Breadcrumbs({
+  context,
+  title,
+}: {
+  context: "playlists" | "albums";
+  title?: string;
+}) {
   const [base] = useRoute("/");
   const [dashboardMatch] = useRoute("/dashboard");
-  const [playlistsMatch] = useRoute("/dashboard/browser/playlists");
-  const [playlistsDetailMatch] = useRoute("/dashboard/browser/playlists/:id");
+  const [playlistsMatch] = useRoute(`/dashboard/browser/${context}`);
+  const [playlistsDetailMatch] = useRoute(`/dashboard/browser/${context}/:id`);
 
   const routes = useMemo(() => {
+    const headerText = capitalize(context.slice(0, -1));
     if (playlistsDetailMatch) {
       return [
         { label: "Home", href: "/dashboard", match: dashboardMatch },
         {
-          label: "Playlist Browser",
-          href: "/dashboard/browser/playlists",
+          label: `${headerText} Browser`,
+          href: `/dashboard/browser/${context}`,
           match: playlistsMatch,
         },
         {
-          label: "Playlist Details",
-          href: "/dashboard/browser/playlists/:id",
+          label: `${headerText} Detail`,
+          href: `/dashboard/browser/${context}/:id`,
           match: playlistsDetailMatch,
         },
       ];
@@ -28,8 +36,8 @@ export function Breadcrumbs({ title }: { title?: string }) {
       return [
         { label: "Home", href: "/dashboard", match: dashboardMatch },
         {
-          label: "Playlist Browser",
-          href: "/dashboard/browser/playlists",
+          label: `${headerText} Browser`,
+          href: `/dashboard/browser/${context}`,
           match: playlistsMatch,
         },
       ];
@@ -42,7 +50,7 @@ export function Breadcrumbs({ title }: { title?: string }) {
     }
 
     return [{ label: "Home", href: "/", match: base }];
-  }, [base, dashboardMatch, playlistsMatch, playlistsDetailMatch]);
+  }, [base, dashboardMatch, playlistsMatch, playlistsDetailMatch, context]);
 
   return (
     <header className="flex flex-col justify-between p-4 bg-white border-t">
@@ -52,10 +60,10 @@ export function Breadcrumbs({ title }: { title?: string }) {
             <Link
               href={link.href}
               className={
-                link.match ? "pointer-events-none" : "hover:text-emerald-500"
+                link.match ? "pointer-events-none" : "hover:text-primary"
               }
             >
-              <span className="group-hover:text-emerald-500">{link.label}</span>
+              <span className="group-hover:text-primary">{link.label}</span>
             </Link>
             {index < routes.length - 1 && (
               <i className="i-ri-arrow-right-s-line align-middle" />

@@ -2,53 +2,22 @@
  * Playlists Dashboard Browser Page
  */
 
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FilterForm } from "./filters/form";
 import { BrowserPlaylistPagination } from "./filters/pagination";
 import { Table } from "./table";
 import { useTokenStore } from "@/store";
 import { usePlaylistFilters } from "@/store/filters";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { useSavedCounts } from "@/libs/hooks";
-import { Breadcrumbs } from "@/components/common/breadcrumbs";
-
-interface BrowserCardProps {
-  title: string;
-  helpText: string;
-  content?: string;
-  children?: React.ReactNode;
-}
+import { Breadcrumbs, BrowserCard, SearchBar } from "@/components/common";
+import { LibraryCounts } from "@/libs/types";
 
 type PlaylistMetadata = {
   total_synced: number;
   total_analyzed: number;
   total_tracks: number;
 };
-
-export function BrowserCard({
-  title,
-  helpText,
-  content,
-  children,
-}: BrowserCardProps) {
-  return (
-    <article className="bg-white border-t border-emerald-500 flex flex-col gap-2">
-      <header className="text-lg p-4 pb-2">{title}</header>
-      <section className="px-4 py-2 border-y text-2xl font-semibold font-titles align-middle">
-        {content ? (
-          content
-        ) : children ? (
-          children
-        ) : (
-          <p className="text-gray-500">No content</p>
-        )}
-      </section>
-      <footer className="text-xs text-gray-500 px-4 pb-2 align-middle">
-        {helpText}
-      </footer>
-    </article>
-  );
-}
 
 async function AnalyzePage({
   token,
@@ -117,6 +86,75 @@ function usePageAnalysisMutation() {
   return mutation;
 }
 
+function BrowserCards({
+  metadata,
+  counts,
+}: {
+  metadata: UseQueryResult<PlaylistMetadata>;
+  counts: UseQueryResult<LibraryCounts>;
+}) {
+  return (
+    <section className="md:grid md:grid-cols-2 lg:grid-cols-4 divide-x">
+      <BrowserCard
+        title="Total Playlists"
+        helpText="The number of playlists saved in your spotify library."
+      >
+        {counts.isLoading ? (
+          <i className="i-ri-loader-line animate-spin" />
+        ) : counts.isError ? (
+          <span className="text-error font-medium">Something went wrong</span>
+        ) : counts.data ? (
+          <span className="text-primary font-medium">
+            {counts.data.playlists}
+          </span>
+        ) : null}
+      </BrowserCard>
+      <BrowserCard
+        title="Synced Playlists"
+        helpText="The number of playlists synced with your spotify account."
+      >
+        {metadata.isLoading ? (
+          <i className="i-ri-loader-line animate-spin" />
+        ) : metadata.isError ? (
+          <span className="text-error font-medium">Something went wrong</span>
+        ) : metadata.data ? (
+          <span className="text-primary font-medium">
+            {metadata.data.total_synced}
+          </span>
+        ) : null}
+      </BrowserCard>
+      <BrowserCard
+        title="Analyzed"
+        helpText="The number of playlists analyzed for recommendations."
+      >
+        {metadata.isLoading ? (
+          <i className="i-ri-loader-line animate-spin" />
+        ) : metadata.isError ? (
+          <span className="text-error font-medium">Something went wrong</span>
+        ) : metadata.data ? (
+          <span className="text-primary font-medium">
+            {metadata.data.total_analyzed}
+          </span>
+        ) : null}
+      </BrowserCard>
+      <BrowserCard
+        title="Total Tracks"
+        helpText="The number of tracks in your synced playlists."
+      >
+        {metadata.isLoading ? (
+          <i className="i-ri-loader-line animate-spin" />
+        ) : metadata.isError ? (
+          <span className="text-error font-medium">Something went wrong</span>
+        ) : metadata.data ? (
+          <span className="text-primary font-medium">
+            {metadata.data.total_tracks}
+          </span>
+        ) : null}
+      </BrowserCard>
+    </section>
+  );
+}
+
 export function PlaylistsBrowser() {
   const [isLoading, setIsLoading] = useState(false);
   const counts = useSavedCounts();
@@ -142,81 +180,14 @@ export function PlaylistsBrowser() {
 
   return (
     <div className="flex flex-col w-full text-sm min-h-min">
-      <section data-testid="search-bar" className="p-4 bg-white">
-        <i className="i-ri-search-line" />
-      </section>
-      <Breadcrumbs />
-      <section className="md:grid md:grid-cols-2 lg:grid-cols-4 divide-x">
-        <BrowserCard
-          title="Total Playlists"
-          helpText="The number of playlists saved in your spotify library."
-        >
-          {counts.isLoading ? (
-            <i className="i-ri-loader-line animate-spin" />
-          ) : counts.isError ? (
-            <span className="text-rose-500 font-medium">
-              Something went wrong
-            </span>
-          ) : counts.data ? (
-            <span className="text-emerald-500 font-medium">
-              {counts.data.playlists}
-            </span>
-          ) : null}
-        </BrowserCard>
-        <BrowserCard
-          title="Synced Playlists"
-          helpText="The number of playlists synced with your spotify account."
-        >
-          {metadata.isLoading ? (
-            <i className="i-ri-loader-line animate-spin" />
-          ) : metadata.isError ? (
-            <span className="text-rose-500 font-medium">
-              Something went wrong
-            </span>
-          ) : metadata.data ? (
-            <span className="text-emerald-500 font-medium">
-              {metadata.data.total_synced}
-            </span>
-          ) : null}
-        </BrowserCard>
-        <BrowserCard
-          title="Analyzed"
-          helpText="The number of playlists analyzed for recommendations."
-        >
-          {metadata.isLoading ? (
-            <i className="i-ri-loader-line animate-spin" />
-          ) : metadata.isError ? (
-            <span className="text-rose-500 font-medium">
-              Something went wrong
-            </span>
-          ) : metadata.data ? (
-            <span className="text-emerald-500 font-medium">
-              {metadata.data.total_analyzed}
-            </span>
-          ) : null}
-        </BrowserCard>
-        <BrowserCard
-          title="Total Tracks"
-          helpText="The number of tracks in your synced playlists."
-        >
-          {metadata.isLoading ? (
-            <i className="i-ri-loader-line animate-spin" />
-          ) : metadata.isError ? (
-            <span className="text-rose-500 font-medium">
-              Something went wrong
-            </span>
-          ) : metadata.data ? (
-            <span className="text-emerald-500 font-medium">
-              {metadata.data.total_tracks}
-            </span>
-          ) : null}
-        </BrowserCard>
-      </section>
+      <SearchBar />
+      <Breadcrumbs context="playlists" />
+      <BrowserCards metadata={metadata} counts={counts} />
       <main
         data-testid="table"
         className="bg-white flex flex-col flex-1 overflow-auto"
       >
-        <header className="p-4 flex items-center justify-between border-y border-t-emerald-500">
+        <header className="p-4 flex items-center justify-between border-y border-t-primary">
           <div>
             <h2 className="text-lg">Table</h2>
             <p>Table Content</p>
@@ -224,11 +195,11 @@ export function PlaylistsBrowser() {
           <div>
             <button
               className={[
-                "bg-white text-emerald-500",
-                "border-emerald-500 border",
+                "bg-white text-primary",
+                "border-primary border",
                 "flex items-center px-4 py-2 text-sm",
                 "shadow rounded",
-                "hover:bg-emerald-500 hover:text-white",
+                "hover:bg-primary hover:text-white",
                 isLoading ? "cursor-wait pointer-events-none" : "",
               ].join(" ")}
               disabled={isLoading}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import "chart.js/auto";
-import { Chart, Colors } from "chart.js";
+import { Chart } from "chart.js";
 
 import type { BrowserPlaylistTrack, Superlatives } from "@/libs/types/api";
 import _ from "lodash";
@@ -11,7 +11,6 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-Chart.register(Colors);
 const DOCS = [
   {
     name: "Danceability",
@@ -145,11 +144,13 @@ export function BarChart({
         label: "Max",
         data: _.values(_.mapValues(cleaned, "max")),
         stack: "Stack 0",
+        backgroundColor: "#0ea5e9",
       },
       {
         label: "Min",
         data: _.values(_.mapValues(cleaned, "min")),
         stack: "Stack 1",
+        backgroundColor: "#f43f5e",
       },
     ],
     [cleaned]

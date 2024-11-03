@@ -34,11 +34,11 @@ export function Menu() {
       <div ref={refs.setReference} {...getReferenceProps()}>
         <button
           className={[
-            isOpen ? "bg-emerald-500 text-white" : "bg-white text-emerald-500",
-            isOpen ? "border-emerald-500" : "border-zinc-100",
+            isOpen ? "bg-primary text-white" : "bg-white text-primary",
+            isOpen ? "border-primary" : "border-zinc-100",
             "flex items-center px-2 py-1 text-sm",
             "shadow rounded",
-            "hover:bg-emerald-500 hover:text-white hover:border-emerald-500",
+            "hover:bg-primary hover:text-white hover:border-primary",
           ].join(" ")}
         >
           <span className="hidden lg:inline">Actions</span>

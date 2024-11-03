@@ -1,11 +1,12 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
 
 interface SidebarLinkProps {
   href: string;
   label: string;
   children?: React.ReactNode;
   disabled?: boolean;
+  isActive?: boolean;
 }
 
 function Toolbar() {
@@ -14,7 +15,7 @@ function Toolbar() {
       aria-roledescription="toolbar"
       className={[
         "drop-shadow-xl shadow-xl",
-        "border-t border-t-zinc-300 bg-emerald-500",
+        "border-t border-t-zinc-300 bg-primary",
         "p-4 sticky bottom-0 flex justify-between",
         "text-slate-800",
       ].join(" ")}
@@ -41,6 +42,7 @@ function SidebarLink({
   href,
   label,
   children,
+  isActive = false,
   disabled = false,
 }: SidebarLinkProps): JSX.Element {
   const attrs = React.useMemo(() => {
@@ -55,16 +57,14 @@ function SidebarLink({
   return (
     <Link
       to={href}
-      className={(active) => {
-        return [
-          active
-            ? "border-l-4 bg-zinc-200 border-l-emerald-500 pointer-events-none"
-            : "",
-          "hover:border-l-4 hover:border-l-jade-indicator",
-          "p-4 text-sm font-medium hover:bg-slate-300",
-          "flex items-center gap-2 align-middle",
-        ].join(" ");
-      }}
+      className={[
+        isActive ? "border-l-4 bg-zinc-200 border-l-primary" : "",
+        disabled || isActive ? "pointer-events-none" : "",
+        disabled ? "text-gray-500" : "",
+        "hover:border-l-4 hover:border-l-primary",
+        "p-4 text-sm font-medium hover:bg-slate-300",
+        "flex items-center gap-2 align-middle",
+      ].join(" ")}
       {...attrs}
     >
       {children}
@@ -110,12 +110,23 @@ function InfoBox({ children }: { children: React.ReactNode }) {
 }
 
 export function Sidebar() {
+  const [playlistsMatch] = useRoute("/dashboard/browser/playlists/*?");
+  const [dashboardMatch] = useRoute("/dashboard");
+
   return (
     <aside className="flex flex-col w-1/6 min-h-full">
       <div className="no-scrollbar flex flex-col flex-1 overflow-y-scroll bg-zinc-100 border-r-[0.5px] border-zinc-100 shadow-2xl divide-y-[0.5px] divide-black">
         <section className="flex flex-col">
-          <SidebarLink href="/dashboard" label="Dashboard" />
-          <SidebarLink href="/dashboard/browser/playlists" label="Playlists" />
+          <SidebarLink
+            href="/dashboard"
+            label="Dashboard"
+            isActive={dashboardMatch}
+          />
+          <SidebarLink
+            href="/dashboard/browser/playlists"
+            label="Playlists"
+            isActive={playlistsMatch}
+          />
           <SidebarLink
             href="/dashboard/browser/tracks"
             label="Tracks"

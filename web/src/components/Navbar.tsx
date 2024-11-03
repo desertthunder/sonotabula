@@ -8,7 +8,7 @@ import { LastPlayed } from "./LastPlayed";
 function StartToast() {
   return (
     <div className="text-sm font-normal flex items-center text-bold">
-      <i className="i-ri-notification-2-fill text-amber-400">
+      <i className="i-ri-notification-2-fill text-warning">
         <span className="sr-only">Notification icon</span>
       </i>
       <span className="ms-3">Started Task</span>

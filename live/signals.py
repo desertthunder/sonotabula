@@ -7,6 +7,7 @@ from channels.layers import get_channel_layer  # type: ignore
 from django.dispatch import Signal, receiver
 
 from live.models import Notification
+from live.serializers import NotificationSerializer
 
 notification_created = Signal()
 notification_updated = Signal()
@@ -22,13 +23,9 @@ def notification_created_handler(
         "task_updates",
         {
             "type": "task_started",
-            "notification": {
-                "id": str(instance.id),
-                "task_id": instance.task_id,
-                "task_name": instance.task_name,
-                "task_status": instance.task_status,
-                "extras": instance.extras,
-            },
+            "notification": NotificationSerializer.from_model(
+                instance,
+            ).model_dump(),
         },
     )
 
@@ -50,12 +47,8 @@ def notification_updated_handler(
         "task_updates",
         {
             "type": "task_complete",
-            "notification": {
-                "id": str(instance.id),
-                "task_id": instance.task_id,
-                "task_name": instance.task_name,
-                "task_status": instance.task_status,
-                "extras": instance.extras,
-            },
+            "notification": NotificationSerializer.from_model(
+                instance,
+            ).model_dump(),
         },
     )

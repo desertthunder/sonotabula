@@ -187,10 +187,10 @@ function DrawerHeader({
   handler: () => void;
 }) {
   return (
-    <header className="p-4 flex justify-between items-center border-b bg-emerald-500">
-      <h1 className="text-lg font-semibold text-zinc-50">{title}</h1>
+    <header className="p-4 flex justify-between items-center border-b bg-primary">
+      <h1 className="text-lg font-semibold text-surface">{title}</h1>
       <button
-        className="bg-zinc-50 font-medium text-red-400 hover:text-zinc-50 hover:bg-red-400 border rounded-lg px-2 py-1 text-sm"
+        className="bg-surface font-medium text-error hover:text-surface hover:bg-rose-600 border rounded-lg px-2 py-1 text-sm"
         onClick={handler}
       >
         Close

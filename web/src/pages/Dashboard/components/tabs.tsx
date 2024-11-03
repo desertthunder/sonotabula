@@ -55,14 +55,14 @@ export function Tabs({ scope, onChange, context }: Props) {
                 "rounded-lg",
                 "flex items-center gap-2",
                 "focus:outline-none",
-                "focus:ring-2 focus:ring-emerald-500",
+                "focus:ring-2 focus:ring-primary",
                 "focus:ring-offset-2 focus:ring-offset-zinc-100",
                 "transition-all",
                 "group group:transition-transform group:duration-300",
                 isLoading ? "pointer-events-none" : "",
                 scope === resource
                   ? "bg-emerald-700 pointer-events-none"
-                  : "bg-emerald-500 hover:bg-emerald-600 hover:text-white",
+                  : "bg-primary hover:bg-emerald-600 hover:text-white",
               ].join(" ")}
               disabled={isLoading || scope === resource}
             >

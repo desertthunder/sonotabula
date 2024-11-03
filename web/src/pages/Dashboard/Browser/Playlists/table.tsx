@@ -12,9 +12,6 @@ import { usePlaylistFilters } from "@/store/filters";
 import type { BrowserPlaylist } from "./types";
 import { PlaylistActionsCell } from "./cells";
 import { Link } from "wouter";
-/**
- * {"json":{"is_synced":true,"is_analyzed":true,"description":"With Brian McBride, The Dead Texan, William Basinski and more","owner_id":"spotify","version":"ZyPYkgAAAACmpgMNhm9gMhsvWVQyX5cB","image_url":"https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/radio/artist/36pCa1JHc6hlGbfEmLzJQc/en","public":true,"shared":false,"id":"88a0fa4f-f2eb-46e6-9731-f4b289b4fe62","name":"Stars Of The Lid Radio","spotify_id":"37i9dQZF1E4pndHPIu7Fgn"}}
- */
 
 const columnHelper = createColumnHelper<BrowserPlaylist>();
 
@@ -35,7 +32,7 @@ const columns = [
         <Link
           to={`/dashboard/browser/playlists/${id}`}
           className={[
-            "hover:text-emerald-500 hover:underline hover:font-semibold hover:text-base",
+            "hover:text-primary hover:underline hover:font-semibold hover:text-base",
             "transition-all duration-300 ease-in-out",
           ].join(" ")}
         >
@@ -95,9 +92,9 @@ const columns = [
     },
     cell: (props) =>
       props.getValue() ? (
-        <i className="i-ri-check-line text-emerald-500" />
+        <i className="i-ri-check-line text-primary" />
       ) : (
-        <i className="i-ri-close-line text-rose-500" />
+        <i className="i-ri-close-line text-error" />
       ),
   }),
   columnHelper.accessor("id", {
@@ -198,7 +195,7 @@ export function Table() {
   return (
     <section className="overflow-auto">
       <table className="table-fixed lg:table-auto w-full border-collapse">
-        <thead className="font-sans text-base text-left bg-emerald-500 text-zinc-50">
+        <thead className="font-sans text-base text-left bg-primary text-surface">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -223,7 +220,7 @@ export function Table() {
         </thead>
         <tbody>
           {query.isLoading ? (
-            <tr className="bg-zinc-50 even:bg-green-200 text-xs">
+            <tr className="bg-surface even:bg-green-200 text-xs">
               <td
                 colSpan={columns.length}
                 className="text-center text-3xl p-12"
@@ -232,14 +229,14 @@ export function Table() {
               </td>
             </tr>
           ) : query.isError ? (
-            <tr className="bg-zinc-50 even:bg-green-200 text-xs text-red-500">
+            <tr className="bg-surface even:bg-green-200 text-xs text-red-500">
               <td colSpan={columns.length} className="px-4">
                 Unable to fetch playlists: {query.error.message}
               </td>
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="bg-zinc-50 even:bg-green-200 text-xs">
+              <tr key={row.id} className="bg-surface even:bg-green-200 text-xs">
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}

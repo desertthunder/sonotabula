@@ -6,24 +6,36 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('api', '0001_initial'),
+        ("api", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ListeningHistory',
+            name="ListeningHistory",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('played_at', models.DateTimeField()),
-                ('logged_at', models.DateTimeField(auto_now_add=True)),
-                ('track', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.track')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("played_at", models.DateTimeField()),
+                ("logged_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "track",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="api.track"
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-played_at'],
+                "ordering": ["-played_at"],
             },
         ),
     ]

@@ -34,7 +34,7 @@ export function DashboardLayout(props: { children: React.ReactNode }) {
       className={[
         "flex flex-col max-h-screen",
         "min-h-screen",
-        "bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%",
+        "bg-gradient-to-b from-emerald-600 to-50% via-primary via-50%",
       ].join(" ")}
     >
       <Navbar />

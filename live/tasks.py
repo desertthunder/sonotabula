@@ -1,5 +1,7 @@
 """Notification dispatch tasks."""
 
+import uuid
+
 from celery import Task, shared_task
 from django_celery_results.models import GroupResult, TaskResult
 from loguru import logger
@@ -10,12 +12,23 @@ from live.signals import notification_created, notification_updated
 
 @shared_task(bind=True)
 def start_task_execution(
-    self: Task, task_id: str, user_id: int, extras: dict[str, str]
+    self: Task,
+    task_id: str,
+    user_id: int,
+    resource_id: str,
+    resource: Notification.Resources,
+    operation: Notification.Operations,
+    extras: dict[str, str],
 ) -> str:
     """Start the task execution."""
     task_result = TaskResult.objects.get(task_id=task_id)
     notification = Notification.objects.create(
-        user_id=user_id, task_result=task_result, extras=extras
+        user_id=user_id,
+        task_result=task_result,
+        resource_id=uuid.UUID(resource_id),
+        operation=operation,
+        resource=resource,
+        extras=extras,
     )
 
     logger.info(f"Task {task_result.task_id} started")

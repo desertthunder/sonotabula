@@ -16,7 +16,7 @@ export function PlaylistNameCell(props: CellContext<LibraryPlaylist, string>) {
   return (
     <button
       onClick={toggleFn}
-      className="text-left text-xs text-slate-800 hover:text-emerald-500"
+      className="text-left text-xs text-slate-800 hover:text-primary"
     >
       {props.getValue()}
     </button>
@@ -35,7 +35,7 @@ export function TrackNameCell(props: CellContext<LibraryTrack, string>) {
   return (
     <button
       onClick={toggleFn}
-      className="text-left text-xs text-slate-800 hover:text-emerald-500"
+      className="text-left text-xs text-slate-800 hover:text-primary"
     >
       {props.getValue()}
     </button>

@@ -56,12 +56,7 @@ function Detail({
   return (
     <>
       <dt className={["font-bold flex items-center"].join(" ")}>{title}</dt>
-      <dd
-        className={[
-          "flex items-center gap-1 p-1",
-          ["Version", "Owner", "Spotify URL"].includes(title) ? "blur-sm" : "",
-        ].join(" ")}
-      >
+      <dd className={["flex items-center gap-1 p-1"].join(" ")}>
         {children ? children : value ? value : "None"}
       </dd>
     </>
@@ -169,14 +164,14 @@ export function PlaylistDetailPage() {
       <section data-testid="search-bar" className="p-4 bg-white">
         <i className="i-ri-search-line" />
       </section>
-      <Breadcrumbs title={playlist.name} />
-      <section className="flex items-center border-y border-emerald-500 ">
-        <div className="bg-emerald-500 aspect-square max-w-[250px] p-4 flex items-center">
+      <Breadcrumbs title={playlist.name} context="playlists" />
+      <section className="flex items-center border-y border-primary ">
+        <div className="bg-primary aspect-square max-w-[250px] p-4 flex items-center">
           <img src={playlist.image_url} alt={playlist.name} />
         </div>
 
         <section className="flex flex-col border-x border-black max-h-[250px] w-full">
-          <header className="sticky text-base bg-emerald-500 pl-4 py-3 pr-8 flex items-center gap-1">
+          <header className="sticky text-base bg-primary pl-4 py-3 pr-8 flex items-center gap-1">
             <h1 className="text-white font-medium flex-1">Playlist Metadata</h1>
             <button
               className={[
@@ -199,7 +194,7 @@ export function PlaylistDetailPage() {
             </button>
             <button
               className={[
-                "bg-white text-emerald-500",
+                "bg-white text-primary",
                 "px-2 py-1 rounded-md",
                 "hover:bg-zinc-100",
                 "text-sm",
@@ -217,7 +212,7 @@ export function PlaylistDetailPage() {
             </button>
             <button
               className={[
-                "text-emerald-500 bg-white",
+                "text-primary bg-white",
                 "px-2 py-1 rounded-md",
                 "text-sm",
                 "hover:bg-zinc-100",
@@ -270,10 +265,16 @@ export function PlaylistDetailPage() {
           </dl>
         </section>
       </section>
-      <section className="flex items-center gap-4 p-4" data-testid="tabs">
-        <h2>Superlatives</h2>
-        <h2>Averages</h2>
-        <h2>Track List</h2>
+      <section className="flex items-center border-b" data-testid="tabs">
+        <button className="border-b-2 p-4 border-secondary">
+          Superlatives
+        </button>
+        <button className="border-b-2 p-4 border-transparent hover:border-secondary">
+          Averages
+        </button>
+        <button className="border-b-2 p-4 border-transparent hover:border-secondary">
+          Track List
+        </button>
       </section>
       {/* Charts */}
       {attrs ? (

@@ -6,165 +6,303 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Album',
+            name="Album",
             fields=[
-                ('is_synced', models.BooleanField(blank=True, default=False, null=True)),
-                ('is_analyzed', models.BooleanField(blank=True, default=False, null=True)),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('spotify_id', models.CharField(max_length=255, unique=True)),
-                ('name', models.CharField(max_length=255)),
-                ('album_type', models.CharField(blank=True, max_length=255, null=True)),
-                ('image_url', models.URLField(blank=True, null=True)),
-                ('label', models.CharField(blank=True, max_length=255, null=True)),
-                ('copyright', models.CharField(blank=True, max_length=255, null=True)),
-                ('release_year', models.IntegerField()),
+                (
+                    "is_synced",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "is_analyzed",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("spotify_id", models.CharField(max_length=255, unique=True)),
+                ("name", models.CharField(max_length=255)),
+                ("album_type", models.CharField(blank=True, max_length=255, null=True)),
+                ("image_url", models.URLField(blank=True, null=True)),
+                ("label", models.CharField(blank=True, max_length=255, null=True)),
+                ("copyright", models.CharField(blank=True, max_length=255, null=True)),
+                ("release_year", models.IntegerField()),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Analysis',
+            name="Analysis",
             fields=[
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('version', models.CharField(max_length=255, unique=True)),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                ("version", models.CharField(max_length=255, unique=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Artist',
+            name="Artist",
             fields=[
-                ('is_synced', models.BooleanField(blank=True, default=False, null=True)),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('spotify_id', models.CharField(max_length=255, unique=True)),
-                ('name', models.CharField(max_length=255)),
-                ('image_url', models.URLField(blank=True, null=True)),
-                ('spotify_follower_count', models.IntegerField(blank=True, null=True)),
+                (
+                    "is_synced",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("spotify_id", models.CharField(max_length=255, unique=True)),
+                ("name", models.CharField(max_length=255)),
+                ("image_url", models.URLField(blank=True, null=True)),
+                ("spotify_follower_count", models.IntegerField(blank=True, null=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Computation',
+            name="Computation",
             fields=[
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('data', models.JSONField(validators=[api.serializers.validation.analysis.ComputationValidator.validate_data])),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "data",
+                    models.JSONField(
+                        validators=[
+                            api.serializers.validation.analysis.ComputationValidator.validate_data
+                        ]
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Genre',
+            name="Genre",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255, unique=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Library',
+            name="Library",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Playlist',
+            name="Playlist",
             fields=[
-                ('is_synced', models.BooleanField(blank=True, default=False, null=True)),
-                ('is_analyzed', models.BooleanField(blank=True, default=False, null=True)),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('spotify_id', models.CharField(max_length=255, unique=True)),
-                ('name', models.CharField(max_length=255)),
-                ('version', models.CharField(blank=True, max_length=255, null=True)),
-                ('image_url', models.URLField(blank=True, max_length=1024, null=True)),
-                ('public', models.BooleanField(blank=True, null=True)),
-                ('shared', models.BooleanField(blank=True, null=True)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('owner_id', models.CharField(max_length=255)),
-                ('owner_name', models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "is_synced",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "is_analyzed",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("spotify_id", models.CharField(max_length=255, unique=True)),
+                ("name", models.CharField(max_length=255)),
+                ("version", models.CharField(blank=True, max_length=255, null=True)),
+                ("image_url", models.URLField(blank=True, max_length=1024, null=True)),
+                ("public", models.BooleanField(blank=True, null=True)),
+                ("shared", models.BooleanField(blank=True, null=True)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("owner_id", models.CharField(max_length=255)),
+                ("owner_name", models.CharField(blank=True, max_length=255, null=True)),
             ],
             options={
-                'ordering': ['-is_synced', '-is_analyzed', '-updated_at', '-created_at'],
+                "ordering": [
+                    "-is_synced",
+                    "-is_analyzed",
+                    "-updated_at",
+                    "-created_at",
+                ],
             },
         ),
         migrations.CreateModel(
-            name='Track',
+            name="Track",
             fields=[
-                ('is_synced', models.BooleanField(blank=True, default=False, null=True)),
-                ('is_analyzed', models.BooleanField(blank=True, default=False, null=True)),
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('spotify_id', models.CharField(max_length=255, unique=True)),
-                ('name', models.CharField(max_length=255)),
-                ('duration', models.IntegerField()),
+                (
+                    "is_synced",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "is_analyzed",
+                    models.BooleanField(blank=True, default=False, null=True),
+                ),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("spotify_id", models.CharField(max_length=255, unique=True)),
+                ("name", models.CharField(max_length=255)),
+                ("duration", models.IntegerField()),
             ],
             options={
-                'ordering': ['-is_analyzed', '-is_synced', '-created_at', '-updated_at'],
+                "ordering": [
+                    "-is_analyzed",
+                    "-is_synced",
+                    "-created_at",
+                    "-updated_at",
+                ],
             },
         ),
         migrations.CreateModel(
-            name='TrackFeatures',
+            name="TrackFeatures",
             fields=[
-                ('public_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('danceability', models.FloatField()),
-                ('energy', models.FloatField()),
-                ('key', models.IntegerField()),
-                ('loudness', models.FloatField()),
-                ('mode', models.IntegerField()),
-                ('speechiness', models.FloatField()),
-                ('acousticness', models.FloatField()),
-                ('instrumentalness', models.FloatField()),
-                ('liveness', models.FloatField()),
-                ('valence', models.FloatField()),
-                ('tempo', models.FloatField()),
-                ('duration_ms', models.IntegerField()),
-                ('time_signature', models.IntegerField()),
+                (
+                    "public_id",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                ("danceability", models.FloatField()),
+                ("energy", models.FloatField()),
+                ("key", models.IntegerField()),
+                ("loudness", models.FloatField()),
+                ("mode", models.IntegerField()),
+                ("speechiness", models.FloatField()),
+                ("acousticness", models.FloatField()),
+                ("instrumentalness", models.FloatField()),
+                ("liveness", models.FloatField()),
+                ("valence", models.FloatField()),
+                ("tempo", models.FloatField()),
+                ("duration_ms", models.IntegerField()),
+                ("time_signature", models.IntegerField()),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

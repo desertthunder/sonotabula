@@ -42,6 +42,27 @@ class Notification(Model):
     notified of the result.
     """
 
+    class Resources(models.TextChoices):
+        """Notification resources."""
+
+        Playlist = "playlist"
+        Album = "album"
+        Track = "track"
+        Artist = "artist"
+
+    class Operations(models.TextChoices):
+        """Task operations."""
+
+        Sync = "sync"
+        Analyze = "analyze"
+        FullSync = "full_sync"
+
+    operation = models.CharField(max_length=16, choices=Operations.choices, blank=True)
+
+    resource = models.CharField(max_length=16, choices=Resources.choices, blank=True)
+
+    resource_id = models.UUIDField(null=True, blank=True)
+
     task_result = models.OneToOneField(
         TaskResult,
         on_delete=models.PROTECT,

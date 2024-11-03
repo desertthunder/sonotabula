@@ -45,7 +45,9 @@ select = [
     "C4",    # Comprehensions
     "N",     # Naming - PEP8 naming conventions
     "TCH",   # TypeCheck
-    # "CPY", # Copyright
+    "TD",    # TODO
+    "FIX",   # FIXME
+    "DJ",    # Django
     "S",     # Bandit
     "ASYNC", # Async
     "ANN",   # Annotations

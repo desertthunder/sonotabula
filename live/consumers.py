@@ -3,7 +3,7 @@
 import asyncio
 import json
 
-from channels.generic.websocket import AsyncWebsocketConsumer  # type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 class TaskStatusConsumer(AsyncWebsocketConsumer):

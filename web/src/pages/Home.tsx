@@ -59,7 +59,7 @@ export default function Home() {
     <main className="bg-green-200 text-gray-800 min-h-screen text-sm">
       <nav className="bg-white shadow-sm py-4">
         <div className="container mx-auto flex justify-between items-center px-6">
-          <a href="#" className="text-emerald-500 text-2xl font-semibold">
+          <a href="#" className="text-primary text-2xl font-semibold">
             Dashspot
           </a>
           <div className="flex space-x-4 items-center">
@@ -68,8 +68,8 @@ export default function Home() {
                 key={link}
                 href="#"
                 className={[
-                  "text-gray-700 hover:text-emerald-500 transition-all duration-500",
-                  "hover:px-4 hover:border-b-2 hover:border-emerald-500",
+                  "text-gray-700 hover:text-primary transition-all duration-500",
+                  "hover:px-4 hover:border-b-2 hover:border-primary",
                 ].join(" ")}
               >
                 {link}
@@ -78,7 +78,7 @@ export default function Home() {
             <Link
               href="/login"
               className={[
-                "bg-emerald-500 text-white px-4 py-2 font-medium text-base",
+                "bg-primary text-white px-4 py-2 font-medium text-base",
                 "rounded-full",
                 "hover:shadow-lg hover:shadow-primary",
                 "group hover:bg-emerald-600 transition-all duration-500",
@@ -109,7 +109,7 @@ export default function Home() {
         <Link
           href="/signup"
           className={[
-            "bg-emerald-500 text-white px-5 py-3 rounded-full",
+            "bg-primary text-white px-5 py-3 rounded-full",
             "font-semibold hover:bg-emerald-600 transition-all duration-500 group text-xl",
           ].join(" ")}
         >
@@ -128,9 +128,7 @@ export default function Home() {
                 className="flex flex-col items-center text-center"
                 key={`${feature.title}-${feature.description}`}
               >
-                <i
-                  className={`${feature.icon} text-emerald-500 text-5xl mb-4`}
-                ></i>
+                <i className={`${feature.icon} text-primary text-5xl mb-4`}></i>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
                   {feature.title}
                 </h3>
@@ -141,7 +139,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-emerald-500 py-20 text-white">
+      <section className="bg-primary py-20 text-white">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold mb-4">
             Ready to Explore Your Spotify Data?
@@ -153,7 +151,7 @@ export default function Home() {
           <Link
             href="/signup"
             className={[
-              "bg-white text-emerald-500 font-semibold",
+              "bg-white text-primary font-semibold",
               "px-8 py-3 rounded-full hover:shadow-lg hover:shadow-primary transition-shadow duration-500",
             ].join(" ")}
           >
@@ -173,7 +171,7 @@ export default function Home() {
                 key={social.icon}
                 href={social.link}
                 className={[
-                  "text-2xl text-emerald-500 group group-hover:bg-gray-400",
+                  "text-2xl text-primary group group-hover:bg-gray-400",
                 ].join(" ")}
               >
                 <i

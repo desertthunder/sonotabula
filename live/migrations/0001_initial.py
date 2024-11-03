@@ -5,62 +5,136 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Acknowledgement',
+            name="Acknowledgement",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('message', models.CharField(blank=True, help_text='Optional message from the user.', max_length=255, null=True)),
-                ('client', models.CharField(choices=[('WEB', 'Web'), ('MOBILE', 'Mobile')], max_length=255)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "message",
+                    models.CharField(
+                        blank=True,
+                        help_text="Optional message from the user.",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                (
+                    "client",
+                    models.CharField(
+                        choices=[("WEB", "Web"), ("MOBILE", "Mobile")], max_length=255
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('message', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("message", models.CharField(max_length=255)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Operation',
+            name="Operation",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('type', models.CharField(choices=[('AN', 'Analyze'), ('SY', 'Sync'), ('CO', 'Compute')], max_length=2)),
-                ('status', models.CharField(choices=[('ST', 'Started'), ('PD', 'Pending'), ('CP', 'Completed'), ('WN', 'Warning'), ('ER', 'Error')], max_length=2)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("AN", "Analyze"), ("SY", "Sync"), ("CO", "Compute")],
+                        max_length=2,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("ST", "Started"),
+                            ("PD", "Pending"),
+                            ("CP", "Completed"),
+                            ("WN", "Warning"),
+                            ("ER", "Error"),
+                        ],
+                        max_length=2,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Resource',
+            name="Resource",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('resource_id', models.UUIDField()),
-                ('type', models.CharField(choices=[('PL', 'Playlist'), ('AL', 'Album'), ('TR', 'Track'), ('AR', 'Artist'), ('US', 'User'), ('OP', 'Operation')], max_length=2)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("resource_id", models.UUIDField()),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("PL", "Playlist"),
+                            ("AL", "Album"),
+                            ("TR", "Track"),
+                            ("AR", "Artist"),
+                            ("US", "User"),
+                            ("OP", "Operation"),
+                        ],
+                        max_length=2,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

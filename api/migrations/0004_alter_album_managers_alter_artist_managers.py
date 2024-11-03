@@ -5,22 +5,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0003_remove_playlist_libraries_remove_album_libraries_and_more'),
+        ("api", "0003_remove_playlist_libraries_remove_album_libraries_and_more"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='album',
+            name="album",
             managers=[
-                ('sync', django.db.models.manager.Manager()),
+                ("sync", django.db.models.manager.Manager()),
             ],
         ),
         migrations.AlterModelManagers(
-            name='artist',
+            name="artist",
             managers=[
-                ('sync', django.db.models.manager.Manager()),
+                ("sync", django.db.models.manager.Manager()),
             ],
         ),
     ]
