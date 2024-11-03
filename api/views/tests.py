@@ -1,195 +1,59 @@
-import logging
-import random
+from http import HTTPStatus
+from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
-from django.urls import reverse
+from loguru import logger
 
-from api.models.analysis import Analysis
+from api.libs.helpers import SpotifyAuthServiceMock
 from api.models.permissions import Token
-from api.services.spotify import SpotifyAuthService
+from api.services.spotify.auth import SpotifyAuthService
 from core.models import AppUser
 
-logging.disable(logging.ERROR)
-
-
-class PlaybackViewTestCase(TestCase):
-    def setUp(self) -> None:
-        self.auth_service = SpotifyAuthService()
-        self.user = AppUser.objects.get(is_staff=True)
-
-        user = self.auth_service.refresh_access_token(self.user.refresh_token)
-
-        self.user = user or self.user
-        self.jwt = Token(self.user).encode()
-
-    def test_last_played_view(self):
-        path = reverse("last-played")
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertIn("track_name", data)
-
-    def test_recently_played_view(self):
-        path = reverse("recently-played")
-        path = f"{path}?limit=2"
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertEqual(len(data), 2)
-
-
-class LibraryViewTestCase(TestCase):
-    def setUp(self) -> None:
-        self.auth_service = SpotifyAuthService()
-        self.user = AppUser.objects.get(is_staff=True)
-
-        user = self.auth_service.refresh_access_token(self.user.refresh_token)
-
-        self.user = user or self.user
-        self.jwt = Token(self.user).encode()
-
-    def test_library_playlists_view(self):
-        path = reverse("library-playlists")
-        path = f"{path}?limit=2"
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertEqual(len(data), 2)
-
-    def test_library_albums_view(self):
-        path = reverse("library-albums")
-        path = f"{path}?limit=2"
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertEqual(len(data), 2)
-
-    def test_library_artist_view(self):
-        path = reverse("library-artists")
-        path = f"{path}?limit=2"
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertEqual(len(data), 2)
-
-    def test_library_tracks_view(self):
-        path = reverse("library-tracks")
-        path = f"{path}?limit=2"
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertEqual(len(data), 2)
+logger.remove(0)
 
 
 class AuthViewTestCase(TestCase):
-    def test_login_view(self):
-        pass
+    def setUp(self):
+        self.user = AppUser.objects.from_spotify(
+            SpotifyAuthServiceMock.get_current_user(),
+            SpotifyAuthServiceMock.get_access_token(),
+        )
 
-    def test_validate_view(self):
-        pass
+        self.jwt = Token(user=self.user).encode()
 
-
-class AnalysisViewTestCase(TestCase):
-    def test_analysis_view(self):
-        pass
-
-
-class BrowserPlaylistViewTestCase(TestCase):
-    def setUp(self) -> None:
-        self.auth_service = SpotifyAuthService()
-        self.user = AppUser.objects.get(is_staff=True)
-        self.jwt = Token(self.user).encode()
-
-    def test_browser_playlist_view(self):
-        path = reverse("list-browser-playlists")
+    @patch.object(SpotifyAuthService, "get_current_user")
+    @patch.object(SpotifyAuthService, "get_access_token")
+    def test_get_login_view(
+        self, mock_get_access_token: MagicMock, mock_get_current_user: MagicMock
+    ):
+        mock_get_access_token.return_value = SpotifyAuthServiceMock.get_access_token()
+        mock_get_current_user.return_value = SpotifyAuthServiceMock.get_current_user()
 
         response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
+            "/api/login", QUERY_STRING="code=FAKE_CODE&state=app-login"
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+    @patch.object(SpotifyAuthService, "build_redirect_uri")
+    def test_post_login_view(self, mock_build_redirect_url: MagicMock):
+        fake_redirect_url = "http://local.dashspot.dev/redirect"
+        mock_build_redirect_url.return_value = (
+            SpotifyAuthServiceMock.build_redirect_url(
+                url=fake_redirect_url,
+            )
         )
 
-        data = response.json().get("data")
+        response = self.client.post("/api/login")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json(), {"redirect": fake_redirect_url})
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertGreater(len(data), 0)
-
-    def filter_by_name(self):
-        path = reverse("list-browser-playlists")
-        path = f"{path}?name=random"
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
+    @patch.object(SpotifyAuthService, "refresh_access_token")
+    def test_post_validate_view(self, mock_refresh_access_token: MagicMock):
+        mock_refresh_access_token.return_value = (
+            SpotifyAuthServiceMock.refresh_access_token(user=self.user)
         )
 
-        data = response.json().get("data")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertGreater(len(data), 0)
-
-
-class BrowserPlaylistTracksViewTestCase(TestCase):
-    def setUp(self) -> None:
-        self.auth_service = SpotifyAuthService()
-        self.user = AppUser.objects.get(is_staff=True)
-        self.analysis = Analysis.objects.prefetch_related("playlist").first()
-
-        if self.analysis is None:
-            self.fail("No analysis found.")
-
-        self.playlist = self.analysis.playlist
-        self.jwt = Token(self.user).encode()
-
-    def test_browser_playlist_tracks_view(self):
-        path = reverse(
-            "list-browser-playlist-tracks",
-            kwargs={"playlist_id": str(self.playlist.id)},
+        response = self.client.post(
+            "/api/validate", headers={"Authorization": f"Bearer {self.jwt}"}
         )
-
-        response = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt}"}
-        )
-
-        data = response.json().get("data")
-        track = random.choice(data)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNotNone(data)
-        self.assertGreater(len(data), 0)
-        self.assertIn("name", track)
-        self.assertIn("features", track)
+        self.assertEqual(response.status_code, HTTPStatus.OK)

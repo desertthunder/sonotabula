@@ -1,4 +1,4 @@
-# Backend Drafts
+# Backend
 
 ## Data Model
 
@@ -104,7 +104,7 @@ most resources, the `next` field with an `offset` parameter is used. However,
 for followed artists, a cursor is used and this requires the spotify ID of the
 last page's artist to be passed in the next request (as `after`).
 
-## Naming Things is Hard
+### Naming Things is Hard
 
 Serializers are typically named after the model they are serializing, but the
 model is named after the context it is in, as is common in Django applications.
@@ -112,10 +112,29 @@ This is especially common in the DRF + Django setup. I'm using DRF for some of
 its built-ins, but have been using Pydantic for the majority of the application's
 data validation and serialization, and de-serialization.
 
-### Solution
+#### Solution
 
 I'm in the process of renaming the serializers to match the model they are
 serializing. There are a ton of repeated fields and code that *could* be abstracted
 down the line. Additionally the child classes of `BaseModel` will be named after
 the purpose they serve. So basically a `Serializer` is for an API endpoint, and
 a `Block` is for an internal data structure and validation.
+
+### Image Deletion/Cycling
+
+Spotify's API returns image urls for albums and playlists but indicates that it
+deletes them every day/the images expire. I think that one way to deal with this
+is to dispatch a background task that refetches the image url from the API.
+
+### Null/Empty Descriptions
+
+Descriptions can be null if they haven't been updated recently (for unverified
+playlists), so we shouldn't update descriptions if they are.
+
+Can we update descriptions? Is that an allowed field in a mutate endpoint? *yes*
+
+#### References
+
+- [Playlist Details](https://developer.spotify.com/documentation/web-api/reference/get-playlist)
+- [Update Playlist](https://developer.spotify.com/documentation/web-api/reference/change-playlist-details)
+- [Playlist Image](https://developer.spotify.com/documentation/web-api/reference/get-playlist-cover)

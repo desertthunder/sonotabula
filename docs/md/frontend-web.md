@@ -1,4 +1,4 @@
-# Front-end Drafts
+# Front-end Web
 
 ## Nginx & Vite
 
@@ -41,6 +41,16 @@ Icons come primarily from [Remix Icon](https://remixicon.com/), with a few from
 
 Remix was selected because of the breadth of icons available, and the two variants
 for each icon (outline and filled).
+
+### Application Design
+
+Home page (as of October 12):
+
+![Home Page](../static/img/demo.png)
+
+...versus the original concept:
+
+![Home design](../static/img/dashboard-main-concept.png)
 
 ## React Specific
 
