@@ -54,13 +54,13 @@ export function useTokenValidator() {
     {
       queryKey: ["token"],
       queryFn: async () => {
-        console.debug("Checking token validity");
-
         if (!token) {
           throw new Error("Token not found");
         }
 
-        const response = await fetch("/api/validate", {
+        const url = new URL("/server/api/validate", window.location.origin);
+
+        const response = await fetch(url.toString(), {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,12 +152,15 @@ export function usePlaylistTracks(id: string) {
     {
       queryKey: ["playlist", id],
       queryFn: async () => {
-        const response = await fetch(`/api/browser/playlist/${id}/tracks`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `/server/api/browser/playlist/${id}/tracks`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch playlist tracks");

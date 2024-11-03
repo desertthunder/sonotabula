@@ -118,7 +118,10 @@ const columns = [
 ];
 
 async function fetchPlaylists(token: string | null, params: URLSearchParams) {
-  const uri = new URL("/api/v1/browser/playlists", window.location.origin);
+  const uri = new URL(
+    "/server/api/v1/browser/playlists",
+    window.location.origin
+  );
   uri.search = params.toString();
   const response = await fetch(uri.toString(), {
     headers: {

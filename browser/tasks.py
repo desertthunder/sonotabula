@@ -10,7 +10,8 @@ import time
 import typing
 import uuid
 
-from celery import group, shared_task
+from celery import Task as CeleryTask
+from celery import chain, group, shared_task
 from celery.states import FAILURE, PENDING, SUCCESS
 from loguru import logger
 
@@ -26,6 +27,7 @@ from api.services.spotify import (
     SpotifyLibraryService,
 )
 from browser.models import Library
+from live.tasks import start_task_execution, task_complete
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
@@ -222,7 +224,7 @@ class PlaylistAnalysis(PlaylistTask):
 
 
 @shared_task
-def analyze_playlist(playlist_id: uuid.UUID, user_id: int) -> str:
+def _analyze_playlist(task_id: str, playlist_id: uuid.UUID, user_id: int) -> str | None:
     """Analyze a playlist.
 
     Creates a chain for a playlist:
@@ -234,11 +236,28 @@ def analyze_playlist(playlist_id: uuid.UUID, user_id: int) -> str:
 
     runner.__call__()
 
-    return runner.status
+    return task_id
 
 
-@shared_task
-def sync_playlist(playlist_id: uuid.UUID, user_id: int) -> str:
+@shared_task(bind=True)
+def analyze_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> None:
+    """Notification wrapper/dispatch for playlist analysis."""
+    chain(
+        start_task_execution.s(
+            self.request.id,
+            user_id,
+            {
+                "playlist_id": str(playlist_id),
+                "task_type": "analyze_playlist",
+            },
+        ),
+        _analyze_playlist.s(playlist_id, user_id),
+        task_complete.s(),
+    ).apply_async()
+
+
+@shared_task(bind=True)
+def sync_playlist(self: CeleryTask, playlist_id: uuid.UUID, user_id: int) -> str:
     """Sync library playlists.
 
     Creates a chain for each playlist (using the primary key):
@@ -249,9 +268,20 @@ def sync_playlist(playlist_id: uuid.UUID, user_id: int) -> str:
 
     Puts the chains in a group and applies them asynchronously.
     """
+    start_task_execution.s(
+        self.request.id,
+        user_id,
+        {
+            "playlist_id": str(playlist_id),
+            "task_type": "sync_playlist",
+        },
+    ).apply()
+
     runner = PlaylistSync(user_id, playlist_id)
 
     runner.__call__()
+
+    task_complete.s(str(self.request.id), runner.status).apply()
 
     return runner.status
 

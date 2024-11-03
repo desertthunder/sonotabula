@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 export function useLoginMutation() {
   const mutation = useMutation({
     mutationFn: async () => {
-      const uri = new URL("/api/login", window.location.origin);
+      const uri = new URL("/server/api/login", window.location.origin);
       const response = await fetch(uri, {
         method: "POST",
         headers: {},

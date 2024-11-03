@@ -57,7 +57,10 @@ async function AnalyzePage({
   token: string | null;
   params: URLSearchParams;
 }) {
-  const url = new URL("/api/v1/browser/playlists", window.location.origin);
+  const url = new URL(
+    "/server/api/v1/browser/playlists",
+    window.location.origin
+  );
   url.search = params.toString();
 
   const response = await fetch(url.toString(), {
@@ -75,7 +78,10 @@ async function fetchPlaylistsMetadata(token: string | null) {
     throw new Error("No token available");
   }
 
-  const url = new URL("/api/v1/browser/playlists/meta", window.location.origin);
+  const url = new URL(
+    "/server/api/v1/browser/playlists/meta",
+    window.location.origin
+  );
 
   const response = await fetch(url.toString(), {
     headers: {

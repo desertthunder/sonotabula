@@ -1,22 +1,22 @@
-import { useParams } from "wouter";
 import { Breadcrumbs } from "@/components/common/breadcrumbs";
-import { useQuery } from "@tanstack/react-query";
-import { useTokenStore } from "@/store";
+import { usePlaylistAction } from "@/libs/hooks/mutations";
 import type {
   BrowserPlaylistResponse,
   BrowserPlaylistTrack,
 } from "@/libs/types/api";
-import { BarChart } from "./charts";
-import { usePlaylistAction } from "@/libs/hooks/mutations";
+import { useTokenStore } from "@/store";
+import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "wouter";
+import { BarChart } from "./charts";
 
 async function fetchBrowserPlaylist(
   id: string | undefined,
   token: string | null
 ) {
   const url = new URL(
-    `/api/v1/browser/playlists/${id}`,
+    `/server/api/v1/browser/playlists/${id}`,
     window.location.origin
   );
   const response = await fetch(url.toString(), {
@@ -75,6 +75,28 @@ export function PlaylistDetailPage() {
   const analyzeMutation = usePlaylistAction(id, "analyze");
   const [isLoadingSync, setLoadingSync] = useState(false);
   const [isLoadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [isLoading, setLoading] = useState(false);
+  const refresh = useCallback(() => {
+    if (query.isFetched && !query.isPending) {
+      query.refetch();
+    }
+  }, [query]);
+
+  useEffect(() => {
+    if (query.isFetching) {
+      setLoading(true);
+
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [query.isFetching]);
 
   useEffect(() => {
     if (syncMutation.isPending) {
@@ -158,6 +180,25 @@ export function PlaylistDetailPage() {
             <h1 className="text-white font-medium flex-1">Playlist Metadata</h1>
             <button
               className={[
+                "bg-white text-emerald-600",
+                "px-2 py-1 rounded-md",
+                "hover:bg-zinc-100",
+                "text-sm",
+                "hover:scale-110",
+                "transition-all duration-200 ease-in-out",
+              ].join(" ")}
+              onClick={refresh}
+              disabled={isLoading}
+            >
+              <i
+                className={[
+                  query.isFetching ? "i-ri-loader-5-line animate-spin" : "",
+                  "i-ri-refresh-line align-middle",
+                ].join(" ")}
+              />
+            </button>
+            <button
+              className={[
                 "bg-white text-emerald-500",
                 "px-2 py-1 rounded-md",
                 "hover:bg-zinc-100",
@@ -229,7 +270,11 @@ export function PlaylistDetailPage() {
           </dl>
         </section>
       </section>
-
+      <section className="flex items-center gap-4 p-4" data-testid="tabs">
+        <h2>Superlatives</h2>
+        <h2>Averages</h2>
+        <h2>Track List</h2>
+      </section>
       {/* Charts */}
       {attrs ? (
         <main className="bg-white flex flex-col flex-1 overflow-auto">

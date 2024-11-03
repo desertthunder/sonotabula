@@ -81,7 +81,8 @@ export async function fetchListeningHistory(token: string | null) {
   if (!token) {
     throw new Error("No token provided");
   }
-  const res = await fetch("/api/playback/recent/", {
+  const url = new URL("/server/api/playback/recent", window.location.origin);
+  const res = await fetch(url.toString(), {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -104,41 +105,29 @@ export async function fetchListeningHistory(token: string | null) {
 
 export async function checkToken(token: string | null) {
   if (!token) {
-    console.debug("No token found");
-
     return null;
   }
 
-  try {
-    const response = await fetch("/api/validate", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const url = new URL("/server/api/validate", window.location.origin);
 
-    if (response.status >= 500) {
-      throw new Error(
-        `Server error: ${response.status} ${response.statusText}`
-      );
-    } else if (!response.ok) {
-      console.debug(
-        `Failed to validate token: ${response.status} ${response.statusText}`
-      );
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-      return null;
-    }
-
-    const data = await response.json();
-
-    console.debug(data.message);
-
-    return data;
-  } catch (error) {
-    console.error(error);
-
-    return null;
+  if (response.status >= 500) {
+    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+  } else if (!response.ok) {
+    throw new Error(
+      `Failed to validate token: ${response.status} ${response.statusText}`
+    );
   }
+
+  const data = await response.json();
+
+  return data;
 }
 
 export async function fetchBrowserPlaylists({

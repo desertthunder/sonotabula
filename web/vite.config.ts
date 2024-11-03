@@ -20,11 +20,5 @@ export default defineConfig({
       clientPort: 443,
       path: "hmr/",
     },
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:8000", // Point directly to Django backend
-        changeOrigin: true,
-      },
-    },
   },
 });

@@ -3,13 +3,13 @@ import { LibraryKey } from "@libs/types/enums";
 export function getLibraryEndpoint(resourceKey: string) {
   switch (resourceKey) {
     case LibraryKey.LibraryPlaylists:
-      return `/api/library/playlists`;
+      return `/server/api/library/playlists`;
     case LibraryKey.LibraryTracks:
-      return `/api/library/tracks`;
+      return `/server/api/library/tracks`;
     case LibraryKey.LibraryAlbums:
-      return `/api/library/albums`;
+      return `/server/api/library/albums`;
     case LibraryKey.LibraryArtists:
-      return `/api/library/artists`;
+      return `/server/api/library/artists`;
     default:
       throw new Error("Invalid resource key");
   }
@@ -18,18 +18,18 @@ export function getLibraryEndpoint(resourceKey: string) {
 export function getBrowserEndpoint(resourceKey: string) {
   switch (resourceKey) {
     case LibraryKey.LibraryPlaylists:
-      return `/api/browser/playlists`;
+      return `/server/api/browser/playlists`;
     case LibraryKey.LibraryTracks:
-      return `/api/browser/tracks`;
+      return `/server/api/browser/tracks`;
     case LibraryKey.LibraryAlbums:
-      return `/api/browser/albums`;
+      return `/server/api/browser/albums`;
     case LibraryKey.LibraryArtists:
-      return `/api/browser/artists`;
+      return `/server/api/browser/artists`;
     default:
       throw new Error("Invalid resource key");
   }
 }
 
 export function getSavedEndpoint() {
-  return `/api/data/saved`;
+  return `/server/api/data/saved`;
 }
