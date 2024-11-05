@@ -45,22 +45,22 @@ class Notification(Model):
     class Resources(models.TextChoices):
         """Notification resources."""
 
-        Playlist = "playlist"
-        Album = "album"
-        Track = "track"
-        Artist = "artist"
+        PLAYLIST = "playlist"
+        ALBUM = "album"
+        TRACK = "track"
+        ARTIST = "artist"
+        LIBRARY = "library"
 
     class Operations(models.TextChoices):
         """Task operations."""
 
-        Sync = "sync"
-        Analyze = "analyze"
-        FullSync = "full_sync"
+        SYNC = "sync"
+        ANALYZE = "analyze"
+        FULL_SYNC = "full_sync"
 
     operation = models.CharField(max_length=16, choices=Operations.choices, blank=True)
-
     resource = models.CharField(max_length=16, choices=Resources.choices, blank=True)
-
+    task_id = models.CharField(max_length=36, blank=True)
     resource_id = models.UUIDField(null=True, blank=True)
 
     task_result = models.OneToOneField(
@@ -97,16 +97,6 @@ class Notification(Model):
         )
 
     @property
-    def task_id(self) -> str:
-        """Return the task id."""
-        if task := self.task_result:
-            return task.task_id
-        elif group := self.group_result:
-            return group.group_id
-
-        raise ValueError("Notification has no task or group result")
-
-    @property
     def task_name(self) -> str:
         """Return the task name."""
         if task := self.task_result:
@@ -139,10 +129,3 @@ class Notification(Model):
         """
 
         ordering = ["user", "-created_at"]
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(task_result__isnull=False)
-                | models.Q(group_result__isnull=False),
-                name="notification_task_or_group",
-            )
-        ]

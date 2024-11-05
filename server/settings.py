@@ -160,7 +160,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-
+CELERY_RESULT_EXTENDED = True
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",

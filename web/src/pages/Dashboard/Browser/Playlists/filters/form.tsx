@@ -79,16 +79,16 @@ export function FilterForm() {
   );
 
   return (
-    <div className="flex gap-4 p-4 justify-start">
-      <div className="flex flex-col gap-2 text-sm items-center">
-        <label htmlFor="pageSize">Per Page</label>
+    <div className="flex flex-1 gap-4 justify-evenly">
+      <section className="flex gap-2 text-sm items-center">
+        <label className="flex-1">Per Page</label>
         <select
           name="pageSize"
           onChange={handlePageSizeChange}
           className={[
             "bg-gray-50 border border-gray-300 rounded",
             "text-gray-900",
-            "focus:ring-green-500 focus:border-green-500 block w-full",
+            "focus:ring-green-500 focus:border-green-500 block max-w-full",
             "py-2",
           ].join(" ")}
           value={pageSize}
@@ -99,21 +99,19 @@ export function FilterForm() {
           <option value={20}>20</option>
           <option value={25}>25</option>
         </select>
-      </div>
-      <section className="flex-1 flex items-center justify-evenly">
-        <div className="flex flex-col gap-2 items-center">
-          <label>My Playlists</label>
-          <Checkbox filter="my_playlists" />
-        </div>
-        <div className="flex flex-col gap-2 items-center">
-          <label>Private</label>
-          <Checkbox filter="private" />
-        </div>
-        <div className="flex flex-col gap-2 items-center">
-          <label>Analyzed</label>
-          <Checkbox filter="is_analyzed" />
-        </div>
       </section>
+      <div className="flex gap-2 items-center">
+        <label>My Playlists</label>
+        <Checkbox filter="my_playlists" />
+      </div>
+      <div className="flex gap-2 items-center">
+        <label>Private</label>
+        <Checkbox filter="private" />
+      </div>
+      <div className="flex gap-2 items-center">
+        <label>Analyzed</label>
+        <Checkbox filter="is_analyzed" />
+      </div>
     </div>
   );
 }

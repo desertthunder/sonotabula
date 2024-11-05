@@ -188,32 +188,27 @@ export function PlaylistsBrowser() {
         className="bg-white flex flex-col flex-1 overflow-auto"
       >
         <header className="p-4 flex items-center justify-between border-y border-t-primary">
-          <div>
-            <h2 className="text-lg">Table</h2>
-            <p>Table Content</p>
-          </div>
-          <div>
-            <button
-              className={[
-                "bg-white text-primary",
-                "border-primary border",
-                "flex items-center px-4 py-2 text-sm",
-                "shadow rounded",
-                "hover:bg-primary hover:text-white",
-                isLoading ? "cursor-wait pointer-events-none" : "",
-              ].join(" ")}
-              disabled={isLoading}
-              onClick={handleAnalyzePageClick}
-            >
-              {isLoading ? (
-                <i className="i-ri-loader-line animate-spin" />
-              ) : (
-                <span>Analyze Page</span>
-              )}
-            </button>
-          </div>
+          <h2 className="text-lg">Table</h2>
+          <FilterForm />
+          <button
+            className={[
+              "bg-white text-primary",
+              "border-primary border",
+              "flex items-center px-4 py-2 text-sm",
+              "shadow rounded",
+              "hover:bg-primary hover:text-white",
+              isLoading ? "cursor-wait pointer-events-none" : "",
+            ].join(" ")}
+            disabled={isLoading}
+            onClick={handleAnalyzePageClick}
+          >
+            {isLoading ? (
+              <i className="i-ri-loader-line animate-spin" />
+            ) : (
+              <span>Analyze Page</span>
+            )}
+          </button>
         </header>
-        <FilterForm />
         <Table />
       </main>
       <BrowserPlaylistPagination />

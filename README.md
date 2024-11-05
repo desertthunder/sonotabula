@@ -10,7 +10,9 @@ It is built with Django, Postgres, Celery, and React on top of the Spotify API.
 By adding additional integration with Wikipedia and MusicBrainz, DashSpot builds
 a comprehensive database of music metadata relevant to them.
 
-![DashSpot Screenshot](./docs/static/img/demo.png)
+| <center>Playlist Browser</center>                  |
+|   ------------------                               |
+| ![DashSpot Screenshot](./docs/static/img/demo.png) |
 
 Check out the [docs](https://dashspot-dev.netlify.app/)!
 

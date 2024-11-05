@@ -4,6 +4,7 @@ import _ from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { LastPlayed } from "./LastPlayed";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 function StartToast() {
   return (
@@ -18,7 +19,7 @@ function StartToast() {
 
 function CompleteToast(props: { handleClick: () => void }) {
   return (
-    <div className="text-sm font-normal flex items-center text-bold">
+    <div className="text-sm font-normal flex items-center text-bold flex-1">
       <i className="i-ri-notification-2-fill text-green-400">
         <span className="sr-only">Notification icon</span>
       </i>
@@ -28,7 +29,9 @@ function CompleteToast(props: { handleClick: () => void }) {
           className="text-red-400 hover:text-red-500"
           onClick={props.handleClick}
         >
-          <i className="i-ri-close-line" />
+          <i className="i-ri-close-line">
+            <span className="sr-only">Close icon</span>
+          </i>
         </button>
       </div>
     </div>
@@ -36,21 +39,18 @@ function CompleteToast(props: { handleClick: () => void }) {
 }
 
 export function Toaster() {
-  const { query, client } = useNotifications();
-
+  const client = useQueryClient();
+  const { isConnected } = useNotifications(client);
   const [showToast, setShowToast] = useState(false);
   const [data, setData] = useState<WSMessage | null>(null);
-
-  useEffect(() => {
-    if (query.isSuccess && query.data) {
-      setShowToast(true);
-      const id = _.last(query.data);
-
-      const message = client.getQueryData(["notifications", id]) as WSMessage;
-
-      setData(message);
-    }
-  }, [query.isSuccess, query.data, client]);
+  const query = useQuery<WSMessage>(
+    {
+      queryKey: ["pushNotification"],
+      staleTime: Infinity,
+      enabled: false,
+    },
+    client
+  );
 
   useEffect(() => {
     if (!showToast) {
@@ -59,29 +59,30 @@ export function Toaster() {
 
     const timer = setTimeout(() => {
       setShowToast(false);
+
+      client.setQueryData(["pushNotification"], null);
     }, 3000);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [showToast]);
+  }, [showToast, client]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (isConnected && query.isSuccess && query.data) {
+      setData(query.data);
       setShowToast(true);
-    }, 3000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
+    }
+  }, [isConnected, query]);
 
   return (
     <div
       id="toast-bottom-right"
       className={[
         "fixed flex items-center w-full max-w-xs",
-        "p-4 space-x-4 divide-x rtl:divide-x-reverse rounded-lg shadow right-5 bottom-5 text-gray-400 divide-gray-700 bg-gray-800",
+        "p-4 space-x-4 divide-x rtl:divide-x-reverse rounded-lg shadow ",
+        "right-5 top-5",
+        "text-gray-400 divide-gray-700 bg-gray-800 z-50",
         showToast ? "scale-100" : "scale-0",
         "transition-transform duration-300",
       ].join(" ")}

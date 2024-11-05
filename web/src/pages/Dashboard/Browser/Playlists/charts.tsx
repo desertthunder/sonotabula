@@ -1,6 +1,17 @@
-import { useEffect, useMemo, useRef } from "react";
-import "chart.js/auto";
-import { Chart } from "chart.js";
+import React, { useMemo } from "react";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  RadialBarChart,
+  RadialBar,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 import type { BrowserPlaylistTrack, Superlatives } from "@/libs/types/api";
 import _ from "lodash";
@@ -44,6 +55,7 @@ const DOCS = [
       "A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track.",
   },
 ];
+
 type FlattenedSuperlatives = {
   label: string;
   min: number;
@@ -57,54 +69,94 @@ type FlattenedSuperlatives = {
 };
 
 const superlativeColumnHelper = createColumnHelper<FlattenedSuperlatives>();
-const minColumns = [
-  superlativeColumnHelper.accessor("label", {
-    id: "label",
-    header: "Feature",
-  }),
-  superlativeColumnHelper.accessor("min", {
-    id: "min",
-    header: "Min",
-    cell: (props) => <span>{_.round(props.getValue(), 3)}</span>,
-  }),
-  superlativeColumnHelper.accessor("min_track_name", {
-    id: "min_track_name",
-    header: "Track Name",
-  }),
-  superlativeColumnHelper.accessor("min_track_artists", {
-    id: "min_track_artists",
-    header: "Track Artists",
-  }),
-];
-const maxColumns = [
-  superlativeColumnHelper.accessor("label", {
-    id: "label",
-    header: "Feature",
-  }),
-  superlativeColumnHelper.accessor("max", {
-    id: "max",
-    header: "Max",
-    cell: (props) => <span>{_.round(props.getValue(), 3)}</span>,
-  }),
-  superlativeColumnHelper.accessor("max_track_name", {
-    id: "max_track_name",
-    header: "Track Name",
-  }),
-  superlativeColumnHelper.accessor("max_track_artists", {
-    id: "max_track_artists",
-    header: "Track Artists",
-  }),
-];
 
-export function BarChart({
+function createColumns(cat: "min" | "max") {
+  return [
+    superlativeColumnHelper.accessor("label", {
+      id: "label",
+      header: "Feature",
+      cell: (props) => <span>{_.startCase(props.getValue())}</span>,
+    }),
+    superlativeColumnHelper.accessor(cat, {
+      id: cat,
+      header: _.startCase(cat),
+      cell: (props) => <span>{_.round(props.getValue(), 3)}</span>,
+    }),
+    superlativeColumnHelper.accessor(`${cat}_track_name`, {
+      id: `${cat}_track_name`,
+      header: "Track Name",
+    }),
+    superlativeColumnHelper.accessor(`${cat}_track_artists`, {
+      id: `${cat}_track_artists`,
+      header: "Track Artists",
+    }),
+  ];
+}
+
+const minColumns = createColumns("min");
+const maxColumns = createColumns("max");
+
+function TooltipContent({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    const dataPair = payload[0].payload;
+
+    const title = _.startCase(label);
+    const minValue = _.round(dataPair.min, 3);
+    const maxValue = _.round(dataPair.max, 3);
+    const minTrack = dataPair.min_track_name;
+    const maxTrack = dataPair.max_track_name;
+    const minArtists = dataPair.min_track_artists;
+    const maxArtists = dataPair.max_track_artists;
+
+    return (
+      <section className="text-xs">
+        <p className="font-semibold">{`${title}`}</p>
+        <p className="font-light">{`${title} Range`}</p>
+        <p className="font-medium">{`Min: ${minValue} - ${minTrack} by ${minArtists}`}</p>
+        <p className="font-medium">{`Max: ${maxValue} - ${maxTrack} by ${maxArtists}`}</p>
+      </section>
+    );
+  }
+
+  return null;
+}
+
+function RadialBarTooltipContent({ active, payload }: any) {
+  if (active && payload && payload.length) {
+    const pt = payload[0].payload;
+
+    const subtitle = _.startCase(pt.name);
+    const value = _.round(pt.value, 3);
+    const title = `Average ${subtitle}`;
+
+    return (
+      <section className="text-xs bg-white p-2 rounded-md border border-gray-200">
+        <p className="font-semibold">{title}</p>
+        <p className="font-medium">Value: {`${value}`}</p>
+      </section>
+    );
+  }
+
+  return null;
+}
+
+function CustomTick({ x, y, payload }: any) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={0} dy={16} textAnchor="end" fill="#666" fontSize={10}>
+        {_.startCase(payload.value).slice(0, 5)}.
+      </text>
+    </g>
+  );
+}
+
+export function SuperlativeBarChart({
   cleaned,
-  labels,
   lookups,
 }: {
   data: Superlatives;
   lookups: Map<string, BrowserPlaylistTrack>;
   cleaned: Omit<Superlatives, "duration_ms" | "loudness" | "tempo">;
-  labels: string[];
 }) {
   const flattened = useMemo(() => {
     return _.map(cleaned, (value, label) => {
@@ -138,59 +190,26 @@ export function BarChart({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const datasets = useMemo(
-    () => [
-      {
-        label: "Max",
-        data: _.values(_.mapValues(cleaned, "max")),
-        stack: "Stack 0",
-        backgroundColor: "#0ea5e9",
-      },
-      {
-        label: "Min",
-        data: _.values(_.mapValues(cleaned, "min")),
-        stack: "Stack 1",
-        backgroundColor: "#f43f5e",
-      },
-    ],
-    [cleaned]
-  );
-
-  // use a ref to store the chart instance since it it mutable
-  const chart = useRef<Chart | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (chart.current) {
-        chart.current.destroy();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const ctx = canvasRef.current;
-    if (ctx) {
-      const newChart = new Chart(ctx, {
-        type: "bar",
-        data: { labels, datasets },
-        options: { responsive: true },
-      });
-
-      chart.current = newChart;
-    }
-
-    return () => {
-      if (chart.current) {
-        chart.current.destroy();
-      }
-    };
-  }, [datasets, labels]);
-
   return (
     <section className="grid grid-cols-5">
       <div className="p-4 col-span-2 flex flex-col">
-        <canvas ref={canvasRef} />
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={flattened}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="label"
+              angle={30}
+              height={60}
+              padding="gap"
+              tick={<CustomTick />}
+            />
+            <YAxis />
+            <Tooltip content={<TooltipContent />} />
+
+            <Bar dataKey="min" fill="#f87171" />
+            <Bar dataKey="max" fill="#0ea5e9" />
+          </BarChart>
+        </ResponsiveContainer>
         <header className="py-4 border-b">
           <h3 className="text-lg">Feature Descriptions</h3>
           <p>
@@ -217,7 +236,7 @@ export function BarChart({
       </div>
       <div className="p-4 col-span-3 text-xs flex flex-col">
         {[minTable, maxTable].map((table, index) => (
-          <>
+          <React.Fragment key={index}>
             <header className="p-4 border-b">
               <h3 className="text-lg">{index === 0 ? "Min" : "Max"}</h3>
               <p className="text-sm">
@@ -268,9 +287,41 @@ export function BarChart({
                 </tbody>
               </table>
             </div>
-          </>
+          </React.Fragment>
         ))}
       </div>
     </section>
+  );
+}
+
+export function AverageRadialBarChart(props: {
+  data: {
+    name: string;
+    value: number;
+    fill: string;
+  }[];
+}) {
+  return (
+    <ResponsiveContainer width="50%" height={500}>
+      <RadialBarChart
+        innerRadius="10%"
+        outerRadius="80%"
+        barSize={20}
+        data={props.data}
+        endAngle={0}
+        startAngle={180}
+      >
+        <RadialBar background dataKey="value" />
+        <Legend
+          iconSize={5}
+          width={150}
+          fontSize={10}
+          layout="vertical"
+          verticalAlign="top"
+          align="right"
+        />
+        <Tooltip content={<RadialBarTooltipContent />} />
+      </RadialBarChart>
+    </ResponsiveContainer>
   );
 }

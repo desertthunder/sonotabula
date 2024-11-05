@@ -13,6 +13,7 @@ import { Home, Profile, Signup } from "./pages";
 import { Dashboard, DashboardLayout } from "./pages/Dashboard";
 import { PlaylistsBrowser } from "./pages/Dashboard/Browser";
 import { PlaylistDetailPage } from "./pages/Dashboard/Browser/Playlists/detail";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

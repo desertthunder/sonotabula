@@ -133,13 +133,6 @@ export type Superlatives = {
   duration_ms: Superlative;
 };
 export type Computations = {
-  // superlatives: Record<ComputedKey, Superlative>;
-  // averages: Record<ComputedKey, number>;
-  // count: {
-  //   key: Record<number, number>;
-  //   mode: Record<number, number>;
-  //   time_signature: Record<number, number>;
-  // };
   superlatives: Superlatives;
   averages: {
     danceability: number;

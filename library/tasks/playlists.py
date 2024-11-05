@@ -1,8 +1,10 @@
 """Syncing of library data from real-time endpoints."""
 
 import time
+import typing
 
-from celery import group, shared_task
+from celery import Task, shared_task, states
+from celery.signals import task_postrun, task_prerun
 from django.db.models import Q
 from loguru import logger
 
@@ -15,6 +17,8 @@ from api.services.spotify import (
 from browser.models import Library
 from core.models import AppUser
 from library.serializers import PlaylistAPISerializer
+from live.models import Notification
+from live.signals import notify_failure, notify_success
 
 user_service = SpotifyAuthService()
 data_service = SpotifyDataService()
@@ -22,8 +26,12 @@ library_service = SpotifyLibraryService(user_service)
 
 
 @shared_task
-def sync_playlists_from_request(user_id: int, api_playlists: list[dict]) -> None:
+def sync_and_add_playlists_to_library(
+    user_id: int, api_playlists: list[dict]
+) -> tuple[int, str, list[tuple[str, str]]]:
     """Sync playlists from a request."""
+    logger.info(f"Syncing playlists for user {user_id}")
+
     models = [PlaylistAPISerializer(**playlist) for playlist in api_playlists]
     user = AppUser.objects.get(id=user_id)
     library, _ = Library.objects.get_or_create(user_id=user_id)
@@ -34,14 +42,18 @@ def sync_playlists_from_request(user_id: int, api_playlists: list[dict]) -> None
 
     if qs.count() == len(models):
         logger.info(f"Playlists already added to library {library.id}")
-        dispatch_sync_playlist_tracks.s(user_id).apply_async()
-        return
+        return (
+            user_id,
+            str(library.id),
+            [(str(playlist.id), playlist.spotify_id) for playlist in qs.all()],
+        )
 
     synced = {"count": 0}
 
     logger.debug(f"User: {user.pk} | {user.spotify_id}, Library: {library.id}")
 
-    for i, playlist in enumerate([playlist.to_db() for playlist in models]):
+    playlists: list[Playlist] = [playlist.to_db() for playlist in models]
+    for i, playlist in enumerate(playlists):
         logger.info(f"Syncing playlist {playlist.name} to library {library.id}")
         logger.debug(f"Playlist ({i + 1}): {playlist.pk} | {playlist.spotify_id}")
         library.playlists.add(playlist)
@@ -55,51 +67,82 @@ def sync_playlists_from_request(user_id: int, api_playlists: list[dict]) -> None
         f"library {library.id}"
     )
 
-    dispatch_sync_playlist_tracks.s(user_id).apply_async()
+    for playlist in playlists:
+        spotify_id = playlist.spotify_id
+
+        logger.info(
+            f"Syncing playlist tracks for {playlist.pk} | {playlist.spotify_id}"
+        )
+
+        time.sleep(0.5)
+        response = data_service.fetch_playlist_tracks(spotify_id, user_id)
+        time.sleep(0.5)
+
+        cleaned = Track.sync.pre_sync(response)
+        data = Track.sync.do(cleaned)
+        result = Track.sync.complete_sync(playlist.pk, data)
+
+        logger.debug(f"Synced {str(result)}")
+
+        playlist.is_synced = True
+        playlist.save()
+
+        logger.debug(f"Playlist {playlist.pk} is now synced")
+
+    return (
+        user_id,
+        str(library.id),
+        [
+            (
+                str(playlist.id),
+                playlist.spotify_id,
+            )
+            for playlist in playlists
+        ],
+    )
 
 
-@shared_task
-def dispatch_sync_playlist_tracks(user_id: int) -> None:
-    """Dispatch a chain of tasks to sync playlist tracks."""
-    library = Library.objects.get(user__id=user_id)
-    tasks = []
+@task_prerun.connect(sender=sync_and_add_playlists_to_library)
+def sync_playlists_start(
+    sender: typing.Callable, task_id: str, task: Task, **kwargs
+) -> None:
+    """Log when the task starts."""
+    args = task.request.args
 
-    for pl in library.playlists.filter(is_synced=False).all():
-        sig = sync_playlist_tracks.s(user_id, pl.spotify_id)
+    if not args:
+        logger.error("No arguments provided to task")
 
-        tasks.append(sig)
+        return
 
-    group(*tasks).apply_async()
+    user_id = args[0]
+    library, _ = Library.objects.get_or_create(user_id=user_id)
+    notification = Notification.objects.create(
+        user_id=user_id,
+        task_id=task_id,
+        resource_id=library.id,
+        operation=Notification.Operations.SYNC,
+        resource=Notification.Resources.LIBRARY,
+        extras={},
+    )
+
+    logger.info(f"Task {task_id} started")
+    logger.info(f"Notification {notification.id} created")
 
 
-@shared_task
-def sync_playlist_tracks_from_request(user_id: int, api_playlist: dict) -> None:
-    """Sync playlist tracks from a request."""
-    logger.warning("TODO (Not implemented)")
+@task_postrun.connect(sender=sync_and_add_playlists_to_library)
+def sync_playlists_complete(sender: typing.Callable, *args, **kwargs) -> None:
+    """Log when the task is successful."""
+    if task_id := kwargs.get("task_id"):
+        logger.info(f"Task {task_id} completed.")
 
-    return
+        notification = Notification.objects.get(task_id=task_id)
 
+        state = kwargs.get("state", "UNKNOWN")
 
-@shared_task
-def sync_playlist_tracks(user_pk: int, spotify_id: str) -> int:
-    """Sync playlist tracks from Spotify to the database."""
-    playlist = Playlist.objects.get(spotify_id=spotify_id)
+        if state == states.SUCCESS:
+            notify_success.send(sender=Notification, instance=notification)
+            logger.info("Task completed successfully.")
 
-    logger.info(f"Syncing playlist tracks for {playlist.pk} | {playlist.spotify_id}")
-
-    time.sleep(0.5)
-    response = data_service.fetch_playlist_tracks(spotify_id, user_pk)
-    time.sleep(0.5)
-
-    cleaned = Track.sync.pre_sync(response)
-    data = Track.sync.do(cleaned)
-    result = Track.sync.complete_sync(playlist.pk, data)
-
-    logger.debug(f"Synced {str(result)}")
-
-    playlist.is_synced = True
-    playlist.save()
-
-    logger.debug(f"Playlist {playlist.pk} is now synced")
-
-    return user_pk
+        if state == states.FAILURE:
+            notify_failure.send(sender=Notification, instance=notification)
+            logger.error("Task failed.")

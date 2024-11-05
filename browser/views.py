@@ -8,6 +8,7 @@ These are audio features stored under a user's
 import typing
 import uuid
 
+from celery import group
 from django.core.paginator import Paginator
 from django.db import models
 from loguru import logger
@@ -32,7 +33,6 @@ from browser.tasks import (
     analyze_playlist,
     sync_and_analyze_playlist,
     sync_playlist,
-    sync_playlists,
 )
 from core.filters import FilterSet
 
@@ -198,13 +198,9 @@ class PlaylistViewSet(BaseBrowserViewSet):
         """
         logger.debug(request.data)
         if request.data.get("operation") == "analyze":
-            result = analyze_playlist.s(
-                uuid.UUID(playlist_pk), request.user.id
-            ).apply_async()
+            result = analyze_playlist.s(playlist_pk, request.user.id).apply_async()
         else:
-            result = sync_playlist.s(
-                uuid.UUID(playlist_pk), request.user.id
-            ).apply_async()
+            result = sync_playlist.s(playlist_pk, request.user.id).apply_async()
 
         return Response(
             data=TaskResultSerializer.from_result(result),
@@ -227,9 +223,14 @@ class PlaylistViewSet(BaseBrowserViewSet):
             .object_list
         )
 
-        result = sync_playlists.s(
-            request.user.id,
-            [obj.id for obj in objects],
+        result = group(
+            *(
+                sync_playlist.s(
+                    playlist.id,
+                    request.user.id,
+                )
+                for playlist in objects
+            )
         ).apply_async()
 
         return Response(

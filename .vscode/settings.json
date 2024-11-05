@@ -22,7 +22,8 @@
         }
     },
     "markdownlint.config": {
-        "MD025": false
+        "MD025": false,
+        "MD033": false
     },
     "python.defaultInterpreterPath": "./.venv/bin/python3",
 }

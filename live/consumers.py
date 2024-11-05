@@ -4,6 +4,9 @@ import asyncio
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
+from loguru import logger
+
+from live.serializers import NotificationSerializer
 
 
 class TaskStatusConsumer(AsyncWebsocketConsumer):
@@ -25,7 +28,9 @@ class TaskStatusConsumer(AsyncWebsocketConsumer):
             text_data=json.dumps(
                 {
                     "type": "task_started",
-                    "notification": event["notification"],
+                    "notification": NotificationSerializer(
+                        **json.loads(event["notification"])
+                    ).model_dump(),
                 }
             )
         )
@@ -33,11 +38,16 @@ class TaskStatusConsumer(AsyncWebsocketConsumer):
     async def task_complete(self, event: dict) -> None:
         """Handle a task complete event."""
         await asyncio.sleep(5)
+
+        logger.debug("Task complete event received")
+
         await self.send(
             text_data=json.dumps(
                 {
                     "type": "task_complete",
-                    "notification": event["notification"],
+                    "notification": NotificationSerializer(
+                        **json.loads(event["notification"])
+                    ).model_dump(),
                 }
             )
         )
