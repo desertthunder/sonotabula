@@ -1,8 +1,17 @@
-"""Listening History views."""
+"""Listening History views.
+
+This module contains a single view that is
+responsible for syncing recently played tracks
+from the user's Spotify API listening history.
+
+All three actions are essentially the same, they just
+fetch a different amount of data. See the limit arg passed
+to the service class.
+"""
 
 import typing
 
-from loguru import logger
+from pydantic import BaseModel
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -10,66 +19,56 @@ from rest_framework.views import APIView
 
 from api.models.permissions import SpotifyAuth
 from api.services.spotify import (
+    AUTH,
+    DATA,
+    PLAYBACK,
     SpotifyAuthService,
     SpotifyDataService,
     SpotifyPlaybackService,
 )
+from api.views.base import GetUserMixin
 from apps.models import ListeningHistory, ListeningHistorySerializer
-from core.models import AppUser
-
-data_service = SpotifyDataService()
-auth_service = SpotifyAuthService()
-playback_service = SpotifyPlaybackService()
 
 
-class ListeningHistoryView(APIView):
+class ListeningHistoryView(GetUserMixin, APIView):
     """Listening History view."""
 
-    data_service: SpotifyDataService
-    auth_service: SpotifyAuthService
-    playback_service: SpotifyPlaybackService
+    _data: SpotifyDataService
+    _auth: SpotifyAuthService
+    _playback: SpotifyPlaybackService
 
-    authentication_classes = [
-        SpotifyAuth,
-    ]
-    permission_classes = [
-        IsAuthenticated,
-    ]
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [IsAuthenticated]
 
     def __init__(
         self,
-        data: SpotifyDataService = data_service,
-        auth: SpotifyAuthService = auth_service,
-        playback: SpotifyPlaybackService = playback_service,
+        data: SpotifyDataService = DATA,
+        auth: SpotifyAuthService = AUTH,
+        playback: SpotifyPlaybackService = PLAYBACK,
     ) -> None:
         """Initialize the view."""
-        self.data_service = data
-        self.auth_service = auth
-        self.playback_service = playback
+        self._data = data
+        self._auth = auth
+        self._playback = playback
 
-    # (TODO) This will be replaced with a celery task
     def serialize(
         self, items: typing.Iterable[dict], user_pk: int
     ) -> list["ListeningHistorySerializer"]:
-        """Serialize the data."""
-        data = []
-        for item in items:  # this will only iterate once
+        """Serialize the data.
+
+        Before saving the data to the database, we need to
+        validate the data and build a ListeningHistory object.
+        """
+        for item in items:
             record = ListeningHistorySerializer.from_api(item)
             obj = ListeningHistory.history.build(record, user_pk)
-            logger.info(f"{obj.pk} - {obj.track.name}")
 
-        data.append(ListeningHistorySerializer.from_db(obj))
-
-        return data
-
-    def get_user(self, request: Request) -> AppUser:
-        """Get the user from the request."""
-        return AppUser.objects.get(pk=request.user.pk)
+        return [ListeningHistorySerializer.from_db(obj)]
 
     def get(self, request: Request) -> Response:
         """Get the user's listening history."""
         user = self.get_user(request)
-        items = self.playback_service.recently_played(user.pk, 1)
+        items = self._playback.recently_played(user.pk, 1)
         data = self.serialize(items, user.pk)
 
         return Response({"data": data[0].model_dump()})
@@ -80,7 +79,7 @@ class ListeningHistoryView(APIView):
         It also syncs a small batch of data.
         """
         user = self.get_user(request)
-        items = self.playback_service.recently_played(user.pk, 5)
+        items = self._playback.recently_played(user.pk, 5)
         data = self.serialize(items, user.pk)
 
         return Response({"data": [item.model_dump() for item in data]})
@@ -92,7 +91,62 @@ class ListeningHistoryView(APIView):
         """
         limit = request.query_params.get("limit", 50)
         user = self.get_user(request)
-        items = self.playback_service.recently_played(user.pk, int(limit))
+        items = self._playback.recently_played(user.pk, int(limit))
         data = self.serialize(items, user.pk)
 
         return Response({"data": [item.model_dump() for item in data]})
+
+
+class UserSavedItems(BaseModel):
+    """User saved item totals."""
+
+    artists: int
+    albums: int
+    tracks: int
+    playlists: int
+    shows: int
+
+    @classmethod
+    def get(
+        cls: type["UserSavedItems"], iter: typing.Iterable[tuple[str, dict]]
+    ) -> "UserSavedItems":
+        """Get user saved items."""
+        response = {
+            "artists": 0,
+            "albums": 0,
+            "tracks": 0,
+            "playlists": 0,
+            "shows": 0,
+        }
+
+        for item, data in iter:
+            key = item.split("/")[-1]
+
+            if key == "following":
+                response["artists"] = data["total"]
+            else:
+                response[key] = data["total"]
+
+        return cls(**response)
+
+
+class UserSavedItemsView(GetUserMixin, APIView):
+    """User saved items view."""
+
+    _data: SpotifyDataService
+    _auth: SpotifyAuthService
+    _playback: SpotifyPlaybackService
+
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self, data: SpotifyDataService = DATA) -> None:
+        """Initialize the view."""
+        self._data = data
+
+    def get(self, request: Request) -> Response:
+        """Get user saved items."""
+        user = self.get_user(request)
+        data = self._data.fetch_saved_items(user, 1)
+        items = UserSavedItems.get(data)
+        return Response({"data": items.model_dump()})

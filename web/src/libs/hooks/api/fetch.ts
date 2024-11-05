@@ -1,81 +1,10 @@
 import type {
-  LibraryResource,
   FetchError,
   ListeningHistoryItem,
   BrowserPlaylist,
   Pagination,
-  BrowserKey,
-  BrowserResource,
 } from "@libs/types";
-import { LibraryKey, getBrowserEndpoint } from "@libs/types";
 import isNil from "lodash/isNil";
-
-export async function browserFetcher<T extends LibraryKey>(
-  resource: LibraryKey,
-  token: string
-): Promise<LibraryResource<T>> {
-  const uri = new URL(getBrowserEndpoint(resource));
-
-  return fetch(uri.toString(), {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }).then(async (response) => {
-    if (!response.ok) {
-      return Promise.reject({
-        code: response.status,
-        message: response.statusText,
-      } as FetchError);
-    }
-
-    const data = await response.json();
-
-    return data["data"] as LibraryResource<T>;
-  });
-}
-
-export async function paginatedBrowserFetcher<T extends BrowserKey>(
-  resource: BrowserKey,
-  token: string | null,
-  params: { page: number; page_size: number } = {
-    page: 1,
-    page_size: 10,
-  }
-): Promise<{
-  data: BrowserResource<T>;
-  pagination: Pagination;
-}> {
-  if (!token) {
-    throw new Error("No token provided");
-  }
-
-  const uri = new URL(getBrowserEndpoint(resource), window.location.origin);
-
-  uri.searchParams.append("page", params.page.toString());
-  uri.searchParams.append("page_size", params.page_size.toString());
-
-  const response = await fetch(uri.toString(), {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    return Promise.reject({
-      code: response.status,
-      message: response.statusText,
-    } as FetchError);
-  }
-
-  const data = (await response.json()) as {
-    data: BrowserResource<T>;
-    pagination: Pagination;
-  };
-
-  return data;
-}
 
 export async function fetchListeningHistory(token: string | null) {
   if (!token) {

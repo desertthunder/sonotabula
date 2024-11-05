@@ -6,6 +6,7 @@ export {
   NumericFilterType,
   PaginationType,
   Routes,
+  Endpoints,
   StringFilterType,
 } from "./enums";
 
@@ -42,4 +43,4 @@ export {
   stringFilters,
 } from "./constants";
 
-export { getBrowserEndpoint, getLibraryEndpoint, getSavedEndpoint } from "./fn";
+export { getLibraryEndpoint } from "./fn";

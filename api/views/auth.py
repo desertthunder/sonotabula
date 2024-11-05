@@ -1,4 +1,9 @@
-"""Authentication views."""
+"""Authentication views.
+
+TODO - move these views to core
+TODO - these views can be encapsulated in a single
+ViewSet class
+"""
 
 from http import HTTPMethod
 

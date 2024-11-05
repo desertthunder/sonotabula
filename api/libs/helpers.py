@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import typing
 
 import httpx
 from django.utils import timezone
@@ -11,7 +12,7 @@ from api.serializers.authentication import AccessToken, CurrentUser
 from core.models import AppUser
 
 
-def open_fixture_file(file_path: str) -> str:
+def open_fixture_file(file_path: str) -> dict:
     """Open a fixture file and return it as a json string."""
     file_path = f"api/libs/fixtures/{file_path}"
     with open(file_path) as file:
@@ -57,8 +58,7 @@ class SpotifyAuthServiceMock:
     @classmethod
     def get_full_profile(cls: type["SpotifyAuthServiceMock"]) -> dict:
         """Mock the get_full_profile method."""
-        json_str = open_fixture_file("auth__get_full_profile.json")
-        return json.loads(json_str)
+        return open_fixture_file("auth__get_full_profile.json")
 
     @classmethod
     def build_redirect_url(
@@ -74,4 +74,16 @@ class SpotifyAuthServiceMock:
 
 # Spotify Library Service Mocks
 
+
 # Spotify Playback Service Mocks
+class SpotifyPlaybackServiceMock:
+    """Collection of method decorators mocking the SpotifyPlaybackService class."""
+
+    @classmethod
+    def recently_played(
+        cls: type["SpotifyPlaybackServiceMock"],
+    ) -> typing.Iterable[dict]:
+        """Mock the recently_played method."""
+        data = open_fixture_file("playback__recently_played.json")
+
+        yield from data.get("items", [])

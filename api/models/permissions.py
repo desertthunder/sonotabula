@@ -88,7 +88,7 @@ class Token:
             spotify_access_token=payload.get("spotify_access_token"),
         )
 
-    @classmethod  # TODO: This needs to change
+    @classmethod
     def decode_jwt(cls: type["Token"], jwt_token: str) -> str:
         """Create a Token from a token string."""
         payload = jwt.decode(jwt_token, cls.secret, algorithms=[cls.algorithm])

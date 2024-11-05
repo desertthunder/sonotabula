@@ -9,9 +9,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from api.models.permissions import SpotifyAuth
-from api.serializers.data import UserSavedItems
 from api.services.spotify.auth import SpotifyAuthService
 from api.services.spotify.data import SpotifyDataService
+from apps.views import UserSavedItems
 from core.models import AppUser
 
 
