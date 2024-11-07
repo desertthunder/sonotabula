@@ -5,20 +5,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0005_computation_album_alter_computation_playlist'),
+        ("api", "0005_computation_album_alter_computation_playlist"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='analysis',
-            name='album',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='analysis', to='api.album'),
+            model_name="analysis",
+            name="album",
+            field=models.OneToOneField(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="analysis",
+                to="api.album",
+            ),
         ),
         migrations.AlterField(
-            model_name='analysis',
-            name='playlist',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='analysis', to='api.playlist'),
+            model_name="analysis",
+            name="playlist",
+            field=models.OneToOneField(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="analysis",
+                to="api.playlist",
+            ),
         ),
     ]

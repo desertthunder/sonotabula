@@ -26,11 +26,10 @@ from library.serializers import (
 )
 from library.tasks import (
     sync_artists_from_request,
-    sync_playlist_tracks_from_request,
-    sync_playlists_from_request,
     sync_track_features_from_request,
     sync_tracks_from_request,
 )
+from library.tasks.playlists import sync_and_add_playlists_to_library
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
@@ -101,7 +100,7 @@ class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
         data = [PlaylistAPISerializer.get(playlist).model_dump() for playlist in resp]
         response = {"message": "Syncing playlists..."}
 
-        sync_playlists_from_request.s(user_id, data).apply_async()
+        sync_and_add_playlists_to_library.s(user_id, data).apply_async()
 
         return Response(data=response, status=HTTPStatus.ACCEPTED)
 
@@ -114,8 +113,6 @@ class PlaylistViewSet(ViewSetMixin, viewsets.ViewSet):
         user_id = request.user.id
         playlist = self._library.library_playlist(user_id, spotify_id)
         data = ExpandedPlaylistSerializer.get(playlist).model_dump()
-
-        sync_playlist_tracks_from_request.s(user_id, data).apply_async()
 
         return Response(data=data, status=HTTPStatus.OK)
 

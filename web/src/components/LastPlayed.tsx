@@ -69,7 +69,7 @@ export function LastPlayed({ data, refresh, isFetching }: Props) {
         <button
           aria-label="Refresh"
           className={[
-            "text-emerald-500",
+            "text-primary",
             "hover:bg-green-100",
             "hover:rounded-full",
             "hover:shadow-2xl",

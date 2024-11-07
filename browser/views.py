@@ -8,6 +8,7 @@ These are audio features stored under a user's
 import typing
 import uuid
 
+from celery import group
 from django.core.paginator import Paginator
 from django.db import models
 from loguru import logger
@@ -19,12 +20,13 @@ from rest_framework.viewsets import ViewSet
 
 from api.models.permissions import SpotifyAuth
 from api.models.playlist import Playlist
-from api.serializers.views.browser import ExpandedPlaylistSerializer
-from browser.filters import PlaylistFilterSet
+from browser.filters import AlbumFilterSet, PlaylistFilterSet
 from browser.models import Library
 from browser.serializers import (
+    ListAlbumSerializer,
     ListPlaylistSerializer,
     PaginationParams,
+    RetrieveAlbumSerializer,
     RetrievePlaylistSerializer,
     TaskResultSerializer,
 )
@@ -32,9 +34,9 @@ from browser.tasks import (
     analyze_playlist,
     sync_and_analyze_playlist,
     sync_playlist,
-    sync_playlists,
 )
 from core.filters import FilterSet
+from core.views import GetUserMixin
 
 
 class LibraryRelationMixin(typing.Protocol):
@@ -44,12 +46,6 @@ class LibraryRelationMixin(typing.Protocol):
     def relation(self) -> str:
         """Get the relation name."""
         ...
-
-
-class GetUserMixin:
-    """Get user mixin."""
-
-    pass
 
 
 class GetLibraryMixin:
@@ -137,9 +133,9 @@ class PlaylistMetaViewSet(BaseBrowserViewSet):
             ).get("track_count"),
         }
 
-        logger.info(f"Playlist metadata: {data}")
+        logger.debug(f"Playlist metadata: {data}")
 
-        return Response(data=data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class PlaylistViewSet(BaseBrowserViewSet):
@@ -184,7 +180,7 @@ class PlaylistViewSet(BaseBrowserViewSet):
         ).apply_async()
 
         return Response(
-            data={"task_id": result.id, "status": result.status, "state": result.state},
+            data=TaskResultSerializer.from_result(result).model_dump(),
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -196,18 +192,12 @@ class PlaylistViewSet(BaseBrowserViewSet):
         Partially updates a playlist, i.e. only syncs or analyzes
         the playlist. Defaults to sync.
         """
-        logger.debug(request.data)
         if request.data.get("operation") == "analyze":
-            result = analyze_playlist.s(
-                uuid.UUID(playlist_pk), request.user.id
-            ).apply_async()
+            result = analyze_playlist.s(playlist_pk, request.user.id).apply_async()
         else:
-            result = sync_playlist.s(
-                uuid.UUID(playlist_pk), request.user.id
-            ).apply_async()
-
+            result = sync_playlist.s(playlist_pk, request.user.id).apply_async()
         return Response(
-            data=TaskResultSerializer.from_result(result),
+            data=TaskResultSerializer.from_result(result).model_dump(),
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -227,13 +217,18 @@ class PlaylistViewSet(BaseBrowserViewSet):
             .object_list
         )
 
-        result = sync_playlists.s(
-            request.user.id,
-            [obj.id for obj in objects],
+        result = group(
+            *(
+                sync_playlist.s(
+                    playlist.id,
+                    request.user.id,
+                )
+                for playlist in objects
+            )
         ).apply_async()
 
         return Response(
-            data=TaskResultSerializer.from_result(result),
+            data=TaskResultSerializer.from_result(result).model_dump(),
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -257,10 +252,7 @@ class PlaylistViewSet(BaseBrowserViewSet):
         )
 
         return Response(
-            data={
-                **RetrievePlaylistSerializer.to_response_data(playlist),
-                **ExpandedPlaylistSerializer.to_response(playlist),
-            },
+            data={**RetrievePlaylistSerializer.to_response(playlist)},
             status=status.HTTP_200_OK,
         )
 
@@ -269,10 +261,76 @@ class PlaylistViewSet(BaseBrowserViewSet):
         return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
 
 
-class AlbumViewSet(ViewSet):
+class AlbumMetaViewSet(BaseBrowserViewSet):
+    """Album Metadata ViewSet."""
+
+    filter_class = AlbumFilterSet
+    relation: str = "albums"
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request: Request) -> Response:
+        """GET /albums.
+
+        Filters and returns a paginated list of albums based
+        on query parameters.
+        """
+        qs = self.get_library(request).albums.all()
+
+        data = {
+            "total_synced": qs.filter(is_synced=True).count(),
+            "total_analyzed": qs.filter(is_analyzed=True).count(),
+            "total_tracks": qs.filter(is_synced=True)
+            .aggregate(
+                track_count=models.Count("tracks"),
+            )
+            .get("track_count"),
+        }
+
+        logger.debug(f"Album metadata: {data}")
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class AlbumViewSet(BaseBrowserViewSet):
     """Album ViewSet."""
 
-    pass
+    filter_class = AlbumFilterSet
+    relation: str = "albums"
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request: Request) -> Response:
+        """GET /albums.
+
+        Filters and returns a paginated list of albums based
+        on query parameters.
+        """
+        qs = self.get_queryset(request)
+        return Response(
+            data=ListAlbumSerializer.to_response(
+                qs.all(),
+                self.get_params(request),
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    def retrieve(self, request: Request, album_pk: str) -> Response:
+        """GET /albums/{pk}.
+
+        Retrieves a single album by its primary key.
+        """
+        album = (
+            self.get_queryset(request)
+            .prefetch_related("tracks", "artists")
+            .get(
+                id=uuid.UUID(album_pk),
+            )
+        )
+        return Response(
+            data={"data": RetrieveAlbumSerializer.get(album).model_dump()},
+            status=status.HTTP_200_OK,
+        )
 
 
 class TrackViewSet(ViewSet):

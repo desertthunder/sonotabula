@@ -1,4 +1,4 @@
-# Front-end Drafts
+# Front-end Web
 
 ## Nginx & Vite
 
@@ -42,6 +42,16 @@ Icons come primarily from [Remix Icon](https://remixicon.com/), with a few from
 Remix was selected because of the breadth of icons available, and the two variants
 for each icon (outline and filled).
 
+### Application Design
+
+Home page (as of October 12):
+
+![Home Page](../static/img/demo.png)
+
+...versus the original concept:
+
+![Home design](../static/img/dashboard-main-concept.png)
+
 ## React Specific
 
 ### Routing
@@ -78,6 +88,8 @@ A similar strategy will be used for modals & confirm dialogs.
 3. Cards
 4. Charts - represented with Chart.js.
 
-### Pagination
+### Filtering Data
 
-### Forms
+Filter state (in forms) was initially managed by Zustand, but I've since moved it to the URL
+so local form input state pushes to the URL/the URL sets the initial state of forms.
+This applies to pagination as well.

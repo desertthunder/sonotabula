@@ -34,7 +34,10 @@ export async function fetchLibraryPlaylists(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/playlists", window.location.origin);
+  const uri = new URL(
+    "/server/api/v1/library/playlists",
+    window.location.origin
+  );
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
@@ -59,7 +62,7 @@ export async function fetchLibraryTracks(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/tracks", window.location.origin);
+  const uri = new URL("/server/api/v1/library/tracks", window.location.origin);
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
@@ -81,7 +84,7 @@ export async function fetchLibraryAlbums(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/albums", window.location.origin);
+  const uri = new URL("/server/api/v1/library/albums", window.location.origin);
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
@@ -103,7 +106,7 @@ async function fetchLibraryArtists(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/artists", window.location.origin);
+  const uri = new URL("/server/api/v1/library/artists", window.location.origin);
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
@@ -129,7 +132,10 @@ export async function syncLibraryPlaylists(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/playlists", window.location.origin);
+  const uri = new URL(
+    "/server/api/v1/library/playlists",
+    window.location.origin
+  );
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
@@ -151,7 +157,7 @@ export async function syncLibraryTracks(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/tracks", window.location.origin);
+  const uri = new URL("/server/api/v1/library/tracks", window.location.origin);
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 
@@ -173,7 +179,7 @@ export async function syncLibraryArtists(
   token: string | null,
   params: LibraryParams
 ) {
-  const uri = new URL("/api/v1/library/artists", window.location.origin);
+  const uri = new URL("/server/api/v1/library/artists", window.location.origin);
   uri.searchParams.append("page", params.page.toString());
   uri.searchParams.append("page_size", params.page_size.toString());
 

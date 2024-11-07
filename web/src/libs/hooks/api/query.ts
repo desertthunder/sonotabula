@@ -1,66 +1,67 @@
 /**
  * @todo paginate queries
  */
-import {
-  BrowserKey,
-  BrowserPlaylistResponse,
-  BrowserResource,
-  FetchError,
-  getSavedEndpoint,
-  LibraryCountsResponse,
-  LibraryKey,
-  LibraryResource,
-  ListeningHistoryItem,
-  Pagination,
-} from "@libs/types";
 import { useTokenStore } from "@/store";
 import {
-  QueryClient,
-  useQuery,
-  useQueryClient,
-  UseQueryResult,
-} from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+  BrowserPlaylistResponse,
+  Endpoints,
+  FetchError,
+  LibraryCountsResponse,
+  ListeningHistoryItem,
+} from "@libs/types";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo } from "react";
 import { useSearch } from "wouter";
 import {
-  browserFetcher,
-  checkToken,
+  fetchTokenState,
   fetchBrowserPlaylists,
-  fetchListeningHistory,
   fetchLibraryPlaylistTracks,
-  paginatedBrowserFetcher,
+  fetchListeningHistory,
+  fetchPlaylistsMetadata,
+  fetchPlaylists,
+  fetchProfile,
 } from "./fetch";
-
-export function useQueryParams(): Record<string, string> {
-  const [search] = useSearch();
-  const params = new URLSearchParams(search);
-
-  return Object.fromEntries(params.entries());
-}
+import isNil from "lodash/isNil";
+import { useQueryParams } from "..";
 
 export function useTokenValidator() {
-  const params = useQueryParams();
+  const search = useSearch();
   const queryClient = useQueryClient();
   const token = useTokenStore((state) => state.token);
   const setToken = useTokenStore((state) => state.setToken);
+  const params = useMemo(() => {
+    const pairs = search.split("&");
+    const q = new URLSearchParams();
+
+    for (const pair of pairs) {
+      const [key, value] = pair.split("=");
+      q.set(key, value);
+    }
+
+    return q;
+  }, [search]);
 
   useEffect(() => {
-    if (params.token) {
-      setToken(params.token);
+    const tokenParam = params.get("token");
+
+    if (isNil(tokenParam)) {
+      return;
     }
-  }, [params.token, setToken]);
+
+    setToken(tokenParam);
+  }, [params, setToken]);
 
   const query = useQuery(
     {
       queryKey: ["token"],
       queryFn: async () => {
-        console.debug("Checking token validity");
-
         if (!token) {
           throw new Error("Token not found");
         }
 
-        const response = await fetch("/api/validate", {
+        const url = new URL("/server/api/validate", window.location.origin);
+
+        const response = await fetch(url.toString(), {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -84,29 +85,6 @@ export function useTokenValidator() {
   return query;
 }
 
-export function useBrowserFetch<T extends LibraryKey>(
-  resource: T
-): UseQueryResult<LibraryResource<T>> {
-  const token = useTokenStore((state) => state.token);
-  const client = useQueryClient();
-
-  const query = useQuery<LibraryResource<T>>(
-    {
-      queryKey: [`${resource}-browser`],
-      queryFn: async () => {
-        if (!token) {
-          throw new Error("Token not found");
-        }
-
-        return await browserFetcher<T>(resource, token);
-      },
-    },
-    client
-  );
-
-  return query;
-}
-
 export function useSavedCounts() {
   const token = useTokenStore((state) => state.token);
   const client = useQueryClient();
@@ -118,7 +96,8 @@ export function useSavedCounts() {
         if (!token) {
           throw new Error("Token not found");
         }
-        const endpoint = new URL(getSavedEndpoint(), window.location.origin);
+
+        const endpoint = new URL(Endpoints.Saved, window.location.origin);
 
         const response = await fetch(endpoint.toString(), {
           method: "GET",
@@ -152,12 +131,15 @@ export function usePlaylistTracks(id: string) {
     {
       queryKey: ["playlist", id],
       queryFn: async () => {
-        const response = await fetch(`/api/browser/playlist/${id}/tracks`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `/server/api/browser/playlist/${id}/tracks`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch playlist tracks");
@@ -165,35 +147,6 @@ export function usePlaylistTracks(id: string) {
 
         return (await response.json()) as BrowserPlaylistResponse;
       },
-    },
-    client
-  );
-
-  return query;
-}
-
-export function usePaginatedBrowser<T extends BrowserKey>(
-  resource: T,
-  params: {
-    page: number;
-    page_size: number;
-  } = {
-    page: 1,
-    page_size: 10,
-  }
-): UseQueryResult<{
-  data: BrowserResource<T>;
-  pagination: Pagination;
-}> {
-  const token = useTokenStore((state) => state.token);
-  const client = useQueryClient();
-  const query = useQuery<{
-    data: BrowserResource<T>;
-    pagination: Pagination;
-  }>(
-    {
-      queryKey: [`${resource}`],
-      queryFn: () => paginatedBrowserFetcher<T>(resource, token, params),
     },
     client
   );
@@ -220,7 +173,7 @@ export function useCheckToken() {
 
   const query = useQuery({
     queryKey: ["checkToken"],
-    queryFn: () => checkToken(token),
+    queryFn: () => fetchTokenState(token),
     staleTime: Infinity,
   });
 
@@ -254,7 +207,7 @@ export function useBrowserPlaylists(
   return query;
 }
 
-export async function useLibraryPlaylistTracks(playlist_id: string) {
+export function useLibraryPlaylistTracks(playlist_id: string) {
   const token = useTokenStore((s) => s.token);
 
   const query = useQuery({
@@ -273,4 +226,41 @@ export async function useLibraryPlaylistTracks(playlist_id: string) {
     query,
     handler,
   };
+}
+
+export function usePlaylistsMetadata() {
+  const token = useTokenStore((state) => state.token);
+  const query = useQuery({
+    queryKey: ["browser", "playlists", "metadata"],
+    queryFn: () => fetchPlaylistsMetadata(token),
+  });
+
+  return query;
+}
+
+export function usePlaylistsQuery() {
+  const token = useTokenStore((state) => state.token);
+  const params = useQueryParams();
+
+  if (params.get("pageSize")) {
+    params.set("per_page", params.get("pageSize") as string);
+    params.delete("pageSize");
+  }
+
+  const query = useQuery({
+    queryKey: ["browser", "playlists", params.toString()],
+    queryFn: async () => await fetchPlaylists(token, params),
+  });
+
+  return query;
+}
+
+export function useProfileQuery() {
+  const token = useTokenStore((state) => state.token);
+  const query = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => fetchProfile(token),
+  });
+
+  return query;
 }

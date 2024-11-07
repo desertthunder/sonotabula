@@ -1,57 +1,44 @@
 import logging
+from unittest import mock
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from api.libs.helpers import SpotifyAuthServiceMock, SpotifyPlaybackServiceMock
+from api.models import Album, Artist, Track
 from api.models.permissions import Token
-from api.services.spotify import SpotifyAuthService, SpotifyPlaybackService
-
-auth_service = SpotifyAuthService()
-playback_service = SpotifyPlaybackService()
-
-User = get_user_model()
+from api.services.spotify import (
+    SpotifyPlaybackService,
+)
+from apps.models import ListeningHistory
+from core.models import AppUser
 
 logging.disable(logging.ERROR)
 
 
 class ListeningHistoryViewTestCase(TestCase):
-    """Listening history view test case."""
-
-    def setUp(self) -> None:
-        """Set up the test case."""
-        self.user = User.objects.get(is_staff=True)
-        self.service = playback_service
-        self.auth = auth_service
-
-        self.jwt = Token(self.user)
-
-    def test_get_most_recent(self) -> None:
-        """Test get request to api/playback/recent."""
-        path = reverse("listening-history")
-
-        resp = self.client.get(
-            path, headers={"Authorization": f"Bearer {self.jwt.encode()}"}
+    def setUp(self):
+        self.user = AppUser.objects.from_spotify(
+            SpotifyAuthServiceMock.get_current_user(),
+            SpotifyAuthServiceMock.get_access_token(),
         )
 
-        self.assertEqual(resp.status_code, 200)
+        self.jwt = Token(user=self.user).encode()
 
-    def test_get_small_batch(self) -> None:
-        """Test getting a small batch of tracks."""
-        path = reverse("listening-history")
-
-        resp = self.client.put(
-            path, headers={"Authorization": f"Bearer {self.jwt.encode()}"}
+    @mock.patch.object(SpotifyPlaybackService, "recently_played")
+    def test_get_recently_played(self, mock_get_recently_played: mock.MagicMock):
+        mock_get_recently_played.return_value = (
+            SpotifyPlaybackServiceMock.recently_played()
         )
 
-        self.assertEqual(resp.status_code, 200)
-
-    def test_get_large_batch(self) -> None:
-        """Test getting a large batch of tracks."""
-        path = reverse("listening-history")
-
-        resp = self.client.post(
-            f"{path}?limit=10", headers={"Authorization": f"Bearer {self.jwt.encode()}"}
+        response = self.client.get(
+            reverse("listening-history"),
+            headers={"Authorization": f"Bearer {self.jwt}"},
         )
 
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("id", response.json().get("data"))
+        self.assertEqual(ListeningHistory.objects.count(), 10)
+        self.assertGreaterEqual(Track.objects.count(), 1)
+        self.assertGreaterEqual(Artist.objects.count(), 1)
+        self.assertGreaterEqual(Album.objects.count(), 1)

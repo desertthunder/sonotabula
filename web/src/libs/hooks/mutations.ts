@@ -16,7 +16,10 @@ export async function callTask({ pid, operation, token }: TaskArgs) {
     throw new Error("No playlist id available");
   }
 
-  const url = new URL(`/api/v1/browser/playlists/${pid}`, window.location.href);
+  const url = new URL(
+    `/server/api/v1/browser/playlists/${pid}`,
+    window.location.origin
+  );
 
   const res = await fetch(url.toString(), {
     method: "PATCH",

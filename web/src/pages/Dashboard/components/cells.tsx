@@ -1,5 +1,10 @@
 import { DrawerKey, useDrawerStore } from "@/store/drawers";
-import type { LibraryArtist, LibraryPlaylist, LibraryTrack } from "@libs/types";
+import type {
+  LibraryAlbum,
+  LibraryArtist,
+  LibraryPlaylist,
+  LibraryTrack,
+} from "@libs/types";
 import { LibraryKey } from "@libs/types";
 import type { CellContext } from "@tanstack/react-table";
 import { useCallback } from "react";
@@ -16,7 +21,7 @@ export function PlaylistNameCell(props: CellContext<LibraryPlaylist, string>) {
   return (
     <button
       onClick={toggleFn}
-      className="text-left text-xs text-slate-800 hover:text-emerald-500"
+      className="text-left text-xs text-slate-800 hover:text-primary"
     >
       {props.getValue()}
     </button>
@@ -35,7 +40,7 @@ export function TrackNameCell(props: CellContext<LibraryTrack, string>) {
   return (
     <button
       onClick={toggleFn}
-      className="text-left text-xs text-slate-800 hover:text-emerald-500"
+      className="text-left text-xs text-slate-800 hover:text-primary"
     >
       {props.getValue()}
     </button>
@@ -121,6 +126,20 @@ export function ArtistIsSyncedCell(props: CellContext<LibraryArtist, boolean>) {
 }
 
 export function TrackIsAnalyzedCell(props: CellContext<LibraryTrack, boolean>) {
+  return (
+    <span className={["text-xs"].join(" ")}>
+      {props.getValue() ? (
+        <i className="i-ri-check-line text-green-500" />
+      ) : (
+        <>
+          <i className="i-ri-close-line text-red-400" />
+        </>
+      )}
+    </span>
+  );
+}
+
+export function AlbumIsSyncedCell(props: CellContext<LibraryAlbum, boolean>) {
   return (
     <span className={["text-xs"].join(" ")}>
       {props.getValue() ? (

@@ -39,6 +39,7 @@ rich = "^13.9.3"
 ruff = "^0.6.7"
 mypy = "^1.11.2"
 celery-types = "^0.22.0"
+coverage = "^7.6.4"
 
 [build-system]
 requires = ["poetry-core"]
@@ -46,6 +47,23 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "server.settings"
+
+[tool.coverage.report]
+omit = [
+    "api/services/*",
+    "**/migrations/*",
+    "**/__init__.py",
+    "**/admin.py",
+    "**/apps.py",
+    "**/urls.py",
+    "**/tests.py",
+    "**/constants.py",
+    "manage.py",
+    "server/*",
+    "web/*",
+    "docs/*",
+]

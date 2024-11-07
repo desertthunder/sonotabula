@@ -45,7 +45,9 @@ select = [
     "C4",    # Comprehensions
     "N",     # Naming - PEP8 naming conventions
     "TCH",   # TypeCheck
-    # "CPY", # Copyright
+    "TD",    # TODO
+    "FIX",   # FIXME
+    "DJ",    # Django
     "S",     # Bandit
     "ASYNC", # Async
     "ANN",   # Annotations
@@ -54,7 +56,7 @@ select = [
 
 # NOTE: ANN002 and ANN003 are disabled because they warn about
 #   a common pattern (*args, **kwargs) that is used in many places.
-ignore = ["E401", "ANN101", "ANN002", "ANN003"]
+ignore = ["E401", "ANN101", "ANN002", "ANN003", "FIX002"]
 
 fixable = ["ALL"]
 unfixable = []

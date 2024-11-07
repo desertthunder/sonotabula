@@ -1,0 +1,33 @@
+{
+    "country": "US",
+    "display_name": "desertthunder",
+    "email": "desert@thunder.com",
+    "explicit_content": {
+        "filter_enabled": false,
+        "filter_locked": false
+    },
+    "external_urls": {
+        "spotify": "https://open.spotify.com/user/desertthunder"
+    },
+    "followers": {
+        "href": null,
+        "total": 8
+    },
+    "href": "https://api.spotify.com/v1/users/desertthunder",
+    "id": "desertthunder",
+    "images": [
+        {
+            "url": "https://gravatar.com/avatar/7",
+            "height": 300,
+            "width": 300
+        },
+        {
+            "url": "https://gravatar.com/avatar/8",
+            "height": 64,
+            "width": 64
+        }
+    ],
+    "product": "premium",
+    "type": "user",
+    "uri": "spotify:user:desertthunder"
+}

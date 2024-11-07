@@ -1,4 +1,4 @@
-# Backend Drafts
+# Backend
 
 ## Data Model
 
@@ -89,6 +89,120 @@ Tracks. Tracks have an additional endpoint of `:spotify_id/data` that fetch and
 then save audio features to the database. Thus *no* database calls aside from
 what is already done by the authentication class are made in these views.
 
+### Channels
+
+Django Channels is used with `daphne` & redis, on top of the built-in ASGI application. This
+is used for notifications about the status of tasks on the client side. Internally
+the consumers listen for messages from Django signals, which are dispatched by
+celery signals when a task starts, succeeds, or fails.
+
+#### Channels (`live`) Models
+
+1. `Notification`
+2. `Acknowledgement`
+3. `TaskResult`
+
+#### Celery Results: `TaskResult`
+
+These come from the `django_celery_results` package and are used to store the
+results and metadata of tasks executed by Celery.
+
+### Data Analysis
+
+From the `audio-features` endpoint at Spotify, we return the following schema
+of data:
+
+```python
+class TrackFeatures(BaseModel):
+    """Track features for analysis."""
+
+    id: str
+    danceability: float
+    energy: float
+    key: int
+    loudness: float
+    mode: int # Modality - 0 for minor, 1 for major
+    speechiness: float
+    acousticness: float
+    instrumentalness: float
+    liveness: float
+    valence: float
+    tempo: float
+    duration_ms: int
+    time_signature: int
+```
+
+The `id` field is the `spotify_id` of the track.
+
+An ongoing question is what fields are relevant to the user and how we can
+use these attributes to provide value to the user as it pertains to
+organizing their music.
+
+Note: the pydantic models are used to clean and validate data before it is
+saved to the database.
+
+#### Analysis Models
+
+Analysis in the context of the application isn't a true analysis of the data. It
+is a persisted record of related objects and the data they contain. The `Analysis`
+object stores the association between track features and the track itself, as well
+as the overarching context of the collection (i.e., album, playlist, etc.).
+
+A `Computation` object is related to its `Analysis` object. It stores calculations
+and statistics about the audio features of a collection's tracks. A collection can
+be a single track, album, or playlist.
+
+#### Computation Data
+
+- Superlatives:
+    - Danceability
+    - Energy
+    - Loudness
+    - Speechiness
+    - Acousticness
+    - Instrumentalness
+    - Liveness
+    - Valence
+    - Tempo
+    - Duration
+
+- Averages: All of the above, with particular importance given to:
+    - Tempo (fastest & slowest)
+    - Valence (happiest & saddest)
+    - Duration (longest & shortest)
+
+- Counts:
+    - Minor Key i.e., mode = 0
+    - Major: mode = 1
+
+## Authentication Middleware & Backends
+
+Spotify's API implements the OAuth2 delegated authority flow. When the user
+grants the application access, they're brought back to the app and the token is
+stored and then encoded as a JWT. The JWT is stored in the React app's state.
+
+### **Sign-up**: Client side route at `/signup`
+
+- The sign-up button sends an empty `POST` request to the server at `/api/signup/`
+    - The server redirects the user to the Spotify Authorization page.
+    - The user logs in to spotify and authorizes the application.
+        - In local development, the redirect uri is `http://localhost:8000/api/spotify_cb`
+    - With the authorization code, the server requests an access token from Spotify.
+    - Then the server creates a new user with the access token and refresh token,
+    and the user's spotify id and email address.
+
+### **Login**: Client side route at `/login`
+
+- The login button sends an empty `PUT` request to the server at `/api/login/`
+- Upon receiving the authorization code, the server requests an access token
+from Spotify and fetches the user's information from the API. It users the
+user's spotify id and email address to find the user in the database.
+- After the user logs in, the user is redirected to the dashboard with a JWT token.
+    - Client side route at `/dashboard?token=<JWT_TOKEN>`
+    - The JWT token is stored in the browser's local storage.
+    - The token is used to authenticate the user for all requests to the server
+    with `simple-jwt`.
+
 ## Challenges
 
 ### Moving/Replacing the Custom User Model
@@ -104,7 +218,7 @@ most resources, the `next` field with an `offset` parameter is used. However,
 for followed artists, a cursor is used and this requires the spotify ID of the
 last page's artist to be passed in the next request (as `after`).
 
-## Naming Things is Hard
+### Naming Things is Hard
 
 Serializers are typically named after the model they are serializing, but the
 model is named after the context it is in, as is common in Django applications.
@@ -112,10 +226,29 @@ This is especially common in the DRF + Django setup. I'm using DRF for some of
 its built-ins, but have been using Pydantic for the majority of the application's
 data validation and serialization, and de-serialization.
 
-### Solution
+#### Solution
 
 I'm in the process of renaming the serializers to match the model they are
 serializing. There are a ton of repeated fields and code that *could* be abstracted
 down the line. Additionally the child classes of `BaseModel` will be named after
 the purpose they serve. So basically a `Serializer` is for an API endpoint, and
 a `Block` is for an internal data structure and validation.
+
+### Image Deletion/Cycling
+
+Spotify's API returns image urls for albums and playlists but indicates that it
+deletes them every day/the images expire. I think that one way to deal with this
+is to dispatch a background task that refetches the image url from the API.
+
+### Null/Empty Descriptions
+
+Descriptions can be null if they haven't been updated recently (for unverified
+playlists), so we shouldn't update descriptions if they are.
+
+Can we update descriptions? Is that an allowed field in a mutate endpoint? *yes*
+
+#### References
+
+- [Playlist Details](https://developer.spotify.com/documentation/web-api/reference/get-playlist)
+- [Update Playlist](https://developer.spotify.com/documentation/web-api/reference/change-playlist-details)
+- [Playlist Image](https://developer.spotify.com/documentation/web-api/reference/get-playlist-cover)

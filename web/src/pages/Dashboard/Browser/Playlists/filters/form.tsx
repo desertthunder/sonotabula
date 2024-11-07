@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  FilterKeys,
-  usePlaylistFilters,
-  setFilters,
-  removeFilter,
-} from "@/store/filters";
-import _ from "lodash";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FilterKeys } from "@/store/filters";
+import { useQueryParams } from "@/libs/hooks";
+import { useLocation } from "wouter";
 
 interface CheckboxProps {
   filter: FilterKeys;
@@ -13,6 +9,7 @@ interface CheckboxProps {
 
 function Checkbox({ filter }: CheckboxProps) {
   const [checked, setChecked] = useState(false);
+  const [, setLocation] = useLocation();
 
   const onClick = useCallback(() => {
     setChecked((prev) => {
@@ -22,11 +19,11 @@ function Checkbox({ filter }: CheckboxProps) {
 
   useEffect(() => {
     if (checked) {
-      setFilters(filter, "1");
+      setLocation(`?${filter}=1`);
     } else {
-      removeFilter(filter);
+      setLocation(`?${filter}=0`);
     }
-  }, [checked, filter]);
+  }, [checked, filter, setLocation]);
 
   return (
     <button
@@ -34,7 +31,7 @@ function Checkbox({ filter }: CheckboxProps) {
       onClick={onClick}
     >
       {checked ? (
-        <i className="i-ri-checkbox-fill text-emerald-500 group-hover:i-ri-blank-line p-2.5" />
+        <i className="i-ri-checkbox-fill text-primary group-hover:i-ri-blank-line p-2.5" />
       ) : (
         <i className="i-ri-checkbox-blank-line text-gray-500 group-hover:i-ri-checkbox-line p-2.5" />
       )}
@@ -68,27 +65,31 @@ export function Range() {
 }
 
 export function FilterForm() {
-  const pageSize = usePlaylistFilters((state) => state.pageSize);
-  const updatePageSize = usePlaylistFilters((state) => state.updatePageSize);
+  const params = useQueryParams();
+  const [, setLocation] = useLocation();
+  const pageSize = useMemo(() => {
+    return parseInt(params.get("pageSize") ?? "5", 10);
+  }, [params]);
 
   const handlePageSizeChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updatePageSize(parseInt(event.target.value, 10));
+      const value = parseInt(event.target.value, 10);
+      setLocation(`?pageSize=${value}`);
     },
-    [updatePageSize]
+    [setLocation]
   );
 
   return (
-    <div className="flex gap-4 p-4 justify-start">
-      <div className="flex flex-col gap-2 text-sm items-center">
-        <label htmlFor="pageSize">Per Page</label>
+    <div className="flex flex-1 gap-4 justify-evenly">
+      <section className="flex gap-2 text-sm items-center">
+        <label className="flex-1">Per Page</label>
         <select
           name="pageSize"
           onChange={handlePageSizeChange}
           className={[
             "bg-gray-50 border border-gray-300 rounded",
             "text-gray-900",
-            "focus:ring-green-500 focus:border-green-500 block w-full",
+            "focus:ring-green-500 focus:border-green-500 block max-w-full",
             "py-2",
           ].join(" ")}
           value={pageSize}
@@ -99,21 +100,19 @@ export function FilterForm() {
           <option value={20}>20</option>
           <option value={25}>25</option>
         </select>
-      </div>
-      <section className="flex-1 flex items-center justify-evenly">
-        <div className="flex flex-col gap-2 items-center">
-          <label>My Playlists</label>
-          <Checkbox filter="my_playlists" />
-        </div>
-        <div className="flex flex-col gap-2 items-center">
-          <label>Private</label>
-          <Checkbox filter="private" />
-        </div>
-        <div className="flex flex-col gap-2 items-center">
-          <label>Analyzed</label>
-          <Checkbox filter="is_analyzed" />
-        </div>
       </section>
+      <div className="flex gap-2 items-center">
+        <label>My Playlists</label>
+        <Checkbox filter="my_playlists" />
+      </div>
+      <div className="flex gap-2 items-center">
+        <label>Private</label>
+        <Checkbox filter="private" />
+      </div>
+      <div className="flex gap-2 items-center">
+        <label>Analyzed</label>
+        <Checkbox filter="is_analyzed" />
+      </div>
     </div>
   );
 }

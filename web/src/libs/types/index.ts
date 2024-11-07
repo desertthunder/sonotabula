@@ -6,6 +6,7 @@ export {
   NumericFilterType,
   PaginationType,
   Routes,
+  Endpoints,
   StringFilterType,
 } from "./enums";
 
@@ -26,6 +27,8 @@ export type {
   LibraryTrack,
   ListeningHistoryItem,
   Pagination,
+  PlaylistMetadata,
+  ProfileResponse,
 } from "./api";
 
 export type { FilterMap, FilterSet, SearchMap } from "./filters";
@@ -42,4 +45,4 @@ export {
   stringFilters,
 } from "./constants";
 
-export { getBrowserEndpoint, getLibraryEndpoint, getSavedEndpoint } from "./fn";
+export { getLibraryEndpoint } from "./fn";

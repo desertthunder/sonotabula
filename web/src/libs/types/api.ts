@@ -19,6 +19,7 @@ export type LibraryAlbum = {
   release_date: string;
   total_tracks: number;
   image_url: string;
+  is_synced: boolean;
 };
 
 export type LibraryTrack = {
@@ -133,13 +134,6 @@ export type Superlatives = {
   duration_ms: Superlative;
 };
 export type Computations = {
-  // superlatives: Record<ComputedKey, Superlative>;
-  // averages: Record<ComputedKey, number>;
-  // count: {
-  //   key: Record<number, number>;
-  //   mode: Record<number, number>;
-  //   time_signature: Record<number, number>;
-  // };
   superlatives: Superlatives;
   averages: {
     danceability: number;
@@ -207,19 +201,6 @@ export type Pagination = {
   num_pages: number;
 };
 
-export type BrowserAlbum = {
-  id: string;
-  name: string;
-  artists: {
-    id: string;
-    name: string;
-    spotify_id: string;
-  }[];
-  spotify_id: string;
-  release_year: number;
-  image_url?: string | null;
-};
-
 export type BrowserTrack = {
   id: string;
   name: string;
@@ -234,17 +215,17 @@ export type BrowserTrack = {
 };
 
 export type BrowserPlaylist = {
-  id: string;
-  spotify_id: string;
-  name: string;
   is_synced: boolean;
   is_analyzed: boolean;
-  description?: string;
-  owner_id?: string;
-  version?: string;
-  image_url?: string;
-  public?: boolean;
-  shared?: boolean;
+  description: string;
+  owner_id: string;
+  version: string;
+  image_url: string;
+  public: boolean;
+  shared: boolean;
+  id: string;
+  name: string;
+  spotify_id: string;
 };
 
 export type ListeningHistoryItem = {
@@ -266,4 +247,50 @@ export type ListeningHistoryItem = {
     name: string;
   }[];
   image_url: string;
+};
+
+export type PlaylistMetadata = {
+  total_synced: number;
+  total_analyzed: number;
+  total_tracks: number;
+};
+
+export type Profile = {
+  spotify_id: string;
+  email: string;
+  display_name: string;
+  saved_tracks: number;
+  saved_albums: number;
+  saved_playlists: number;
+  saved_artists: number;
+  saved_shows: number;
+  id: string;
+  image_url: string;
+};
+
+export type ProfileResponse = {
+  data: Profile;
+};
+
+export type BrowserAlbum = {
+  id: string;
+  name: string;
+  spotify_id: string;
+  release_year: number;
+  image_url: string;
+  artists: {
+    id: string;
+    name: string;
+    spotify_id: string;
+  }[];
+  tracks: {
+    id: string;
+    name: string;
+    spotify_id: string;
+  }[];
+};
+
+export type BrowserAlbumListResponse = {
+  data: BrowserAlbum[];
+  pagination: Pagination;
 };

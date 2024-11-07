@@ -3,6 +3,7 @@
 import uuid
 
 from django.db import models
+from django_stubs_ext.db.models import TypedModelMeta
 from loguru import logger
 
 from api.blocks import AlbumArtistSyncBlock, AlbumSyncBlock, AlbumTrackSyncBlock
@@ -105,12 +106,22 @@ class Album(SpotifyModel, TimestampedModel, CanBeAnalyzedMixin):
         - spotify_id
     """
 
-    album_type = models.CharField(max_length=255, blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
-    label = models.CharField(max_length=255, blank=True, null=True)
-    copyright = models.CharField(max_length=255, blank=True, null=True)
+    album_type = models.CharField(max_length=255, blank=True)
+    image_url = models.URLField(blank=True, max_length=255)
+    label = models.CharField(max_length=255, blank=True)
+    copyright = models.CharField(max_length=255, blank=True)
     release_year = models.IntegerField()
     genres = models.ManyToManyField("api.Genre", related_name="albums")
 
     sync = AlbumSyncManager()
     objects = models.Manager()
+
+    class Meta(TypedModelMeta):
+        """Meta options."""
+
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        """Album with artists and release year as string."""
+        artists = [artist.name for artist in self.artists.all()]
+        return f"{self.name} ({self.release_year}) by {', '.join(artists)}"

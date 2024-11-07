@@ -130,7 +130,7 @@ export function Dashboard() {
   return (
     <div
       className={[
-        "bg-gradient-to-b from-emerald-600 to-50% via-emerald-500 via-50%",
+        "bg-gradient-to-b from-emerald-600 to-50% via-primary via-50%",
         "flex-1 flex flex-col justify-between gap-8",
         "pt-8",
         "overflow-y-auto",

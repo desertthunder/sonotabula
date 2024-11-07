@@ -48,3 +48,19 @@ export function humanReadableDate(date: string) {
 export function titleCase(str: string) {
   return str[0].toUpperCase() + str.slice(1);
 }
+
+export function formatHeader(header: string) {
+  if (header === "duration_ms") {
+    return "Duration (ms)";
+  }
+
+  if (header === "time_signature") {
+    return "Time Signature";
+  }
+
+  if (header === "id") {
+    return "ID";
+  }
+
+  return titleCase(header);
+}

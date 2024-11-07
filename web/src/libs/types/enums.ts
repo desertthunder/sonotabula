@@ -50,3 +50,7 @@ export enum Routes {
   Login = "/login",
   Dashboard = "/dashboard",
 }
+
+export enum Endpoints {
+  Saved = "/server/api/v1/playback/saved",
+}

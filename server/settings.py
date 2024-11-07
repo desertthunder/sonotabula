@@ -21,9 +21,14 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = bool(os.environ.get("DEBUG", 0))
 
-ALLOWED_HOSTS: list[str] = ["127.0.0.1", "localhost", "local.dashspot.dev"]
+ALLOWED_HOSTS: list[str] = [
+    "127.0.0.1",
+    "localhost",
+    "local.dashspot.dev",
+]
 
 CORS_ALLOWED_ORIGINS = [
+    "https://local.dashspot.dev",  # React
     "http://localhost:5173",  # React
     "https://accounts.spotify.com",  # Spotify Redirect URI
 ]
@@ -91,7 +96,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "server.wsgi.application"
+# WSGI_APPLICATION = "server.wsgi.application"
 ASGI_APPLICATION = "server.asgi.application"
 
 DATABASES = {
@@ -102,9 +107,6 @@ DATABASES = {
         "PASSWORD": os.environ.get("PGPASSWORD", "password"),
         "HOST": os.environ.get("PGHOST", "localhost"),
         "PORT": os.environ.get("PGPORT", 5432),
-        "TEST": {
-            "NAME": os.environ.get("PGDATABASE", "music_api_db_test"),
-        },
     }
 }
 
@@ -158,3 +160,12 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_RESULT_EXTENDED = True
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}

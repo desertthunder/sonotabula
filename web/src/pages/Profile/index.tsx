@@ -1,22 +1,8 @@
 /**
  * @description User profile page
  */
-import { useTokenStore } from "@/store";
-
-import { useQuery } from "@tanstack/react-query";
+import { useProfileQuery } from "@/libs/hooks";
 import { useMemo } from "react";
-type ProfileResponse = {
-  spotify_id: string;
-  email: string;
-  display_name: string;
-  saved_tracks: number;
-  saved_albums: number;
-  saved_playlists: number;
-  saved_artists: number;
-  saved_shows: number;
-  id: string;
-  image_url: string;
-};
 
 function DTitle({
   children,
@@ -51,30 +37,8 @@ function DescriptionList({ children }: { children: React.ReactNode }) {
   );
 }
 
-async function fetchProfile(token: string | null) {
-  const url = new URL("api/v1/profile", window.location.origin);
-
-  const response = await fetch(url.href, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch profile");
-  }
-
-  return (await response.json()) as { data: ProfileResponse };
-}
-
 export function Profile() {
-  const token = useTokenStore((state) => state.token);
-  const query = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => fetchProfile(token),
-    enabled: !!token,
-  });
-
+  const query = useProfileQuery();
   const profile = useMemo(() => query.data?.data, [query.data]);
 
   return (

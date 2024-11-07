@@ -10,3 +10,8 @@ from api.services.spotify.auth import SpotifyAuthService
 from api.services.spotify.data import SpotifyDataService
 from api.services.spotify.library import SpotifyLibraryService
 from api.services.spotify.playback import SpotifyPlaybackService
+
+DATA = SpotifyDataService()
+AUTH = SpotifyAuthService()
+LIBRARY = SpotifyLibraryService()
+PLAYBACK = SpotifyPlaybackService()

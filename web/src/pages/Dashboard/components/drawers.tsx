@@ -50,7 +50,10 @@ async function fetchPlaylist(key: DrawerKey, token: string | null) {
   const queryKey = key.split("-");
   const id = _.last(queryKey);
 
-  const uri = new URL(`api/v1/library/playlists/${id}`, window.location.origin);
+  const uri = new URL(
+    `/server/api/v1/library/playlists/${id}`,
+    window.location.origin
+  );
 
   const res = await fetch(uri.toString(), {
     method: "GET",
@@ -187,13 +190,13 @@ function DrawerHeader({
   handler: () => void;
 }) {
   return (
-    <header className="p-4 flex justify-between items-center border-b bg-emerald-500">
-      <h1 className="text-lg font-semibold text-zinc-50">{title}</h1>
+    <header className="p-4 flex justify-between items-center border-b bg-primary">
+      <h1 className="text-lg font-semibold text-surface">{title}</h1>
       <button
-        className="bg-zinc-50 font-medium text-red-400 hover:text-zinc-50 hover:bg-red-400 border rounded-lg px-2 py-1 text-sm"
+        className="group px-2 py-1 rounded-lg bg-surface hover:bg-error"
         onClick={handler}
       >
-        Close
+        <i className="i-ri-close-circle-fill bg-error text-surface group-hover:bg-surface group-hover:text-error text-xl font-extrabold align-middle"></i>
       </button>
     </header>
   );

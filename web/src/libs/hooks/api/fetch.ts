@@ -1,87 +1,19 @@
 import type {
-  LibraryResource,
   FetchError,
   ListeningHistoryItem,
   BrowserPlaylist,
   Pagination,
-  BrowserKey,
-  BrowserResource,
+  ProfileResponse,
+  PlaylistMetadata,
 } from "@libs/types";
-import { LibraryKey, getBrowserEndpoint } from "@libs/types";
 import isNil from "lodash/isNil";
-
-export async function browserFetcher<T extends LibraryKey>(
-  resource: LibraryKey,
-  token: string
-): Promise<LibraryResource<T>> {
-  const uri = new URL(getBrowserEndpoint(resource));
-
-  return fetch(uri.toString(), {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }).then(async (response) => {
-    if (!response.ok) {
-      return Promise.reject({
-        code: response.status,
-        message: response.statusText,
-      } as FetchError);
-    }
-
-    const data = await response.json();
-
-    return data["data"] as LibraryResource<T>;
-  });
-}
-
-export async function paginatedBrowserFetcher<T extends BrowserKey>(
-  resource: BrowserKey,
-  token: string | null,
-  params: { page: number; page_size: number } = {
-    page: 1,
-    page_size: 10,
-  }
-): Promise<{
-  data: BrowserResource<T>;
-  pagination: Pagination;
-}> {
-  if (!token) {
-    throw new Error("No token provided");
-  }
-
-  const uri = new URL(getBrowserEndpoint(resource), window.location.origin);
-
-  uri.searchParams.append("page", params.page.toString());
-  uri.searchParams.append("page_size", params.page_size.toString());
-
-  const response = await fetch(uri.toString(), {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    return Promise.reject({
-      code: response.status,
-      message: response.statusText,
-    } as FetchError);
-  }
-
-  const data = (await response.json()) as {
-    data: BrowserResource<T>;
-    pagination: Pagination;
-  };
-
-  return data;
-}
 
 export async function fetchListeningHistory(token: string | null) {
   if (!token) {
     throw new Error("No token provided");
   }
-  const res = await fetch("/api/playback/recent/", {
+  const url = new URL("/server/api/v1/playback/recent", window.location.origin);
+  const res = await fetch(url.toString(), {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -102,43 +34,31 @@ export async function fetchListeningHistory(token: string | null) {
   return data["data"] as ListeningHistoryItem;
 }
 
-export async function checkToken(token: string | null) {
+export async function fetchTokenState(token: string | null) {
   if (!token) {
-    console.debug("No token found");
-
     return null;
   }
 
-  try {
-    const response = await fetch("/api/validate", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const url = new URL("/server/api/validate", window.location.origin);
 
-    if (response.status >= 500) {
-      throw new Error(
-        `Server error: ${response.status} ${response.statusText}`
-      );
-    } else if (!response.ok) {
-      console.debug(
-        `Failed to validate token: ${response.status} ${response.statusText}`
-      );
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-      return null;
-    }
-
-    const data = await response.json();
-
-    console.debug(data.message);
-
-    return data;
-  } catch (error) {
-    console.error(error);
-
-    return null;
+  if (response.status >= 500) {
+    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+  } else if (!response.ok) {
+    throw new Error(
+      `Failed to validate token: ${response.status} ${response.statusText}`
+    );
   }
+
+  const data = await response.json();
+
+  return data;
 }
 
 export async function fetchBrowserPlaylists({
@@ -205,4 +125,96 @@ export async function fetchLibraryPlaylistTracks(
     playlist: Record<string, string>;
     tracks: any[]; // eslint-disable-line
   };
+}
+
+export async function fetchPlaylistsMetadata(token: string | null) {
+  if (!token) {
+    throw new Error("No token available");
+  }
+
+  const url = new URL(
+    "/server/api/v1/browser/playlists/meta",
+    window.location.origin
+  );
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch playlists metadata");
+  }
+
+  return (await response.json()) as PlaylistMetadata;
+}
+
+export async function analyzePage({
+  token,
+  params,
+}: {
+  token: string | null;
+  params: URLSearchParams;
+}) {
+  const url = new URL(
+    "/server/api/v1/browser/playlists",
+    window.location.origin
+  );
+  url.search = params.toString();
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: "POST",
+  });
+
+  return await response.json();
+}
+
+export async function fetchPlaylists(
+  token: string | null,
+  params: URLSearchParams
+) {
+  const uri = new URL(
+    "/server/api/v1/browser/playlists",
+    window.location.origin
+  );
+  uri.search = params.toString();
+  const response = await fetch(uri.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch playlists");
+  }
+
+  return (await response.json()) as {
+    data: BrowserPlaylist[];
+    pagination: {
+      total: number;
+      per_page: number;
+      page: number;
+      num_pages: number;
+    };
+  };
+}
+
+export async function fetchProfile(token: string | null) {
+  const url = new URL("api/v1/profile", window.location.origin);
+
+  const response = await fetch(url.href, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch profile");
+  }
+
+  return (await response.json()) as ProfileResponse;
 }

@@ -24,10 +24,8 @@ export default function Signup() {
       window.location.href = mutation.data.redirect;
 
       return;
-    } else if (mutation.isError) {
-      console.error(mutation.error);
     }
-  }, [mutation.data, mutation.error, mutation.isSuccess, mutation.isError]);
+  }, [mutation.data, mutation.isSuccess, mutation.isError]);
 
   const onClickSignup = useCallback(async () => {
     mutation.mutate();
@@ -39,10 +37,10 @@ export default function Signup() {
         <header className="flex justify-between flex-col gap-4 text-5xl font-bold">
           <h1 className="text-left">
             <i className="i-ri-spotify-fill text-5xl align-middle mr-2"></i>
-            <span className="align-middle">Dashspot</span>
+            <span className="align-middle">Sonotabula</span>
           </h1>
           <p className="text-sm text-gray-100 font-medium">
-            Dashspot is a library manager and analytics tool for your music
+            Sonotabula is a library manager and analytics tool for your music
             library.
           </p>
         </header>

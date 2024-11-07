@@ -1,5 +1,6 @@
-import { useTokenStore } from "@/store";
-import { useQuery } from "@tanstack/react-query";
+import type { BrowserPlaylist } from "@/libs/types";
+import { usePlaylistFilters } from "@/store/filters";
+import { UseQueryResult } from "@tanstack/react-query";
 import {
   createColumnHelper,
   flexRender,
@@ -7,14 +8,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import _ from "lodash";
-import { useEffect, useMemo } from "react";
-import { usePlaylistFilters } from "@/store/filters";
-import type { BrowserPlaylist } from "./types";
-import { PlaylistActionsCell } from "./cells";
+import { useEffect } from "react";
 import { Link } from "wouter";
-/**
- * {"json":{"is_synced":true,"is_analyzed":true,"description":"With Brian McBride, The Dead Texan, William Basinski and more","owner_id":"spotify","version":"ZyPYkgAAAACmpgMNhm9gMhsvWVQyX5cB","image_url":"https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/radio/artist/36pCa1JHc6hlGbfEmLzJQc/en","public":true,"shared":false,"id":"88a0fa4f-f2eb-46e6-9731-f4b289b4fe62","name":"Stars Of The Lid Radio","spotify_id":"37i9dQZF1E4pndHPIu7Fgn"}}
- */
+import { PlaylistActionsCell } from "./cells";
 
 const columnHelper = createColumnHelper<BrowserPlaylist>();
 
@@ -35,7 +31,7 @@ const columns = [
         <Link
           to={`/dashboard/browser/playlists/${id}`}
           className={[
-            "hover:text-emerald-500 hover:underline hover:font-semibold hover:text-base",
+            "hover:text-primary hover:underline hover:font-semibold hover:text-base",
             "transition-all duration-300 ease-in-out",
           ].join(" ")}
         >
@@ -95,9 +91,9 @@ const columns = [
     },
     cell: (props) =>
       props.getValue() ? (
-        <i className="i-ri-check-line text-emerald-500" />
+        <i className="i-ri-check-line text-primary" />
       ) : (
-        <i className="i-ri-close-line text-rose-500" />
+        <i className="i-ri-close-line text-error" />
       ),
   }),
   columnHelper.accessor("id", {
@@ -117,85 +113,48 @@ const columns = [
   }),
 ];
 
-async function fetchPlaylists(token: string | null, params: URLSearchParams) {
-  const uri = new URL("/api/v1/browser/playlists", window.location.origin);
-  uri.search = params.toString();
-  const response = await fetch(uri.toString(), {
-    headers: {
-      Authorization: `Bearer ${token}`,
+export function Table({
+  context,
+}: {
+  context: UseQueryResult<
+    {
+      data: BrowserPlaylist[];
+      pagination: {
+        total: number;
+        per_page: number;
+        page: number;
+        num_pages: number;
+      };
     },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch playlists");
-  }
-
-  return (await response.json()) as {
-    data: BrowserPlaylist[];
-    pagination: {
-      total: number;
-      per_page: number;
-      page: number;
-      num_pages: number;
-    };
-  };
-}
-
-export function Table() {
-  const token = useTokenStore((state) => state.token);
+    Error
+  >;
+}) {
   const updateTotal = usePlaylistFilters((state) => state.updateTotal);
-  const page = usePlaylistFilters((state) => state.page);
-  const pageSize = usePlaylistFilters((state) => state.pageSize);
   const updateFetching = usePlaylistFilters((state) => state.updateFetching);
-  const filters = usePlaylistFilters((state) => state.filters);
-
-  const params = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set("page", page.toString());
-    params.set("page_size", pageSize.toString());
-
-    for (const [key, value] of filters) {
-      params.set(key, value);
-    }
-
-    return params;
-  }, [page, pageSize, filters]);
-
-  const query = useQuery({
-    queryKey: _.flatten([
-      "browser",
-      "playlists",
-      ...Array.from(params.entries()),
-    ]),
-    queryFn: async () => {
-      const data = await fetchPlaylists(token, params);
-
-      return data;
-    },
-  });
 
   const table = useReactTable({
     columns,
-    data: query.data?.data || [],
+    data: context.data?.data || [],
     getCoreRowModel: getCoreRowModel(),
   });
 
   useEffect(() => {
-    if (query.data) {
-      updateTotal(query.data.pagination.total);
+    if (context.data) {
+      updateTotal(context.data.pagination.total);
     }
-  }, [query.data, updateTotal]);
+  }, [context.data, updateTotal]);
 
   useEffect(() => {
-    const isFetching = query.isLoading || query.isFetching || query.isFetching;
+    const isFetching =
+      context.isLoading || context.isFetching || context.isFetching;
 
     updateFetching(isFetching);
-  }, [query.isLoading, query.isFetching, updateFetching]);
+  }, [context.isLoading, context.isFetching, updateFetching]);
 
   return (
     <section className="overflow-auto">
       <table className="table-fixed lg:table-auto w-full border-collapse">
-        <thead className="font-sans text-base text-left bg-emerald-500 text-zinc-50">
+        <thead className="font-sans text-base text-left bg-primary text-surface">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -219,8 +178,8 @@ export function Table() {
           ))}
         </thead>
         <tbody>
-          {query.isLoading ? (
-            <tr className="bg-zinc-50 even:bg-green-200 text-xs">
+          {context.isLoading ? (
+            <tr className="bg-surface even:bg-green-200 text-xs">
               <td
                 colSpan={columns.length}
                 className="text-center text-3xl p-12"
@@ -228,15 +187,15 @@ export function Table() {
                 <i className="i-ri-loader-line animate-spin" />
               </td>
             </tr>
-          ) : query.isError ? (
-            <tr className="bg-zinc-50 even:bg-green-200 text-xs text-red-500">
+          ) : context.isError ? (
+            <tr className="bg-surface even:bg-green-200 text-xs text-red-500">
               <td colSpan={columns.length} className="px-4">
-                Unable to fetch playlists: {query.error.message}
+                Unable to fetch playlists: {context.error.message}
               </td>
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="bg-zinc-50 even:bg-green-200 text-xs">
+              <tr key={row.id} className="bg-surface even:bg-green-200 text-xs">
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}

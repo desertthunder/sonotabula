@@ -1,1 +1,0 @@
-"""Synchronous library views."""

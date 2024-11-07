@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from api.models import Album, Artist, Track
 
 
-# TODO: Rename to `Block`
 class ListeningHistorySerializer(BaseModel):
     """Listening history serializer."""
 
@@ -254,3 +253,7 @@ class ListeningHistory(models.Model):
 
         ordering = ["-played_at"]
         unique_together = ["played_at", "track"]
+
+    def __str__(self) -> str:
+        """String representation."""
+        return f"{self.track.name} - {self.played_at.strftime('%Y-%m-%d %H:%M:%S')}"
