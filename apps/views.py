@@ -11,7 +11,6 @@ to the service class.
 
 import typing
 
-from pydantic import BaseModel
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -26,8 +25,9 @@ from api.services.spotify import (
     SpotifyDataService,
     SpotifyPlaybackService,
 )
-from api.views.base import GetUserMixin
 from apps.models import ListeningHistory, ListeningHistorySerializer
+from apps.serializers import UserSavedItems
+from core.views import GetUserMixin
 
 
 class ListeningHistoryView(GetUserMixin, APIView):
@@ -95,39 +95,6 @@ class ListeningHistoryView(GetUserMixin, APIView):
         data = self.serialize(items, user.pk)
 
         return Response({"data": [item.model_dump() for item in data]})
-
-
-class UserSavedItems(BaseModel):
-    """User saved item totals."""
-
-    artists: int
-    albums: int
-    tracks: int
-    playlists: int
-    shows: int
-
-    @classmethod
-    def get(
-        cls: type["UserSavedItems"], iter: typing.Iterable[tuple[str, dict]]
-    ) -> "UserSavedItems":
-        """Get user saved items."""
-        response = {
-            "artists": 0,
-            "albums": 0,
-            "tracks": 0,
-            "playlists": 0,
-            "shows": 0,
-        }
-
-        for item, data in iter:
-            key = item.split("/")[-1]
-
-            if key == "following":
-                response["artists"] = data["total"]
-            else:
-                response[key] = data["total"]
-
-        return cls(**response)
 
 
 class UserSavedItemsView(GetUserMixin, APIView):

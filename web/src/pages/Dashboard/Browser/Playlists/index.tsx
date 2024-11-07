@@ -12,7 +12,7 @@ import { Breadcrumbs, BrowserCard } from "@/components/common";
 import { LibraryCounts, PlaylistMetadata } from "@/libs/types";
 import { usePageAnalysisMutation, usePlaylistsQuery } from "@/libs/hooks";
 
-function BrowserCards({
+function PlaylistBrowserCards({
   metadata,
   counts,
 }: {
@@ -108,7 +108,7 @@ export function PlaylistsBrowser() {
   return (
     <div className="flex flex-col w-full text-sm min-h-min">
       <Breadcrumbs context="playlists" />
-      <BrowserCards metadata={metadata} counts={counts} />
+      <PlaylistBrowserCards metadata={metadata} counts={counts} />
       <main
         data-testid="table"
         className="bg-white flex flex-col flex-1 overflow-auto"

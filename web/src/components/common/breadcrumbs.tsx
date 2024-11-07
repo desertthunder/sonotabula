@@ -2,54 +2,63 @@ import capitalize from "lodash/capitalize";
 import React, { useMemo } from "react";
 import { Link, useRoute } from "wouter";
 
-export function Breadcrumbs({
-  context,
-  title,
-}: {
-  context: "playlists" | "albums";
-  title?: string;
-}) {
+function usePathMatch(ctx: string) {
   const [base] = useRoute("/");
   const [dashboardMatch] = useRoute("/dashboard");
-  const [playlistsMatch] = useRoute(`/dashboard/browser/${context}`);
-  const [playlistsDetailMatch] = useRoute(`/dashboard/browser/${context}/:id`);
+  const [contextMatch] = useRoute(`/dashboard/browser/${ctx}`);
+  const [detailMatch] = useRoute(`/dashboard/browser/${ctx}/:id`);
+
   const routes = useMemo(() => {
-    const headerText = capitalize(context.slice(0, -1));
-    if (playlistsDetailMatch) {
+    if (detailMatch) {
       return [
-        { label: "Home", href: "/dashboard", match: dashboardMatch },
+        { label: "Home", href: "/", match: base },
+        { label: "Dashboard", href: "/dashboard", match: dashboardMatch },
         {
-          label: `${headerText} Browser`,
-          href: `/dashboard/browser/${context}`,
-          match: playlistsMatch,
+          label: `${capitalize(ctx.slice(0, -1))} Browser`,
+          href: `/dashboard/browser/${ctx}`,
+          match: contextMatch,
         },
         {
-          label: `${headerText} Detail`,
-          href: `/dashboard/browser/${context}/:id`,
-          match: playlistsDetailMatch,
+          label: `${capitalize(ctx.slice(0, -1))} Detail`,
+          href: `/dashboard/browser/${ctx}/:id`,
+          match: detailMatch,
         },
       ];
     }
 
-    if (playlistsMatch) {
+    if (contextMatch) {
       return [
-        { label: "Home", href: "/dashboard", match: dashboardMatch },
+        { label: "Home", href: "/", match: base },
+        { label: "Dashboard", href: "/dashboard", match: dashboardMatch },
         {
-          label: `${headerText} Browser`,
-          href: `/dashboard/browser/${context}`,
-          match: playlistsMatch,
+          label: `${capitalize(ctx.slice(0, -1))} Browser`,
+          href: `/dashboard/browser/${ctx}`,
+          match: contextMatch,
         },
       ];
     }
 
     if (dashboardMatch) {
       return [
+        { label: "Home", href: "/", match: base },
         { label: "Dashboard", href: "/dashboard", match: dashboardMatch },
       ];
     }
 
     return [{ label: "Home", href: "/", match: base }];
-  }, [base, dashboardMatch, playlistsMatch, playlistsDetailMatch, context]);
+  }, [base, dashboardMatch, contextMatch, detailMatch, ctx]);
+
+  return routes;
+}
+
+export function Breadcrumbs({
+  context,
+  title,
+}: {
+  context: "playlists" | "albums" | "artists" | "tracks";
+  title?: string;
+}) {
+  const routes = usePathMatch(context);
 
   return (
     <header className="flex flex-col justify-between p-4 bg-white border-t">

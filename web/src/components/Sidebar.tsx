@@ -111,6 +111,7 @@ function InfoBox({ children }: { children: React.ReactNode }) {
 
 export function Sidebar() {
   const [playlistsMatch] = useRoute("/dashboard/browser/playlists/*?");
+  const [albumsMatch] = useRoute("/dashboard/browser/albums/*?");
   const [dashboardMatch] = useRoute("/dashboard");
 
   return (
@@ -128,13 +129,13 @@ export function Sidebar() {
             isActive={playlistsMatch}
           />
           <SidebarLink
-            href="/dashboard/browser/tracks"
-            label="Tracks"
-            disabled
-          />
-          <SidebarLink
             href="/dashboard/browser/albums"
             label="Albums"
+            isActive={albumsMatch}
+          />
+          <SidebarLink
+            href="/dashboard/browser/tracks"
+            label="Tracks"
             disabled
           />
         </section>

@@ -169,6 +169,8 @@ class AlbumAPISerializer(APISerializer):
     image_url: str
     label: str | None = None
     genres: list[str] | None = None
+    id: str | int | None = None
+    is_synced: bool = False
 
     @classmethod
     def mappings(cls: type["AlbumAPISerializer"]) -> dict[str, str]:
@@ -190,6 +192,21 @@ class AlbumAPISerializer(APISerializer):
             "label",
             "genres",
         )
+
+    @classmethod
+    def get(
+        cls: type["AlbumAPISerializer"], response: dict, library: Library | None = None
+    ) -> "AlbumAPISerializer":
+        """Serialize album."""
+        data = cls.map_response(response)
+
+        if library is not None and (
+            record := library.albums.filter(spotify_id=data["id"]).first()
+        ):
+            data["is_synced"] = record.is_synced
+            data["id"] = str(record.id)
+
+        return cls(**data)
 
 
 class TrackAPISerializer(APISerializer):

@@ -11,8 +11,21 @@ from rest_framework.response import Response
 from api.models.permissions import SpotifyAuth
 from api.services.spotify.auth import SpotifyAuthService
 from api.services.spotify.data import SpotifyDataService
-from apps.views import UserSavedItems
+from apps.serializers import UserSavedItems
 from core.models import AppUser
+
+
+class GetUserMixin:
+    """Mixin for getting the user from the request."""
+
+    def get_user(self, request: Request) -> AppUser:
+        """Get the user from the request object.
+
+        This method ensures that we're not using an
+        AnonymousUser instance, as the QuerySet will
+        raise a AppUser.DoesNotExist exception if we do.
+        """
+        return AppUser.objects.get(pk=request.user.pk)
 
 
 class UserSerializer(BaseModel):
@@ -76,14 +89,16 @@ class UserSerializer(BaseModel):
     def to_db(self, user: AppUser) -> AppUser:
         """Update a database model from a UserSerializer."""
         user.spotify_display_name = self.display_name
-        user.image_url = self.image_url
         user.saved_tracks = self.saved_tracks
         user.saved_albums = self.saved_albums
         user.saved_playlists = self.saved_playlists
         user.saved_artists = self.saved_artists
         user.saved_shows = self.saved_shows
+        if image_url := self.image_url:
+            user.image_url = image_url
 
         user.save()
+
         return user
 
 

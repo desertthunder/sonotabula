@@ -36,6 +36,7 @@ from browser.tasks import (
     sync_playlist,
 )
 from core.filters import FilterSet
+from core.views import GetUserMixin
 
 
 class LibraryRelationMixin(typing.Protocol):
@@ -45,12 +46,6 @@ class LibraryRelationMixin(typing.Protocol):
     def relation(self) -> str:
         """Get the relation name."""
         ...
-
-
-class GetUserMixin:
-    """Get user mixin."""
-
-    pass
 
 
 class GetLibraryMixin:
@@ -138,9 +133,9 @@ class PlaylistMetaViewSet(BaseBrowserViewSet):
             ).get("track_count"),
         }
 
-        logger.info(f"Playlist metadata: {data}")
+        logger.debug(f"Playlist metadata: {data}")
 
-        return Response(data=data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class PlaylistViewSet(BaseBrowserViewSet):
@@ -264,6 +259,37 @@ class PlaylistViewSet(BaseBrowserViewSet):
     def destroy(self, request: Request, pk: str | None = None) -> Response:
         """Destroy a playlist."""
         return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+class AlbumMetaViewSet(BaseBrowserViewSet):
+    """Album Metadata ViewSet."""
+
+    filter_class = AlbumFilterSet
+    relation: str = "albums"
+    authentication_classes = [SpotifyAuth]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request: Request) -> Response:
+        """GET /albums.
+
+        Filters and returns a paginated list of albums based
+        on query parameters.
+        """
+        qs = self.get_library(request).albums.all()
+
+        data = {
+            "total_synced": qs.filter(is_synced=True).count(),
+            "total_analyzed": qs.filter(is_analyzed=True).count(),
+            "total_tracks": qs.filter(is_synced=True)
+            .aggregate(
+                track_count=models.Count("tracks"),
+            )
+            .get("track_count"),
+        }
+
+        logger.debug(f"Album metadata: {data}")
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class AlbumViewSet(BaseBrowserViewSet):

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("live", "0005_notification_operation_notification_resource_and_more"),
     ]

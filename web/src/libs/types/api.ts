@@ -19,6 +19,7 @@ export type LibraryAlbum = {
   release_date: string;
   total_tracks: number;
   image_url: string;
+  is_synced: boolean;
 };
 
 export type LibraryTrack = {
@@ -200,19 +201,6 @@ export type Pagination = {
   num_pages: number;
 };
 
-export type BrowserAlbum = {
-  id: string;
-  name: string;
-  artists: {
-    id: string;
-    name: string;
-    spotify_id: string;
-  }[];
-  spotify_id: string;
-  release_year: number;
-  image_url?: string | null;
-};
-
 export type BrowserTrack = {
   id: string;
   name: string;
@@ -282,4 +270,27 @@ export type Profile = {
 
 export type ProfileResponse = {
   data: Profile;
+};
+
+export type BrowserAlbum = {
+  id: string;
+  name: string;
+  spotify_id: string;
+  release_year: number;
+  image_url: string;
+  artists: {
+    id: string;
+    name: string;
+    spotify_id: string;
+  }[];
+  tracks: {
+    id: string;
+    name: string;
+    spotify_id: string;
+  }[];
+};
+
+export type BrowserAlbumListResponse = {
+  data: BrowserAlbum[];
+  pagination: Pagination;
 };

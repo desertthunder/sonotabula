@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("live", "0006_notification_task_id_alter_notification_operation_and_more"),
     ]

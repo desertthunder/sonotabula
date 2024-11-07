@@ -26,6 +26,7 @@ import {
   PlaylistNameCell,
   TrackIsAnalyzedCell,
   TrackIsSyncedCell,
+  AlbumIsSyncedCell,
   TrackNameCell,
 } from "./cells";
 import { Pager } from "./pagination";
@@ -127,6 +128,11 @@ const albumColumns = [
     header: "Year",
     id: "release_date",
     cell: (props) => <span>{props.getValue().split("-")[0]}</span>,
+  }),
+  albumColumnHelper.accessor("is_synced", {
+    header: "Synced",
+    id: "is_synced",
+    cell: AlbumIsSyncedCell,
   }),
   albumColumnHelper.accessor("spotify_id", {
     header: "Link",
@@ -296,8 +302,9 @@ export function RealTimeTable<T extends LibraryKey>({
                   <th
                     key={header.id}
                     className={[
-                      "h-10 text-left align-middle font-medium text-gray-500 text-xs",
+                      "h-10 text-left align-middle font-medium text-gray-500",
                       "sticky overflow-x-visible top-0 bg-slate-50 z-20 uppercase",
+                      "px-4 py-3",
                     ].join(" ")}
                   >
                     {header.isPlaceholder
@@ -339,8 +346,7 @@ export function RealTimeTable<T extends LibraryKey>({
                       <td
                         key={cell.id}
                         className={[
-                          "p-2 align-middle",
-                          "text-xs",
+                          "px-4 py-3 align-middle",
                           cell.column.columnDef.meta?.className || "",
                         ].join(" ")}
                       >

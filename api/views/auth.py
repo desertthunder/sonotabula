@@ -24,23 +24,21 @@ from api.libs.constants import WEB_APP_URL, SpotifyAPIStates
 from api.libs.exceptions import SpotifyAPIError
 from api.libs.requests import RedirectURI
 from api.models.permissions import Token
-from api.services.spotify import SpotifyAuthService
+from api.services.spotify import AUTH, SpotifyAuthService
 from core.models import AppUser
 from server import settings
-
-default_auth_service = SpotifyAuthService()  # NOTE used for dependency injection
 
 
 class SpotifyAuthView(views.APIView):
     """Spotify Authentication view base class."""
 
-    auth_service: SpotifyAuthService
+    _auth: SpotifyAuthService
 
     def __init__(
-        self, auth_service: SpotifyAuthService = default_auth_service, *args, **kwargs
+        self, auth_service: SpotifyAuthService = AUTH, *args, **kwargs
     ) -> None:
         """Validate View Constructor."""
-        self.auth_service = auth_service
+        self._auth = auth_service
 
         super().__init__(*args, **kwargs)
 
@@ -66,14 +64,14 @@ class LoginView(SpotifyAuthView):
             return HttpResponseForbidden()
 
         try:
-            token_set = self.auth_service.get_access_token(authorization_code)
+            token_set = self._auth.get_access_token(authorization_code)
         except SpotifyAPIError as exc:
             logger.error(f"Spotify API Error details: {exc}")
 
             return HttpResponseBadRequest("Unable to get access token.")
 
         try:
-            current_user = self.auth_service.get_current_user(token_set.access_token)
+            current_user = self._auth.get_current_user(token_set.access_token)
         except SpotifyAPIError as exc:
             logger.error(f"Spotify API Error details: {exc}")
 
@@ -102,7 +100,7 @@ class LoginView(SpotifyAuthView):
 
         Endpoint: POST /api/login
         """
-        redirect_uri = self.auth_service.build_redirect_uri()
+        redirect_uri = self._auth.build_redirect_uri()
 
         resp = redirect(to=redirect_uri)
         resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -123,7 +121,7 @@ class ValidateView(SpotifyAuthView):
 
     def refresh_token(self, user: AppUser) -> str:
         """Refresh the token."""
-        user = self.auth_service.refresh_access_token(user.refresh_token)
+        user = self._auth.refresh_access_token(user.refresh_token)
         client_jwt = Token(user)
         return client_jwt.encode()
 

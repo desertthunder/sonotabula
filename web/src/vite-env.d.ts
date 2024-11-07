@@ -9,7 +9,7 @@ declare module "@tanstack/react-table" {
 }
 
 interface ImportMetaEnv {
-  readonly TOOLS: string;
+  readonly VITE_TOOLS: string;
 }
 
 interface ImportMeta {
