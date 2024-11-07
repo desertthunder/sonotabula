@@ -1,5 +1,6 @@
-import { useTokenStore } from "@/store";
-import { useQuery } from "@tanstack/react-query";
+import type { BrowserPlaylist } from "@/libs/types";
+import { usePlaylistFilters } from "@/store/filters";
+import { UseQueryResult } from "@tanstack/react-query";
 import {
   createColumnHelper,
   flexRender,
@@ -7,11 +8,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import _ from "lodash";
-import { useEffect, useMemo } from "react";
-import { usePlaylistFilters } from "@/store/filters";
-import type { BrowserPlaylist } from "./types";
-import { PlaylistActionsCell } from "./cells";
+import { useEffect } from "react";
 import { Link } from "wouter";
+import { PlaylistActionsCell } from "./cells";
 
 const columnHelper = createColumnHelper<BrowserPlaylist>();
 
@@ -114,83 +113,43 @@ const columns = [
   }),
 ];
 
-async function fetchPlaylists(token: string | null, params: URLSearchParams) {
-  const uri = new URL(
-    "/server/api/v1/browser/playlists",
-    window.location.origin
-  );
-  uri.search = params.toString();
-  const response = await fetch(uri.toString(), {
-    headers: {
-      Authorization: `Bearer ${token}`,
+export function Table({
+  context,
+}: {
+  context: UseQueryResult<
+    {
+      data: BrowserPlaylist[];
+      pagination: {
+        total: number;
+        per_page: number;
+        page: number;
+        num_pages: number;
+      };
     },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch playlists");
-  }
-
-  return (await response.json()) as {
-    data: BrowserPlaylist[];
-    pagination: {
-      total: number;
-      per_page: number;
-      page: number;
-      num_pages: number;
-    };
-  };
-}
-
-export function Table() {
-  const token = useTokenStore((state) => state.token);
+    Error
+  >;
+}) {
   const updateTotal = usePlaylistFilters((state) => state.updateTotal);
-  const page = usePlaylistFilters((state) => state.page);
-  const pageSize = usePlaylistFilters((state) => state.pageSize);
   const updateFetching = usePlaylistFilters((state) => state.updateFetching);
-  const filters = usePlaylistFilters((state) => state.filters);
-
-  const params = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set("page", page.toString());
-    params.set("page_size", pageSize.toString());
-
-    for (const [key, value] of filters) {
-      params.set(key, value);
-    }
-
-    return params;
-  }, [page, pageSize, filters]);
-
-  const query = useQuery({
-    queryKey: _.flatten([
-      "browser",
-      "playlists",
-      ...Array.from(params.entries()),
-    ]),
-    queryFn: async () => {
-      const data = await fetchPlaylists(token, params);
-
-      return data;
-    },
-  });
 
   const table = useReactTable({
     columns,
-    data: query.data?.data || [],
+    data: context.data?.data || [],
     getCoreRowModel: getCoreRowModel(),
   });
 
   useEffect(() => {
-    if (query.data) {
-      updateTotal(query.data.pagination.total);
+    if (context.data) {
+      updateTotal(context.data.pagination.total);
     }
-  }, [query.data, updateTotal]);
+  }, [context.data, updateTotal]);
 
   useEffect(() => {
-    const isFetching = query.isLoading || query.isFetching || query.isFetching;
+    const isFetching =
+      context.isLoading || context.isFetching || context.isFetching;
 
     updateFetching(isFetching);
-  }, [query.isLoading, query.isFetching, updateFetching]);
+  }, [context.isLoading, context.isFetching, updateFetching]);
 
   return (
     <section className="overflow-auto">
@@ -219,7 +178,7 @@ export function Table() {
           ))}
         </thead>
         <tbody>
-          {query.isLoading ? (
+          {context.isLoading ? (
             <tr className="bg-surface even:bg-green-200 text-xs">
               <td
                 colSpan={columns.length}
@@ -228,10 +187,10 @@ export function Table() {
                 <i className="i-ri-loader-line animate-spin" />
               </td>
             </tr>
-          ) : query.isError ? (
+          ) : context.isError ? (
             <tr className="bg-surface even:bg-green-200 text-xs text-red-500">
               <td colSpan={columns.length} className="px-4">
-                Unable to fetch playlists: {query.error.message}
+                Unable to fetch playlists: {context.error.message}
               </td>
             </tr>
           ) : (

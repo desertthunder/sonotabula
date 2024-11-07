@@ -88,6 +88,8 @@ A similar strategy will be used for modals & confirm dialogs.
 3. Cards
 4. Charts - represented with Chart.js.
 
-### Pagination
+### Filtering Data
 
-### Forms
+Filter state (in forms) was initially managed by Zustand, but I've since moved it to the URL
+so local form input state pushes to the URL/the URL sets the initial state of forms.
+This applies to pagination as well.

@@ -26,6 +26,8 @@ from api.services.spotify import (
     SpotifyLibraryService,
 )
 from browser.models import Library
+from live.models import Notification
+from live.signals import notify_failure, notify_start, notify_success
 
 AUTH = SpotifyAuthService()
 LIBRARY = SpotifyLibraryService(auth_service=AUTH)
@@ -53,22 +55,6 @@ class Task:
             raise e from e
 
         return self
-
-
-@task_prerun.connect
-def task_prerun_handler(
-    sender: typing.Callable, task_id: str, task: CeleryTask, **kwargs
-) -> None:
-    """Task start handler."""
-    logger.info(f"Task {task_id} started.")
-
-
-@task_postrun.connect
-def task_postrun_handler(
-    sender: typing.Callable, task_id: str, task: CeleryTask, **kwargs
-) -> None:
-    """Task complete handler."""
-    logger.info(f"Task {task_id} completed.")
 
 
 ############################################
@@ -500,3 +486,66 @@ def analyze_album(album_id: uuid.UUID, user_id: int) -> str:
     runner.__call__()
 
     return runner.status
+
+
+############################################
+# Task Signals                            #
+############################################
+
+
+@task_prerun.connect(sender=sync_playlist)
+@task_prerun.connect(sender=analyze_playlist)
+@task_prerun.connect(sender=sync_and_analyze_playlist)
+def task_prerun_handler(
+    sender: typing.Callable, task_id: str, task: CeleryTask, **kwargs
+) -> None:
+    """Task start handler."""
+    logger.info(f"Task {task_id} started.")
+    args = task.request.args
+
+    if not args:
+        logger.error("No arguments provided to task")
+
+        return
+
+    user_id = args[1]
+    playlist_id = args[0]
+
+    notification = Notification.objects.create(
+        user_id=user_id,
+        task_id=task_id,
+        resource_id=playlist_id,
+        operation=Notification.Operations.SYNC
+        if "sync" in task.name
+        else Notification.Operations.ANALYZE,
+        resource=Notification.Resources.PLAYLIST,
+        extras={},
+    )
+
+    notify_start.send(sender=Notification, instance=notification)
+
+    logger.debug(f"Notification {notification.id} created.")
+    logger.info(f"Task {task_id} started")
+
+
+@task_postrun.connect(sender=sync_playlist)
+@task_postrun.connect(sender=analyze_playlist)
+@task_postrun.connect(sender=sync_and_analyze_playlist)
+def task_postrun_handler(
+    sender: typing.Callable, task_id: str, task: CeleryTask, **kwargs
+) -> None:
+    """Task complete handler."""
+    logger.info(f"Task {task_id} completed.")
+    logger.info(f"Task {task_id} completed.")
+
+    notification = Notification.objects.get(task_id=task_id)
+
+    state = kwargs.get("state", "UNKNOWN")
+
+    if state == states.SUCCESS:
+        notify_success.send(sender=Notification, instance=notification)
+        logger.info("Task completed successfully.")
+
+    if state == states.FAILURE:
+        notify_failure.send(sender=Notification, instance=notification)
+        logger.error("Task failed.")

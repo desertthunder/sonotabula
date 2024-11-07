@@ -30,21 +30,6 @@ export type Notification = {
   extras: Record<string, string>;
 };
 
-/**
- * {
-    "id": "290a4810-4c80-409f-9ded-c9a33caffa18",
-    "user_id": 1,
-    "resource_id": "d6f0e40a-0070-467d-a8be-3572d22da077",
-    "resource": "playlist",
-    "operation": "sync",
-    "task_id": "1a65d446-32b4-4108-85db-9bb11f50b4f2",
-    "task_name": "sync_playlist",
-    "task_status": "SUCCESS",
-    "extras": "{\"playlist_id\": \"d6f0e40a-0070-467d-a8be-3572d22da077\", \"task_type\": \"sync_playlist\"}",
-    "created_at": "2024-11-03T22:12:13.916063Z",
-    "updated_at": "2024-11-03T22:12:13.916071Z"
-}
- */
 export type WSMessage = {
   type: string;
   notification: {
@@ -81,20 +66,9 @@ export function useNotifications(client: QueryClient) {
 
     socket.onmessage = (event: MessageEvent<string>) => {
       try {
-        // const response: Record<string, string> = JSON.parse(event.data);
-        // const notification = _.isString(response.notification)
-        //   ? JSON.parse(response.notification)
-        //   : response.notification;
-
-        // const message: WSMessage = {
-        //   type: response.type,
-        //   notification,
-        // };
-        console.log("event.data", event.data);
         const message: WSMessage = JSON.parse(event.data);
 
         client.setQueryData(queryKey, () => message);
-
         console.debug("Received message", message);
 
         if (
@@ -118,8 +92,10 @@ export function useNotifications(client: QueryClient) {
       }
     };
 
-    return () => {
-      socket.close();
+    socket.onclose = () => {
+      console.debug("Socket closed");
+
+      setIsConnected(false);
     };
   }, [client]);
 

@@ -6,85 +6,11 @@ import { useCallback, useEffect, useState } from "react";
 import { FilterForm } from "./filters/form";
 import { BrowserPlaylistPagination } from "./filters/pagination";
 import { Table } from "./table";
-import { useTokenStore } from "@/store";
-import { usePlaylistFilters } from "@/store/filters";
-import { useMutation, useQuery, UseQueryResult } from "@tanstack/react-query";
-import { useSavedCounts } from "@/libs/hooks";
-import { Breadcrumbs, BrowserCard, SearchBar } from "@/components/common";
-import { LibraryCounts } from "@/libs/types";
-
-type PlaylistMetadata = {
-  total_synced: number;
-  total_analyzed: number;
-  total_tracks: number;
-};
-
-async function AnalyzePage({
-  token,
-  params,
-}: {
-  token: string | null;
-  params: URLSearchParams;
-}) {
-  const url = new URL(
-    "/server/api/v1/browser/playlists",
-    window.location.origin
-  );
-  url.search = params.toString();
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    method: "POST",
-  });
-
-  return await response.json();
-}
-
-async function fetchPlaylistsMetadata(token: string | null) {
-  if (!token) {
-    throw new Error("No token available");
-  }
-
-  const url = new URL(
-    "/server/api/v1/browser/playlists/meta",
-    window.location.origin
-  );
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch playlists metadata");
-  }
-
-  return (await response.json()) as PlaylistMetadata;
-}
-
-function usePlaylistsMetadata() {
-  const token = useTokenStore((state) => state.token);
-  const query = useQuery({
-    queryKey: ["browser", "playlists", "metadata"],
-    queryFn: () => fetchPlaylistsMetadata(token),
-  });
-
-  return query;
-}
-
-function usePageAnalysisMutation() {
-  const token = useTokenStore((state) => state.token);
-  const getParams = usePlaylistFilters((state) => state.getAllParams);
-
-  const mutation = useMutation({
-    mutationFn: () => AnalyzePage({ token, params: getParams() }),
-  });
-
-  return mutation;
-}
+import { UseQueryResult } from "@tanstack/react-query";
+import { usePlaylistsMetadata, useSavedCounts } from "@/libs/hooks";
+import { Breadcrumbs, BrowserCard } from "@/components/common";
+import { LibraryCounts, PlaylistMetadata } from "@/libs/types";
+import { usePageAnalysisMutation, usePlaylistsQuery } from "@/libs/hooks";
 
 function BrowserCards({
   metadata,
@@ -160,6 +86,7 @@ export function PlaylistsBrowser() {
   const counts = useSavedCounts();
   const metadata = usePlaylistsMetadata();
   const mutation = usePageAnalysisMutation();
+  const query = usePlaylistsQuery();
 
   const handleAnalyzePageClick = useCallback(() => {
     setIsLoading(true);
@@ -180,7 +107,6 @@ export function PlaylistsBrowser() {
 
   return (
     <div className="flex flex-col w-full text-sm min-h-min">
-      <SearchBar />
       <Breadcrumbs context="playlists" />
       <BrowserCards metadata={metadata} counts={counts} />
       <main
@@ -209,7 +135,7 @@ export function PlaylistsBrowser() {
             )}
           </button>
         </header>
-        <Table />
+        <Table context={query} />
       </main>
       <BrowserPlaylistPagination />
     </div>

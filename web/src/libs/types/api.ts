@@ -227,17 +227,17 @@ export type BrowserTrack = {
 };
 
 export type BrowserPlaylist = {
-  id: string;
-  spotify_id: string;
-  name: string;
   is_synced: boolean;
   is_analyzed: boolean;
-  description?: string;
-  owner_id?: string;
-  version?: string;
-  image_url?: string;
-  public?: boolean;
-  shared?: boolean;
+  description: string;
+  owner_id: string;
+  version: string;
+  image_url: string;
+  public: boolean;
+  shared: boolean;
+  id: string;
+  name: string;
+  spotify_id: string;
 };
 
 export type ListeningHistoryItem = {
@@ -259,4 +259,27 @@ export type ListeningHistoryItem = {
     name: string;
   }[];
   image_url: string;
+};
+
+export type PlaylistMetadata = {
+  total_synced: number;
+  total_analyzed: number;
+  total_tracks: number;
+};
+
+export type Profile = {
+  spotify_id: string;
+  email: string;
+  display_name: string;
+  saved_tracks: number;
+  saved_albums: number;
+  saved_playlists: number;
+  saved_artists: number;
+  saved_shows: number;
+  id: string;
+  image_url: string;
+};
+
+export type ProfileResponse = {
+  data: Profile;
 };

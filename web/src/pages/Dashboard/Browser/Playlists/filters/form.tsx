@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  FilterKeys,
-  usePlaylistFilters,
-  setFilters,
-  removeFilter,
-} from "@/store/filters";
-import _ from "lodash";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FilterKeys } from "@/store/filters";
+import { useQueryParams } from "@/libs/hooks";
+import { useLocation } from "wouter";
 
 interface CheckboxProps {
   filter: FilterKeys;
@@ -13,6 +9,7 @@ interface CheckboxProps {
 
 function Checkbox({ filter }: CheckboxProps) {
   const [checked, setChecked] = useState(false);
+  const [, setLocation] = useLocation();
 
   const onClick = useCallback(() => {
     setChecked((prev) => {
@@ -22,11 +19,11 @@ function Checkbox({ filter }: CheckboxProps) {
 
   useEffect(() => {
     if (checked) {
-      setFilters(filter, "1");
+      setLocation(`?${filter}=1`);
     } else {
-      removeFilter(filter);
+      setLocation(`?${filter}=0`);
     }
-  }, [checked, filter]);
+  }, [checked, filter, setLocation]);
 
   return (
     <button
@@ -68,14 +65,18 @@ export function Range() {
 }
 
 export function FilterForm() {
-  const pageSize = usePlaylistFilters((state) => state.pageSize);
-  const updatePageSize = usePlaylistFilters((state) => state.updatePageSize);
+  const params = useQueryParams();
+  const [, setLocation] = useLocation();
+  const pageSize = useMemo(() => {
+    return parseInt(params.get("pageSize") ?? "5", 10);
+  }, [params]);
 
   const handlePageSizeChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updatePageSize(parseInt(event.target.value, 10));
+      const value = parseInt(event.target.value, 10);
+      setLocation(`?pageSize=${value}`);
     },
-    [updatePageSize]
+    [setLocation]
   );
 
   return (

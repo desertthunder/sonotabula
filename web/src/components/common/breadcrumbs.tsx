@@ -13,7 +13,6 @@ export function Breadcrumbs({
   const [dashboardMatch] = useRoute("/dashboard");
   const [playlistsMatch] = useRoute(`/dashboard/browser/${context}`);
   const [playlistsDetailMatch] = useRoute(`/dashboard/browser/${context}/:id`);
-
   const routes = useMemo(() => {
     const headerText = capitalize(context.slice(0, -1));
     if (playlistsDetailMatch) {

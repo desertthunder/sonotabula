@@ -27,6 +27,8 @@ export type {
   LibraryTrack,
   ListeningHistoryItem,
   Pagination,
+  PlaylistMetadata,
+  ProfileResponse,
 } from "./api";
 
 export type { FilterMap, FilterSet, SearchMap } from "./filters";

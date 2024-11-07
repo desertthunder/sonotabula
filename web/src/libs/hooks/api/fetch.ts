@@ -3,6 +3,8 @@ import type {
   ListeningHistoryItem,
   BrowserPlaylist,
   Pagination,
+  ProfileResponse,
+  PlaylistMetadata,
 } from "@libs/types";
 import isNil from "lodash/isNil";
 
@@ -10,7 +12,7 @@ export async function fetchListeningHistory(token: string | null) {
   if (!token) {
     throw new Error("No token provided");
   }
-  const url = new URL("/server/api/playback/recent", window.location.origin);
+  const url = new URL("/server/api/v1/playback/recent", window.location.origin);
   const res = await fetch(url.toString(), {
     method: "GET",
     headers: {
@@ -32,7 +34,7 @@ export async function fetchListeningHistory(token: string | null) {
   return data["data"] as ListeningHistoryItem;
 }
 
-export async function checkToken(token: string | null) {
+export async function fetchTokenState(token: string | null) {
   if (!token) {
     return null;
   }
@@ -123,4 +125,96 @@ export async function fetchLibraryPlaylistTracks(
     playlist: Record<string, string>;
     tracks: any[]; // eslint-disable-line
   };
+}
+
+export async function fetchPlaylistsMetadata(token: string | null) {
+  if (!token) {
+    throw new Error("No token available");
+  }
+
+  const url = new URL(
+    "/server/api/v1/browser/playlists/meta",
+    window.location.origin
+  );
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch playlists metadata");
+  }
+
+  return (await response.json()) as PlaylistMetadata;
+}
+
+export async function analyzePage({
+  token,
+  params,
+}: {
+  token: string | null;
+  params: URLSearchParams;
+}) {
+  const url = new URL(
+    "/server/api/v1/browser/playlists",
+    window.location.origin
+  );
+  url.search = params.toString();
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: "POST",
+  });
+
+  return await response.json();
+}
+
+export async function fetchPlaylists(
+  token: string | null,
+  params: URLSearchParams
+) {
+  const uri = new URL(
+    "/server/api/v1/browser/playlists",
+    window.location.origin
+  );
+  uri.search = params.toString();
+  const response = await fetch(uri.toString(), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch playlists");
+  }
+
+  return (await response.json()) as {
+    data: BrowserPlaylist[];
+    pagination: {
+      total: number;
+      per_page: number;
+      page: number;
+      num_pages: number;
+    };
+  };
+}
+
+export async function fetchProfile(token: string | null) {
+  const url = new URL("api/v1/profile", window.location.origin);
+
+  const response = await fetch(url.href, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch profile");
+  }
+
+  return (await response.json()) as ProfileResponse;
 }

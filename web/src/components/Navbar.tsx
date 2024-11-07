@@ -1,7 +1,7 @@
 import { useNotifications, WSMessage } from "@/libs/hooks/ws";
 import { useListeningHistory } from "@libs/hooks";
 import _ from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { LastPlayed } from "./LastPlayed";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,10 +47,22 @@ export function Toaster() {
     {
       queryKey: ["pushNotification"],
       staleTime: Infinity,
-      enabled: false,
     },
     client
   );
+  const bellColor = useMemo(() => {
+    if (showToast) {
+      return data?.type === "task_started"
+        ? "text-warning"
+        : data?.type === "task_complete"
+        ? "text-green-400"
+        : query.isError
+        ? "text-red-400"
+        : "text-gray-400";
+    }
+
+    return "text-gray-400";
+  }, [showToast, data, query]);
 
   useEffect(() => {
     if (!showToast) {
@@ -76,32 +88,35 @@ export function Toaster() {
   }, [isConnected, query]);
 
   return (
-    <div
-      id="toast-bottom-right"
-      className={[
-        "fixed flex items-center w-full max-w-xs",
-        "p-4 space-x-4 divide-x rtl:divide-x-reverse rounded-lg shadow ",
-        "right-5 top-5",
-        "text-gray-400 divide-gray-700 bg-gray-800 z-50",
-        showToast ? "scale-100" : "scale-0",
-        "transition-transform duration-300",
-      ].join(" ")}
-      role="alert"
-    >
-      {showToast ? (
-        <>
-          {data?.type === "task_started" ? (
-            <StartToast />
-          ) : (
-            <CompleteToast
-              handleClick={() => {
-                setShowToast(false);
-              }}
-            />
-          )}
-        </>
-      ) : null}
-    </div>
+    <>
+      <div
+        id="toast-bottom-right"
+        className={[
+          "fixed flex items-center w-full max-w-xs",
+          "p-4 space-x-4 divide-x rtl:divide-x-reverse rounded-lg shadow ",
+          "right-5 top-5",
+          "text-gray-400 divide-gray-700 bg-gray-800 z-50",
+          showToast ? "scale-100" : "scale-0",
+          "transition-transform duration-300",
+        ].join(" ")}
+        role="alert"
+      >
+        {showToast ? (
+          <>
+            {data?.type === "task_started" ? (
+              <StartToast />
+            ) : (
+              <CompleteToast
+                handleClick={() => {
+                  setShowToast(false);
+                }}
+              />
+            )}
+          </>
+        ) : null}
+      </div>
+      <i className={`i-fe-bell text-xl ${bellColor}`} />
+    </>
   );
 }
 
@@ -114,7 +129,6 @@ export function Navbar() {
 
   return (
     <>
-      <Toaster />
       <nav className="flex border-b-4 border-green-500 py-1 pl-4 gap-4 bg-white justify-between items-center">
         <section>
           <Link
@@ -126,11 +140,11 @@ export function Navbar() {
           </Link>
         </section>
 
-        <section className="flex flex-1 items-center text-2xl justify-end">
+        <section className="flex flex-1 items-center text-2xl justify-end gap-3">
+          <Toaster />
           <Link to="/profile" className="flex items-center text-3xl group">
             <i className="i-ri-account-circle-2-fill text-green-500 group-hover:text-green-400 group-hover:scale-110 transition-all duration-300" />
           </Link>
-          <i className="i-ri-notification-2-fill text-gray-400" />
         </section>
         <section className="flex-shrink px-2">
           {query.isPending ? (
