@@ -54,7 +54,7 @@ class AppUser(TokenSetMixin, TimestampedModel, AbstractUser):
 
     email = models.EmailField(blank=False, unique=True)
 
-    image_url = models.URLField(blank=True, null=True, max_length=512)
+    image_url = models.URLField(blank=True, max_length=512)
     saved_tracks = models.IntegerField(default=0)
     saved_albums = models.IntegerField(default=0)
     saved_playlists = models.IntegerField(default=0)

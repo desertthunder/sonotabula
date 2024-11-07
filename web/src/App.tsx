@@ -51,12 +51,13 @@ export function AppRouter() {
     </Switch>
   );
 }
-
 export default function Root() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppRouter />
-      <ReactQueryDevtools initialIsOpen={false} />
+      {import.meta.env.TOOLS ? (
+        <ReactQueryDevtools initialIsOpen={false} />
+      ) : null}
     </QueryClientProvider>
   );
 }

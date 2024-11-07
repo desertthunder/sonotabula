@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from browser.views import PlaylistMetaViewSet, PlaylistViewSet
+from browser.views import AlbumViewSet, PlaylistMetaViewSet, PlaylistViewSet
 
 urlpatterns = [
     path(
@@ -22,4 +22,10 @@ urlpatterns = [
         PlaylistViewSet.as_view({"get": "list", "post": "create"}),
         name="browser__playlists",
     ),
+    path(
+        "albums/<str:album_pk>",
+        AlbumViewSet.as_view({"get": "retrieve"}),
+        name="browser__album",
+    ),
+    path("albums", AlbumViewSet.as_view({"get": "list"}), name="browser__albums"),
 ]

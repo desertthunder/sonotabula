@@ -36,7 +36,7 @@ class Artist(SpotifyModel, TimestampedModel, CanBeSyncedMixin):
         - spotify_id
     """
 
-    image_url = models.URLField(blank=True, null=True)
+    image_url = models.URLField(blank=True)
     spotify_follower_count = models.IntegerField(blank=True, null=True)
     albums = models.ManyToManyField("api.Album", related_name="artists")
     genres = models.ManyToManyField("api.Genre", related_name="artists")
