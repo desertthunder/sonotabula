@@ -60,7 +60,7 @@ export default function Home() {
       <nav className="bg-white shadow-sm py-4">
         <div className="container mx-auto flex justify-between items-center px-6">
           <a href="#" className="text-primary text-2xl font-semibold">
-            Dashspot
+            Sonotabula
           </a>
           <div className="flex space-x-4 items-center">
             {["Features", "Docs", "Contact"].map((link) => (

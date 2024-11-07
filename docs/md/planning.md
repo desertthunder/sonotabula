@@ -40,5 +40,5 @@ The proposed fields to search by are:
 
 ## These Docs
 
-Since we're using conventional [commits](./development/commits.md), a changelog
+Since we're using conventional [commits](./development.md#angular-convention), a changelog
 could be generated on releases. I might write my own.

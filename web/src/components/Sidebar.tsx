@@ -27,7 +27,7 @@ function Toolbar() {
         <i className="i-ri-logout-circle-line w-6 h-6 group-hover:scale-110 transition-transform duration-500" />
       </button>
       <a
-        href="https://dashspot-dev.netlify.app"
+        href="https://sonotabula.netlify.app"
         rel="noopener noreferrer"
         target="_blank"
         className="bg-zinc-100 rounded-full flex items-center justify-center w-12 h-12 group"

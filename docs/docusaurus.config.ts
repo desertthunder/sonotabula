@@ -6,35 +6,21 @@ const config: Config = {
   title: "Music Dashboard Docs",
   tagline: "A spotify integrated music library dashboard.",
   favicon: "/img/favicon.svg",
-
-  // Set the production url of your site here
-  url: "https://dashspot-dev.netlify.app",
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
+  url: "https://sonotabula.netlify.app",
   baseUrl: "/",
-
-  // GitHub pages deployment config.
-  projectName: "spotify-dashboard", // Repo name
-
+  projectName: "sonotablula",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
-
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
   },
-
   presets: [
     [
       "classic",
       {
         docs: {
           sidebarPath: "./sidebars.ts",
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
           routeBasePath: "/",
           path: "md",
         },
@@ -47,7 +33,6 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
     image: "img/social-card.png",
     colorMode: {
       defaultMode: "dark",

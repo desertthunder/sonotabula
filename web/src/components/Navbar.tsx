@@ -136,7 +136,7 @@ export function Navbar() {
             className="text-xl font-headings font-medium text-black flex items-center hover:text-green-500 group"
           >
             <i className="i-ri-spotify-line group-hover:i-ri-spotify-fill text-xl  mr-1" />
-            <span>Dashspot</span>
+            <span>Sonotabula</span>
           </Link>
         </section>
 
