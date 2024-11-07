@@ -4,10 +4,8 @@
  * @todo artists page
  */
 import { Routes } from "@libs/types";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { Route, Router, Switch } from "wouter";
 import { Home, Profile, Signup } from "./pages";
 import { Dashboard, DashboardLayout } from "./pages/Dashboard";
@@ -18,22 +16,6 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
-
-const localStoragePersister = createSyncStoragePersister({
-  storage: window.localStorage,
-});
-
-persistQueryClient({
-  queryClient,
-  persister: localStoragePersister,
-  dehydrateOptions: {
-    shouldDehydrateQuery(query: Query): boolean {
-      // We're only persisting the token query
-      // but also want to keep the default behavior.
-      return query.queryKey[0] === "token" && query.state.status === "success";
     },
   },
 });
