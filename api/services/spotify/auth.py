@@ -12,14 +12,13 @@ from loguru import logger
 
 from api.libs.constants import SpotifyAPIEndpoints, SpotifyAPIScopes
 from api.libs.exceptions import MissingAPICredentialsError, SpotifyAPIError
-from api.libs.params import SpotifyRedirectParams
 from api.libs.requests import (
     SpotifyAccessTokenRequest,
-    SpotifyRedirectURI,
     SpotifyRefreshTokenRequest,
 )
-from api.serializers.authentication import AccessToken, CurrentUser
-from core.models import AppUser
+from api.serializers.authentication import CurrentUser
+from core.models import AccessToken, AppUser
+from server import settings
 
 logger.add("logs/spotify_auth.log", rotation="1 MB", retention="1 day", level="DEBUG")
 
@@ -32,14 +31,19 @@ class SpotifyAuthService:
     client_secret: str | None
 
     def __init__(self) -> None:
-        """Spotify Auth Service."""
+        """Spotify API authentication service layer."""
         self.client = httpx.Client()
-
         self.client_id = os.getenv("SPOTIFY_CLIENT_ID")
         self.client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
 
-    def auth(self) -> httpx.BasicAuth:
-        """Basic Auth for Spotify API."""
+    @property
+    def basic_auth(self) -> httpx.BasicAuth:
+        """Username/password authentication for token requests.
+
+        Returns:
+            httpx.BasicAuth - Basic Auth object using the client_id
+            and client_secret for httpx client instances.
+        """
         if not self.client_id:
             raise MissingAPICredentialsError
 
@@ -48,7 +52,7 @@ class SpotifyAuthService:
 
         return httpx.BasicAuth(self.client_id, self.client_secret)
 
-    def get_access_token(self, code: str) -> AccessToken:
+    def get_access_token(self, code: str) -> dict:
         """Handle the Spotify callback.
 
         Returns the access token, refresh token, and expiry time.
@@ -59,7 +63,7 @@ class SpotifyAuthService:
         request_data = SpotifyAccessTokenRequest(code)
 
         with httpx.Client(
-            base_url=SpotifyAPIEndpoints.Access_Token, auth=self.auth()
+            base_url=SpotifyAPIEndpoints.Access_Token, auth=self.basic_auth
         ) as client:
             response = client.post(url="", data=request_data.as_dict)
 
@@ -77,11 +81,54 @@ class SpotifyAuthService:
 
         logger.debug(f"Access token response: {resp}")
 
-        token_set = AccessToken.get(resp)
+        return resp
 
-        logger.debug(f"Access token for expires at {token_set.token_expiry}")
+    def fetch_user(self, access_token: str, refresh_token: str | None) -> dict:
+        """Fetch the user's data from the Spotify API."""
+        try:
+            client = httpx.Client(
+                base_url=SpotifyAPIEndpoints.BASE_URL,
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            response = client.get(url=SpotifyAPIEndpoints.CurrentUser)
+            response.raise_for_status()
+            client.close()
 
-        return token_set
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            if (
+                exc.response.status_code == 401
+                and "The access token expired" in exc.response.text
+                and refresh_token is not None
+            ):
+                res = httpx.post(
+                    url=SpotifyAPIEndpoints.Access_Token,
+                    data=SpotifyRefreshTokenRequest(
+                        refresh_token,
+                        self.client_id,  # type: ignore
+                    ).as_dict,
+                    auth=self.basic_auth,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                )
+
+                if res.is_error:
+                    raise SpotifyAPIError(res.text) from exc
+
+                if not (access_token := res.json().get("access_token")):
+                    raise SpotifyAPIError(
+                        "Access token not found in response."
+                    ) from exc
+
+                response = client.get(
+                    url=SpotifyAPIEndpoints.CurrentUser,
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+                client.close()
+                response.raise_for_status()
+
+                return response.json()
+            else:
+                raise exc
 
     def get_current_user(self, access_token: str) -> CurrentUser:
         """Get the current user's data."""
@@ -146,17 +193,19 @@ class SpotifyAuthService:
         if not self.client_id:
             raise MissingAPICredentialsError
 
-        params = SpotifyRedirectParams(
-            client_id=self.client_id,
-            state="app-login",
-            scope=SpotifyAPIScopes.user_scopes(),
+        request = httpx.Client().build_request(
+            HTTPMethod.GET,
+            url=SpotifyAPIEndpoints.Authorization,
+            params={
+                "client_id": self.client_id,
+                "state": "app-login",
+                "scope": SpotifyAPIScopes.user_scopes(),
+                "response_type": "code",
+                "redirect_uri": settings.REDIRECT_URI,
+            },
         )
 
-        client = httpx.Client(base_url=SpotifyAPIEndpoints.Authorization)
-
-        req = client.build_request(HTTPMethod.GET, url="", params=params.as_dict)
-
-        return SpotifyRedirectURI.from_request(req)
+        return str(request.url)
 
     def refresh_access_token(self, refresh_token: str) -> AppUser:
         """Refresh the access token and update the user's token set."""
@@ -172,7 +221,7 @@ class SpotifyAuthService:
         response = httpx.post(
             url=SpotifyAPIEndpoints.Access_Token,
             data=request_data.as_dict,
-            auth=self.auth(),
+            auth=self.basic_auth,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 

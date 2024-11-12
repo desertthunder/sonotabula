@@ -18,7 +18,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from api.models.permissions import SpotifyAuth
 from api.models.playlist import Playlist
 from browser.filters import AlbumFilterSet, PlaylistFilterSet
 from browser.models import Library
@@ -36,6 +35,7 @@ from browser.tasks import (
     sync_playlist,
 )
 from core.filters import FilterSet
+from core.permissions import SpotifyAuth
 from core.views import GetUserMixin
 
 

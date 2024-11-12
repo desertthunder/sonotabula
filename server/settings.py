@@ -169,3 +169,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+WEB_APP_URL = os.getenv("WEB_APP_URL", "https://local.dashspot.dev")
+REDIRECT_URI = f"{WEB_APP_URL}/server/api/login"
