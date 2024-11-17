@@ -3,7 +3,7 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/a2dbf0df-0390-4635-98aa-ab2dfe272e98/deploy-status)](https://app.netlify.com/sites/sonotabula/deploys)
 
 Sonotabula is a dynamic visualizing dashboard designed to explore and analyze
-Spotify libraries meant to be like an itunes style library browser.
+Spotify libraries meant to be like an iTunes style library browser.
 
 It is built with Django, Postgres, Celery, and React on top of the Spotify API.
 
@@ -15,6 +15,23 @@ a comprehensive database of music metadata relevant to them.
 | ![Sonotabula Screenshot](./docs/static/img/demo.png) |
 
 Check out the [docs](https://sonotabula.netlify.app/)!
+
+## Overview
+
+The primary goal of this application is to enhance the library browsing experience for Spotify users.
+We went from iTunes and Winamp to many iterations of Spotify, and the current iteration of the latter
+does little to give you control over the exploration of new music, or the rediscovery of what
+you've saved.
+
+### Features
+
+1. Better search and filtering capabilities - if you search for a track, you should be able to see
+what playlists it's in, what albums it's in, and what artists are associated with it.
+2. Better visualization of your library - you should be able to see what genres you listen to, what
+artists you listen to, and what tracks you listen to, as well as some of the audio features of those
+tracks.
+3. Better browsing - instead of a giant sidebar being the only way to smoothly navigate your library.
+Many applications do a great job of this for locally saved music, and I'd like to bring that to Spotify.
 
 ## Setup
 
@@ -84,7 +101,8 @@ The core integration is built with Spotify.
 
 ### Attribution
 
-From the [top tracks](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-users-top-artists-and-tracks) endpoint documentation:
+From the [top tracks](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-users-top-artists-and-tracks)
+endpoint documentation:
 
 > Please keep in mind that metadata, cover art and artist images must be
 > accompanied by a link back to the applicable artist, album, track, or playlist

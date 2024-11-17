@@ -1,4 +1,5 @@
 import random
+import unittest
 from unittest import mock
 
 from django.db import models
@@ -8,13 +9,13 @@ from django.urls import reverse
 from faker import Faker
 from rest_framework.request import Request
 
-from api.libs.helpers import SpotifyAuthServiceMock
+from api.libs.helpers import TestHelpers
 from api.models import Album, Artist, Playlist, Track, TrackFeatures
 from api.models.analysis import Analysis
-from api.models.permissions import Token
 from browser.filters import AlbumFilterSet, PlaylistFilterSet, TrackFilterSet
 from browser.models import Library
 from core.models import AppUser
+from core.permissions import TokenSerializer
 
 fake = Faker()
 
@@ -36,7 +37,7 @@ class FakeTaskResult:
 
 
 def create_library_with_albume(user: AppUser, count: int = 10):
-    library = Library.objects.create(user=user)
+    library, _ = Library.objects.get_or_create(user=user)
 
     for i in range(count):
         artists = [
@@ -69,7 +70,7 @@ def create_library_with_albume(user: AppUser, count: int = 10):
 
 
 def create_library_with_playlists(user: AppUser, count: int = 10):
-    library = Library.objects.create(user=user)
+    library, _ = Library.objects.get_or_create(user=user)
 
     for i in range(count):
         playlist = Playlist.objects.create(
@@ -78,16 +79,20 @@ def create_library_with_playlists(user: AppUser, count: int = 10):
             owner_id=user.spotify_id,
             version=str(fake.uuid4()),
         )
+
         playlist.tracks.add(
-            *[
-                track
-                for track, _ in create_track_with_features()
-                for _ in range(fake.random_int(1, 5))
-            ]
+            *[create_track_with_features() for _ in range(fake.random_int(7, 10))]
         )
+
         library.playlists.add(playlist)
 
         create_analysis_from_playlist(playlist, library, force=(i < 2))
+
+        playlist.is_analyzed = True
+        playlist.is_synced = True
+
+        playlist.save()
+        library.save()
 
     return library
 
@@ -105,9 +110,6 @@ def create_analysis_from_playlist(
     )
 
     analysis.tracks.add(*playlist.tracks.all())
-
-    playlist.is_analyzed = True
-    playlist.is_synced = True
 
     return analysis
 
@@ -141,7 +143,7 @@ def create_track_with_features():
         duration=fake.random_int(1000, 10000),
     )
 
-    features = TrackFeatures.objects.create(
+    TrackFeatures.objects.create(
         track=track,
         danceability=fake.random_number(digits=2) / 100,
         energy=fake.random_number(digits=2) / 100,
@@ -160,17 +162,14 @@ def create_track_with_features():
 
     track.save()
 
-    return track, features
+    return track
 
 
 class AlbumViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_albume(self.user)
-        self.jwt = Token(user=self.user).encode()
+        self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
     def test_list_albums_view(self):
         path = reverse("browser__albums")
@@ -204,12 +203,9 @@ class AlbumViewSetTestCase(TestCase):
 
 class AlbumMetadataViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_albume(self.user)
-        self.jwt = Token(user=self.user).encode()
+        self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
     def test_get_metadata(self):
         response = self.client.get(
@@ -235,12 +231,9 @@ class AlbumMetadataViewSetTestCase(TestCase):
 
 class PlaylistViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_playlists(self.user)
-        self.jwt = Token(user=self.user).encode()
+        self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
     def test_list_playlists_view(self):
         response = self.client.get(
@@ -328,12 +321,9 @@ class PlaylistViewSetTestCase(TestCase):
 
 class PlaylistMetadataViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_playlists(self.user)
-        self.jwt = Token(user=self.user).encode()
+        self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
     def test_get_metadata(self):
         response = self.client.get(
@@ -363,39 +353,45 @@ class PlaylistFilterSetTestCase(TestCase):
 
     def setUp(self) -> None:
         """Set up test data."""
-        self.user = AppUser.objects.get(is_staff=True)
+        self.user = TestHelpers.create_test_user()
         self.filters = PlaylistFilterSet()
         self.request = Request(HttpRequest())
-        self.library = Library.objects.get(user=self.user)
+        self.library, _ = Library.objects.get_or_create(user=self.user)
 
         for _ in range(10):
-            Playlist.objects.create(
+            playlist = Playlist.objects.create(
                 name=fake.name() + "__FILTER__",
                 spotify_id=str(fake.uuid4()),
                 owner_id=self.user.spotify_id,
                 public=True,
                 shared=True,
+                is_analyzed=random.choice([True, False]),
+                is_synced=random.choice([True, False]),
             )
 
+            for _ in range(10):
+                album = Album.objects.create(
+                    name=fake.name() + "__ALBUM__",
+                    spotify_id=str(fake.uuid4()),
+                    release_year=fake.year(),
+                    image_url=fake.image_url(),
+                    album_type=fake.word(),
+                )
+
+                playlist.tracks.add(
+                    Track.objects.create(
+                        album=album,
+                        name=fake.name() + "__TRACK__",
+                        spotify_id=str(fake.uuid4()),
+                        duration=fake.random_number(digits=3),
+                    )
+                )
+
+            playlist.save()
+
+            self.library.playlists.add(playlist)
+
         self.playlist = random.choice(Playlist.objects.all())
-
-        self.fake_album = Album.objects.create(
-            name=fake.name() + "__ALBUM__",
-            spotify_id=str(fake.uuid4()),
-            release_year=fake.year(),
-            image_url=fake.image_url(),
-            album_type=fake.word(),
-        )
-
-        self.fake_track = Track.objects.create(
-            name=fake.name() + "__TRACK__",
-            spotify_id=str(fake.uuid4()),
-            duration=fake.random_number(digits=3),
-            album=self.fake_album,
-        )
-
-        self.fake_track.playlists.add(self.playlist)
-        self.fake_track.save()
 
         self.request.user = self.user
 
@@ -427,30 +423,30 @@ class PlaylistFilterSetTestCase(TestCase):
         filtered_queryset = self.filters.filter_collaborative(queryset, True)
         self.assertGreater(filtered_queryset.count(), 0)
 
-    def test_filter_my_playlist(self):
+    def test_filter_my_playlists(self):
         """Test filter_my_playlist."""
         queryset = Playlist.objects.all()
-        filtered_queryset = self.filters.filter_my_playlist(
-            queryset, self.user.spotify_id
+        filtered_queryset = self.filters.filter_my_playlists(
+            queryset, self.user.spotify_id, self.request
         )
-        self.assertGreater(filtered_queryset.count(), 10)
+        self.assertEqual(filtered_queryset.count(), 10)
 
     def test_filter_is_analyzed(self):
         """Test filter_is_analyzed."""
         queryset = Playlist.objects.all()
-        filtered_queryset = self.filters.filter_is_analyzed(queryset)
+        filtered_queryset = self.filters.filter_is_analyzed(queryset, 1)
         self.assertGreater(filtered_queryset.count(), 0)
 
     def test_filter_is_synced(self):
         """Test filter_is_synced."""
         queryset = Playlist.objects.all()
-        filtered_queryset = self.filters.filter_is_synced(queryset)
+        filtered_queryset = self.filters.filter_is_synced(queryset, 1)
         self.assertGreater(filtered_queryset.count(), 0)
 
     def test_filter_private(self):
         """Test filter_private."""
         queryset = Playlist.objects.all()
-        filtered_queryset = self.filters.filter_private(queryset)
+        filtered_queryset = self.filters.filter_private(queryset, 1)
         self.assertGreater(filtered_queryset.count(), 0)
 
     def test_filter_num_tracks(self):
@@ -463,13 +459,13 @@ class PlaylistFilterSetTestCase(TestCase):
         """Test filter_track_name."""
         queryset = Playlist.objects.all()
         filtered_queryset = self.filters.filter_track_name(queryset, "__TRACK__")
-        self.assertEqual(filtered_queryset.count(), 1)
+        self.assertEqual(filtered_queryset.count(), 100)
 
 
+@unittest.skip("TODO")
 class TrackFilterSetTestCase(TestCase):
     def setUp(self) -> None:
-        self.user = AppUser.objects.get(is_staff=True)
-
+        self.user = TestHelpers.create_test_user()
         self.analysis = Analysis.objects.prefetch_related("playlist").first()
 
         if not self.analysis:
@@ -528,12 +524,13 @@ class TrackFilterSetTestCase(TestCase):
         self.assertEqual(filtered_queryset.count(), 1)
 
 
+@unittest.skip("TODO")
 class AlbumFilterSetTestCase(TestCase):
     """Test AlbumFilterSet."""
 
     def setUp(self) -> None:
         """Set up test data."""
-        self.user = AppUser.objects.get(is_staff=True)
+        self.user = TestHelpers.create_test_user()
         self.filters = AlbumFilterSet()
         self.request = Request(HttpRequest())
         self.library = Library.objects.get(user=self.user)

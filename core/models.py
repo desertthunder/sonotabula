@@ -5,40 +5,156 @@ Parking Lot:
 """
 
 import datetime
+import typing
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils import timezone
 from django_stubs_ext.db.models import TypedModelMeta
 from loguru import logger
+from pydantic import BaseModel
 
 from api.models.mixins import TimestampedModel, TokenSetMixin
-from api.serializers.authentication import AccessToken, CurrentUser
+
+
+class Serializer(BaseModel):
+    """Base class for serializing data."""
+
+    @classmethod
+    def mappings(cls: type[typing.Self]) -> dict[str, str]:
+        """Mapping of JSON data to class properties."""
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    @classmethod
+    def nullable_fields(cls: type[typing.Self]) -> tuple:
+        """Fields that can be null."""
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    @classmethod
+    def map_response(cls: type[typing.Self], response: dict) -> dict:
+        """Map JSON data to class properties."""
+        data = {}
+
+        for key, value in cls.mappings().items():
+            path = value.split(".")
+            prop = response.copy()
+
+            for p in path:
+                if p.isdigit() and isinstance(prop, list):
+                    i = int(p)
+                    prop = prop[i]
+                elif isinstance(prop, dict) and prop.get(p):
+                    prop = prop.get(p)  # type: ignore
+            if isinstance(prop, dict):
+                prop = ""  # type: ignore
+
+            if prop is not None:
+                data[key] = prop
+
+        for field in cls.nullable_fields():
+            data[field] = response.get(field)  # type: ignore
+        return data
+
+    @classmethod
+    def get(cls: type[typing.Self], response: dict) -> typing.Self:
+        """Create a Serializer object from JSON data."""
+        data: dict = cls.map_response(response)
+
+        return cls(**data)
+
+    @classmethod
+    def list(
+        cls: type[typing.Self], response: list[dict]
+    ) -> typing.Iterable[typing.Self]:
+        """Create a list of Serializer objects from JSON data."""
+        for item in response:
+            yield cls.get(item)
+
+
+class AccessToken(Serializer):
+    """Spotify Access Token Response Data."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str
+    token_expiry: datetime.datetime
+
+    @classmethod
+    def mappings(cls: type["AccessToken"]) -> dict:
+        """Mapping of JSON data to class properties."""
+        return {
+            "access_token": "access_token",
+            "refresh_token": "refresh_token",
+            "token_type": "token_type",
+        }
+
+    @classmethod
+    def nullable_fields(cls: type["AccessToken"]) -> tuple[str]:
+        """Fields that can be null."""
+        return ("token_expiry",)
+
+    @classmethod
+    def get(cls: type["AccessToken"], response: dict) -> "AccessToken":
+        """Create a Serializer object from JSON data."""
+        data: dict = cls.map_response(response)
+
+        if "token_expiry" in data and data.get("token_expiry"):
+            token_expiry = int(data["token_expiry"])
+            data["token_expiry"] = timezone.now() + datetime.timedelta(
+                seconds=token_expiry
+            )
+        elif "expires_in" in response and response.get("expires_in"):
+            token_expiry = int(response["expires_in"])
+            data["token_expiry"] = timezone.now() + datetime.timedelta(
+                seconds=token_expiry
+            )
+        return cls(**data)
+
+
+class SpotifyUserSerializer(Serializer):
+    """Spotify Current User Data."""
+
+    id: str
+    email: str
+    display_name: str
+
+    @classmethod
+    def mappings(cls: type["SpotifyUserSerializer"]) -> dict:
+        """Mapping of JSON data to class properties."""
+        return {
+            "display_name": "display_name",
+            "email": "email",
+            "id": "id",
+        }
+
+    @classmethod
+    def nullable_fields(cls: type["SpotifyUserSerializer"]) -> tuple[str]:
+        """Fields that can be null."""
+        return ("",)
 
 
 class AppUserManager(UserManager["AppUser"]):
     """Application User Manager."""
 
-    def from_spotify(
-        self,
-        spotify_data: CurrentUser,
-        token_set: AccessToken,
-    ) -> "AppUser":
+    def from_spotify(self, data: dict, token_data: dict) -> "AppUser":
         """Find or Create a user from spotify data."""
         try:
+            spotify_data = SpotifyUserSerializer.get(data)
+            tokens = AccessToken.get(token_data)
+
             user = self.get(spotify_id=spotify_data.id)
 
             logger.debug(f"Found user: {user.public_id}")
 
-            user.update_token_set(token_set)
+            user.update_token_set(tokens)
         except AppUser.DoesNotExist:
             user = self.create(
                 spotify_id=spotify_data.id,
                 email=spotify_data.email,
                 spotify_display_name=spotify_data.display_name,
-                access_token=token_set.access_token,
-                refresh_token=token_set.refresh_token,
-                token_expiry=token_set.token_expiry,
+                access_token=tokens.access_token,
+                refresh_token=tokens.refresh_token,
+                token_expiry=tokens.token_expiry,
             )
 
             user.save()

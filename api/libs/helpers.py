@@ -1,14 +1,12 @@
 """Helper functions for tests."""
 
-import datetime
 import json
 import typing
 
 import httpx
-from django.utils import timezone
 
 from api.libs.requests import RedirectURI
-from api.serializers.authentication import AccessToken, CurrentUser
+from browser.models import Library
 from core.models import AppUser
 
 
@@ -32,14 +30,14 @@ class SpotifyAuthServiceMock:
         )
 
     @classmethod
-    def get_access_token(cls: type["SpotifyAuthServiceMock"]) -> AccessToken:
+    def get_access_token(cls: type["SpotifyAuthServiceMock"]) -> dict:
         """Mock the get_access_token method."""
-        return AccessToken(
-            access_token="FAKE_ACCESS_TOKEN",  # noqa: S106
-            refresh_token="FAKE_REFRESH_TOKEN",  # noqa: S106
-            token_type="Bearer",  # noqa: S106
-            token_expiry=timezone.now() + datetime.timedelta(seconds=3600),
-        )
+        return {
+            "access_token": "FAKE_ACCESS_TOKEN",
+            "refresh_token": "FAKE_REFRESH_TOKEN",
+            "token_type": "Bearer",
+            "token_expiry": 3600,
+        }
 
     @classmethod
     def refresh_access_token(
@@ -49,16 +47,23 @@ class SpotifyAuthServiceMock:
         return user
 
     @classmethod
-    def get_current_user(cls: type["SpotifyAuthServiceMock"]) -> CurrentUser:
+    def get_current_user(cls: type["SpotifyAuthServiceMock"]) -> dict:
         """Mock the get_current_user method."""
-        return CurrentUser(
-            display_name="FAKE_DISPLAY_NAME", email="FAKE_EMAIL", id="FAKE_ID"
-        )
+        return {
+            "display_name": "FAKE_DISPLAY_NAME",
+            "email": "FAKE_EMAIL",
+            "id": "FAKE_ID",
+        }
 
     @classmethod
     def get_full_profile(cls: type["SpotifyAuthServiceMock"]) -> dict:
         """Mock the get_full_profile method."""
         return open_fixture_file("auth__get_full_profile.json")
+
+    @classmethod
+    def fetch_user(cls: type["SpotifyAuthServiceMock"]) -> dict:
+        """Mock the fetch_user method."""
+        return cls.get_full_profile()
 
     @classmethod
     def build_redirect_url(
@@ -87,3 +92,19 @@ class SpotifyPlaybackServiceMock:
         data = open_fixture_file("playback__recently_played.json")
 
         yield from data.get("items", [])
+
+
+class TestHelpers:
+    """Collection of helper methods for tests."""
+
+    @staticmethod
+    def create_test_user() -> AppUser:
+        """Create a user from test fixtures."""
+        user = AppUser.objects.from_spotify(
+            data=SpotifyAuthServiceMock.get_full_profile(),
+            token_data=SpotifyAuthServiceMock.get_access_token(),
+        )
+
+        Library.objects.create(user=user)
+
+        return user

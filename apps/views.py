@@ -16,7 +16,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.models.permissions import SpotifyAuth
 from api.services.spotify import (
     AUTH,
     DATA,
@@ -27,6 +26,7 @@ from api.services.spotify import (
 )
 from apps.models import ListeningHistory, ListeningHistorySerializer
 from apps.serializers import UserSavedItems
+from core.permissions import SpotifyAuth
 from core.views import GetUserMixin
 
 

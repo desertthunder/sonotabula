@@ -9,7 +9,6 @@ from rest_framework.response import Response
 
 from api.libs.constants import SpotifyAPIEndpoints
 from api.models import Playlist
-from api.models.permissions import SpotifyAuth
 from api.serializers.library import ExpandedPlaylist as ExpandedPlaylistSerializer
 from api.services.spotify import (
     SpotifyAuthService,
@@ -17,6 +16,7 @@ from api.services.spotify import (
     SpotifyLibraryService,
 )
 from browser.models import Library
+from core.permissions import SpotifyAuth
 from library.serializers import (
     AlbumAPISerializer,
     ArtistAPISerializer,

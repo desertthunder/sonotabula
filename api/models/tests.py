@@ -4,11 +4,13 @@ import unittest
 from django.test import TestCase
 from faker import Faker
 
+from api.libs.helpers import TestHelpers
 from api.models.analysis import Analysis
-from api.models.music import Album, Artist, Library
-from api.models.playlist import Playlist, SyncPlaylist
-from api.models.track import SyncData, Track
-from core.models import AppUser
+from api.models.music import Album, Artist
+from api.models.playlist import Playlist
+from api.models.track import Track
+from api.serializers.validation.playlist import SyncPlaylist
+from api.serializers.validation.track import SyncTrackData
 
 faker = Faker()
 
@@ -55,7 +57,8 @@ class PlaylistSyncManagerTestCase(TestCase):
             for _ in range(faker.random_int(min=1, max=4))
         ]
 
-        self.user = AppUser.objects.get(is_staff=True)
+        self.user = TestHelpers.create_test_user()
+        self.library = self.user.library
 
     def test_validate_iterator(self):
         result = Playlist.sync.pre_sync(self.data)
@@ -75,14 +78,13 @@ class PlaylistSyncManagerTestCase(TestCase):
         self.assertEqual(Playlist.objects.count(), initial_count + len(self.data))
 
     def test_complete(self):
-        library = Library.objects.get(user=self.user)
         data = Playlist.sync.pre_sync(self.data)
         playlists = Playlist.sync.do(playlists=list(data), user_pk=self.user.pk)
-        result = Playlist.sync.complete_sync(library.pk, playlists)
+        result = Playlist.sync.complete_sync(self.library.pk, playlists)
 
         self.assertGreater(len(result), 0)
-        self.assertIsNotNone(library)
-        self.assertEqual(library.playlists.count(), len(self.data))
+        self.assertIsNotNone(self.library)
+        self.assertEqual(self.library.playlists.count(), len(self.data))
 
 
 class TrackSyncManagerTestCase(TestCase):
@@ -97,7 +99,7 @@ class TrackSyncManagerTestCase(TestCase):
         result = Track.sync.pre_sync(self.fake_iterator())
 
         for data in result:
-            self.assertIsInstance(data, SyncData)
+            self.assertIsInstance(data, SyncTrackData)
             self.assertIsNotNone(data.track.spotify_id)
             self.assertIsNotNone(data.album.spotify_id)
             self.assertGreater(len(data.artists), 0)
@@ -141,9 +143,7 @@ class TrackSyncManagerTestCase(TestCase):
 
         data = Track.sync.pre_sync(self.fake_iterator())
         results = Track.sync.do(data)
-        completed = Track.sync.complete_sync(
-            playlist.pk, [track_pk for track_pk, _ in results]
-        )
+        completed = Track.sync.complete_sync(playlist.pk, results)
 
         self.assertIsNotNone(completed)
         self.assertEqual(playlist.tracks.count(), len(results))
@@ -156,7 +156,7 @@ class AnalysisManagerTestCase(TestCase):
             name=faker.name(), spotify_id=faker.uuid4(), owner_id=faker.uuid4()
         )
 
-        self.user = AppUser.objects.get(is_staff=True)
+        self.user = TestHelpers.create_test_user()
 
     def test_pre_analysis(self):
         with open("api/libs/fixtures/playlist-tracks.json") as f:
