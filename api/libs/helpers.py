@@ -6,6 +6,7 @@ import typing
 import httpx
 
 from api.libs.requests import RedirectURI
+from browser.models import Library
 from core.models import AppUser
 
 
@@ -91,3 +92,19 @@ class SpotifyPlaybackServiceMock:
         data = open_fixture_file("playback__recently_played.json")
 
         yield from data.get("items", [])
+
+
+class TestHelpers:
+    """Collection of helper methods for tests."""
+
+    @staticmethod
+    def create_test_user() -> AppUser:
+        """Create a user from test fixtures."""
+        user = AppUser.objects.from_spotify(
+            data=SpotifyAuthServiceMock.get_full_profile(),
+            token_data=SpotifyAuthServiceMock.get_access_token(),
+        )
+
+        Library.objects.create(user=user)
+
+        return user

@@ -6,9 +6,8 @@ from django.test import TestCase
 from django.urls import reverse
 from loguru import logger
 
-from api.libs.helpers import SpotifyAuthServiceMock
+from api.libs.helpers import SpotifyAuthServiceMock, TestHelpers
 from api.services.spotify import SpotifyAuthService
-from core.models import AppUser
 from core.serializers import TokenSerializer
 
 logger.remove(0)
@@ -16,10 +15,7 @@ logger.remove(0)
 
 class CoreAuthViewTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
 
         self.jwt = TokenSerializer.from_user(user=self.user).encode()
 

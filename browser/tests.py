@@ -9,7 +9,7 @@ from django.urls import reverse
 from faker import Faker
 from rest_framework.request import Request
 
-from api.libs.helpers import SpotifyAuthServiceMock
+from api.libs.helpers import TestHelpers
 from api.models import Album, Artist, Playlist, Track, TrackFeatures
 from api.models.analysis import Analysis
 from browser.filters import AlbumFilterSet, PlaylistFilterSet, TrackFilterSet
@@ -37,7 +37,7 @@ class FakeTaskResult:
 
 
 def create_library_with_albume(user: AppUser, count: int = 10):
-    library = Library.objects.create(user=user)
+    library, _ = Library.objects.get_or_create(user=user)
 
     for i in range(count):
         artists = [
@@ -70,7 +70,7 @@ def create_library_with_albume(user: AppUser, count: int = 10):
 
 
 def create_library_with_playlists(user: AppUser, count: int = 10):
-    library = Library.objects.create(user=user)
+    library, _ = Library.objects.get_or_create(user=user)
 
     for i in range(count):
         playlist = Playlist.objects.create(
@@ -167,10 +167,7 @@ def create_track_with_features():
 
 class AlbumViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_albume(self.user)
         self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
@@ -206,10 +203,7 @@ class AlbumViewSetTestCase(TestCase):
 
 class AlbumMetadataViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_albume(self.user)
         self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
@@ -237,10 +231,7 @@ class AlbumMetadataViewSetTestCase(TestCase):
 
 class PlaylistViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_playlists(self.user)
         self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
@@ -330,10 +321,7 @@ class PlaylistViewSetTestCase(TestCase):
 
 class PlaylistMetadataViewSetTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
         self.library = create_library_with_playlists(self.user)
         self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
@@ -365,14 +353,10 @@ class PlaylistFilterSetTestCase(TestCase):
 
     def setUp(self) -> None:
         """Set up test data."""
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
-
+        self.user = TestHelpers.create_test_user()
         self.filters = PlaylistFilterSet()
         self.request = Request(HttpRequest())
-        self.library = Library.objects.create(user=self.user)
+        self.library, _ = Library.objects.get_or_create(user=self.user)
 
         for _ in range(10):
             playlist = Playlist.objects.create(
@@ -481,8 +465,7 @@ class PlaylistFilterSetTestCase(TestCase):
 @unittest.skip("TODO")
 class TrackFilterSetTestCase(TestCase):
     def setUp(self) -> None:
-        self.user = AppUser.objects.get(is_staff=True)
-
+        self.user = TestHelpers.create_test_user()
         self.analysis = Analysis.objects.prefetch_related("playlist").first()
 
         if not self.analysis:
@@ -547,7 +530,7 @@ class AlbumFilterSetTestCase(TestCase):
 
     def setUp(self) -> None:
         """Set up test data."""
-        self.user = AppUser.objects.get(is_staff=True)
+        self.user = TestHelpers.create_test_user()
         self.filters = AlbumFilterSet()
         self.request = Request(HttpRequest())
         self.library = Library.objects.get(user=self.user)

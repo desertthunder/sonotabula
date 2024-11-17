@@ -4,13 +4,15 @@ from unittest import mock
 from django.test import TestCase
 from django.urls import reverse
 
-from api.libs.helpers import SpotifyAuthServiceMock, SpotifyPlaybackServiceMock
+from api.libs.helpers import (
+    SpotifyPlaybackServiceMock,
+    TestHelpers,
+)
 from api.models import Album, Artist, Track
 from api.services.spotify import (
     SpotifyPlaybackService,
 )
 from apps.models import ListeningHistory
-from core.models import AppUser
 from core.serializers import TokenSerializer
 
 logging.disable(logging.ERROR)
@@ -18,10 +20,7 @@ logging.disable(logging.ERROR)
 
 class ListeningHistoryViewTestCase(TestCase):
     def setUp(self):
-        self.user = AppUser.objects.from_spotify(
-            SpotifyAuthServiceMock.get_current_user(),
-            SpotifyAuthServiceMock.get_access_token(),
-        )
+        self.user = TestHelpers.create_test_user()
 
         self.jwt = TokenSerializer.from_user(user=self.user).encode()
 
